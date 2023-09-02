@@ -1,0 +1,6 @@
+recursive-include pretalx_nanoc_exporter/static *
+recursive-include pretalx_nanoc_exporter/templates *
+exclude pretalx_nanoc_exporter/locale/django.pot
+recursive-include pretalx_nanoc_exporter/locale *
+recursive-include pretalx_nanoc_exporter/ *.py
+include Makefile
