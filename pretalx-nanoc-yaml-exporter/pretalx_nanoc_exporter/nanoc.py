@@ -1,3 +1,4 @@
+from pathlib import Path
 import datetime
 from collections import defaultdict
 
@@ -14,6 +15,7 @@ from pretalx.submission.models import Submission, Track
 
 print("********reading nanoc.py")
 
+tz=pytz.timezone("Europe/Brussels")
 
 def represent_time(dumper, data):
     # return dumper.represent_scalar('tag:yaml.org,2002:timestamp', data.strftime('%H:%M:%S'))
@@ -26,10 +28,15 @@ def represent_timedelta(dumper, data):
     minutes = int(seconds // 60 - 60 * hours)
     return dumper.represent_scalar("timedelta", f"{hours:02d}:{minutes:02d}:00")
 
+def represent_datetime(dumper, data):
+    """Make sure that timezone is added"""
+    return dumper.represent_scalar("timestamp", str(data.astimezone(tz)))
+
 
 # Register the custom representer for datetime.time
 yaml.add_representer(datetime.time, represent_time)
 yaml.add_representer(datetime.timedelta, represent_timedelta)
+yaml.add_representer(datetime.datetime, represent_datetime)
 
 from yaml.representer import Representer
 
@@ -105,8 +112,8 @@ class NanocExporter(ScheduleData):
                         talk.end.time(), end_time[room_slug][day]
                     )
                 else:
-                    start_time[room_slug][day] = talk.start.time()
-                    end_time[room_slug][day] = talk.end.time()
+                    start_time[room_slug][day] = talk.start.astimezone(tz).time()
+                    end_time[room_slug][day] = talk.end.astimezone(tz).time()
             for day in self.days:
                 start_time_index[room_slug][day] = time_to_index(
                     start_time[room_slug][day]
@@ -175,8 +182,8 @@ class NanocExporter(ScheduleData):
                 "conference_track_id": track.pk,
                 "conference_call_for_papers_url": "",  # TODO?
                 "slug": track.slug,
-                "rank": track.pk,  # TODO - how to rank tracks
-                "type": "maintrack",  # TODO
+                "rank": track.pk,  # TODO - cfr https://github.com/pretalx/pretalx/issues/1305
+                "type": "maintrack",  # TODO - either include in pretalx upstream/plugin or keep in exporter?
                 "rooms": track_rooms,
                 "events": track_talks,
                 "events_by_day": track_talks_day,
@@ -196,19 +203,31 @@ class NanocExporter(ScheduleData):
                 for talk in room["talks"]:
                     track = talk.submission.track
                     day_string = talk.start.strftime("%A")
+                    links = [{"title": resource.description, "url": resource.link} for resource in talk.submission.resources.filter(link__isnull=False)]
+                    attachments = [{"title": resource.description, 
+                                    "file": "/media-static/" + resource.resource.name,
+                                    "filename": Path(resource.resource.name).name,
+                                    "identifier": "/media-static/" + resource.resource.name,
+                                    "type": "slides", # TODO - or not -influences link+icon
+                                    "size": resource.resource.size,
+                                    "mime": "image/png", # TODO: is this actually used? we could use "magic" for this
+                                    "id": resource.pk,
+                                    "event_id": talk.pk,
+                                    "event_slug": talk.frab_slug
+                                    } for resource in talk.submission.resources.exclude(resource="")]
                     talks[talk.frab_slug] = {
                         "event_id": talk.pk,
                         "conference_track_id": track.pk,
                         "title": talk.submission.title,
-                        "subtitle": "",  # TODO?
+                        "subtitle": "",  # this does not exist in pretalx
                         "slug": talk.frab_slug,
                         "subtitle": "",
                         "abstract": talk.submission.abstract,
                         "description": str(talk.submission.description),
-                        "start_time": talk.start.time(),
-                        "end_time": talk.end.time(),
-                        "start_datetime": str(talk.start),
-                        "end_datetime": str(talk.end),
+                        "start_time": talk.start.astimezone(tz).time(),
+                        "end_time": talk.end.astimezone(tz).time(),
+                        "start_datetime": talk.start,
+                        "end_datetime": talk.end,
                         "start_time_index": time_to_index(talk.start.time()),
                         "end_time_index": time_to_index(talk.end.time()),
                         "duration": talk.end - talk.start,
@@ -227,8 +246,8 @@ class NanocExporter(ScheduleData):
                         "room_rank": talk.room.position,
                         "conference_room_id": talk.room.pk,
                         "language": "en",
-                        "attachments": [],
-                        "links": []
+                        "attachments": attachments,
+                        "links": links
                         # logo TODO
                     }
         return talks
@@ -239,8 +258,15 @@ class NanocExporter(ScheduleData):
         days = {}
         for day in self.data:
             day_slug = day["start"].strftime("%A").lower()
-            start_time = day["start"].time()
-            end_time = (day["start"] + datetime.timedelta(hours=10)).time()
+            print("day start: " + str(day["start"]))
+
+            # TODO FIXED for now as day["start"] is 00
+            # and day["end"] will end up being before day["start"]
+            #start_time = day["start"].astimezone(tz).time()
+            #end_time = (day["start"].astimezone(tz) + datetime.timedelta(hours=10)).time()
+
+            start_time = datetime.time(hour=9)
+            end_time = datetime.time(hour=17)
             days[day_slug] = {
                 "conference_day_id": day["start"].weekday(),
                 "name": day["start"].strftime("%A"),
@@ -266,7 +292,7 @@ class NanocExporter(ScheduleData):
                     for speaker in talk.submission.speakers.all():
                         if speaker.code not in speakers_dict:
                             speakers_dict[speaker.code] = {
-                                "person_id": speaker.pk,  # TODO: can we get rid of this?
+                                "person_id": speaker.pk,  # TODO: check if this is actually used
                                 "title": speaker.name,
                                 "public_name": speaker.name,
                                 "first_name": "",
@@ -276,8 +302,8 @@ class NanocExporter(ScheduleData):
                                 "slug": speaker.code,
                                 "gender": "",  # check whether we need/want this
                                 "sortname": speaker.name.upper(),
-                                "abstract": "",  # TODO
-                                "description": "",  # TODO
+                                "abstract": speaker.profiles.get(event=self.event).biography,
+                                "description": "",  # TODO: do we use this anywhere where abstract is not shown? Pretalx does not have two fields
                                 "conference_person_id": speaker.pk,  # not equal to person_id in penta
                                 "links": [],
                                 "events": [talk.frab_slug],
