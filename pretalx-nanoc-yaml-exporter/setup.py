@@ -30,7 +30,7 @@ setup(
     author="Johan Van de Wauw",
     author_email="johanvdw@fosdem.org",
     license="Apache Software License",
-    install_requires=[],
+    install_requires=["pyyaml"],
     packages=find_packages(exclude=["tests", "tests.*"]),
     include_package_data=True,
     cmdclass=cmdclass,
