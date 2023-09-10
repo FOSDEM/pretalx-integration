@@ -76,7 +76,6 @@ class NanocExporter(ScheduleData):
             - bb
 
         """
-        event = self.event
         schedule = self.schedule
         rooms = Room.objects.prefetch_related(
             Prefetch(
@@ -114,7 +113,7 @@ class NanocExporter(ScheduleData):
                 else:
                     start_time[room_slug][day] = talk.start.astimezone(tz).time()
                     end_time[room_slug][day] = talk.end.astimezone(tz).time()
-            for day in self.days:
+            for day in start_time_index[room_slug]:
                 start_time_index[room_slug][day] = time_to_index(
                     start_time[room_slug][day]
                 )
@@ -172,7 +171,7 @@ class NanocExporter(ScheduleData):
                 else:
                     start_time[day] = slot.start.time()
                     end_time[day] = slot.end.time()
-            for day in self.days:
+            for day in start_time:
                 start_time_index[day] = time_to_index(start_time[day])
                 end_time_index[day] = time_to_index(end_time[day])
             tracks_dict[track.slug] = {
