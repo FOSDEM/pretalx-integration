@@ -13,8 +13,6 @@ from pretalx.schedule.exporters import ScheduleData
 from pretalx.schedule.models import Room, TalkSlot
 from pretalx.submission.models import Submission, Track
 
-print("********reading nanoc.py")
-
 tz=pytz.timezone("Europe/Brussels")
 
 def represent_time(dumper, data):
@@ -257,7 +255,6 @@ class NanocExporter(ScheduleData):
         days = {}
         for day in self.data:
             day_slug = day["start"].strftime("%A").lower()
-            print("day start: " + str(day["start"]))
 
             # TODO FIXED for now as day["start"] is 00
             # and day["end"] will end up being before day["start"]
@@ -278,7 +275,6 @@ class NanocExporter(ScheduleData):
                 "start_time_index": time_to_index(start_time),
                 "end_time_index": time_to_index(end_time),
             }
-        print(days)
         return days
 
     @cached_property
