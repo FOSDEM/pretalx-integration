@@ -179,7 +179,7 @@ class NanocExporter(ScheduleData):
                 "conference_track_id": track.pk,
                 "conference_call_for_papers_url": "",  # TODO?
                 "slug": track.slug,
-                "rank": track.pk,  # TODO - cfr https://github.com/pretalx/pretalx/issues/1305
+                "rank": track.position,
                 "type": "maintrack",  # TODO - either include in pretalx upstream/plugin or keep in exporter?
                 "rooms": track_rooms,
                 "events": track_talks,
