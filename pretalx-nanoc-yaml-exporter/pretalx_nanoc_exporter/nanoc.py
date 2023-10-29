@@ -119,7 +119,7 @@ class NanocExporter(ScheduleData):
         rooms = {
             str(room.name).lower(): {
                 "conference_room_id": room.pk,
-                "conference_room": str(room.name),
+                "conference_room": str(room.description),
                 "size": room.capacity,
                 "rank": room.position,
                 "slug": str(room.name).lower(),
