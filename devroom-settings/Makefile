@@ -1,5 +1,5 @@
 all: localecompile
-LNGS:=`find pretalx_track_settings/locale/ -mindepth 1 -maxdepth 1 -type d -printf "-l %f "`
+LNGS:=`find devroom_settings/locale/ -mindepth 1 -maxdepth 1 -type d -printf "-l %f "`
 
 localecompile:
 	django-admin compilemessages

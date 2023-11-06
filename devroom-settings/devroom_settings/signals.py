@@ -21,7 +21,7 @@ def render_form_fragment(sender, track, **kwargs):
     return html
 
 
-@receiver(on_save_track, dispatch_uid="pretalx_track_settings_save" )
+@receiver(on_save_track, dispatch_uid="devroom_settings_save" )
 def check_and_save(sender, track, request, **kwargs):
     """Checks and saves extra track settings"""
     f = TrackSettingsForm(request.POST, track=track)

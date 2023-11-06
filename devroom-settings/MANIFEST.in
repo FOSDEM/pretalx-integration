@@ -1,6 +1,6 @@
-recursive-include pretalx_track_settings/static *
-recursive-include pretalx_track_settings/templates *
-exclude pretalx_track_settings/locale/django.pot
-recursive-include pretalx_track_settings/locale *
-recursive-include pretalx_track_settings *.py
+recursive-include devroom_settings/static *
+recursive-include devroom_settings/templates *
+exclude devroom_settings/locale/django.pot
+recursive-include devroom_settings/locale *
+recursive-include devroom_settings *.py
 include Makefile
