@@ -1,6 +1,8 @@
 from django.dispatch import receiver
 
 from pretalx.cfp.signals import html_below_track, on_save_track
+from pretalx.mail.signals import register_mail_placeholders
+from pretalx.mail.placeholders import SimpleFunctionalMailTextPlaceholder
 from .models import TrackSettings
 from .forms import TrackSettingsForm
 
@@ -37,3 +39,15 @@ def check_and_save(sender, track, request, **kwargs):
     settings.track=track
     settings.save()
     f.save_m2m()
+
+@receiver(register_mail_placeholders, dispatch_uid="devroom_settings_placeholders")
+def devroom_placeholders(sender, **kwargs):
+    placeholders=[
+    SimpleFunctionalMailTextPlaceholder(
+        "track_mail",
+        ["submission"],
+        lambda submission: str(submission.track.devroom_settings.mail),
+        "toothbrush-devroom-managers@fosdem.org",
+        "Email of the track responsible"
+    )]
+    return placeholders

@@ -6,7 +6,7 @@ from . import __version__
 
 class PluginApp(AppConfig):
     name = "devroom_settings"
-    verbose_name = "Pretalx extra track settings"
+    verbose_name = "Pretalx devroom settings"
 
     class PretalxPluginMeta:
         name = gettext_lazy("Pretalx extra track settings")

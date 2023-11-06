@@ -1,5 +1,5 @@
 [project]
-name = "pretalx-track-settings"
+name = "devroom_settings"
 dynamic = ["version"]
 description = "Store extra info per track"
 readme = "README.rst"
@@ -34,4 +34,4 @@ include-package-data = true
 version = {attr = "devroom_settings.__version__"}
 
 [tool.setuptools.packages.find]
-include = ["pretalx*"]
+include = ["devroom*","pretalx*"]
