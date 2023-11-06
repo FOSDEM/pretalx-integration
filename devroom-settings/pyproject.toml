@@ -1,0 +1,37 @@
+[project]
+name = "pretalx-track-settings"
+dynamic = ["version"]
+description = "Store extra info per track"
+readme = "README.rst"
+license = {text = "Apache Software License"}
+keywords = ["pretalx"]
+authors = [
+    {name = "Johan Van de Wauw", email = "johanvdw@fosdem.org"},
+]
+maintainers = [
+    {name = "Johan Van de Wauw", email = "johanvdw@fosdem.org"},
+]
+
+dependencies = [
+]
+
+[project.entry-points."pretalx.plugin"]
+pretalx_track_settings = "pretalx_track_settings:PretalxPluginMeta"
+
+[build-system]
+requires = [
+    "setuptools",
+]
+
+[project.urls]
+homepage = "https://github.com/FOSDEM/pretalx-integrations/"
+repository = "https://github.com/FOSDEM/pretalx-integrations/.git"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.dynamic]
+version = {attr = "pretalx_track_settings.__version__"}
+
+[tool.setuptools.packages.find]
+include = ["pretalx*"]
