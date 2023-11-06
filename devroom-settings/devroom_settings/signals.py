@@ -46,7 +46,7 @@ def devroom_placeholders(sender, **kwargs):
     SimpleFunctionalMailTextPlaceholder(
         "track_mail",
         ["submission"],
-        lambda submission: str(submission.track.devroom_settings.mail),
+        lambda submission: str(submission.track.tracksettings.mail),
         "toothbrush-devroom-managers@fosdem.org",
         "Email of the track responsible"
     )]
