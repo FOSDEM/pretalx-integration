@@ -38,7 +38,6 @@ def check_and_save(sender, track, request, **kwargs):
         pass
     settings.track=track
     settings.save()
-    f.save_m2m()
 
 
 def track_email(track):

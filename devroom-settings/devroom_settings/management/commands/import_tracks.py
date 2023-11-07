@@ -7,7 +7,7 @@ from django.utils.text import slugify
 
 from pretalx.event.models import Event
 from pretalx.submission.models import Track
-from devroom_settings.models import TrackSettings
+from devroom_settings.models import TrackSettings, TrackManager
 
 class Command(BaseCommand):
     help = 'Import accepted devrooms from another CfP as devrooms (track)'
@@ -21,21 +21,24 @@ class Command(BaseCommand):
         source_event = Event.objects.get(slug=source)
         with scope(event=source_event):
             accepted_devrooms=source_event.submissions.filter(state__in =["confirmed", "accepted"])
-        print(accepted_devrooms)
 
         dest=kwargs["destination"]
         dest_event = Event.objects.get(slug=dest)
-
+        with scope(event=dest_event):
+            existing_tracks=list(Track.objects.all().values_list('name', flat=True))
 
         for submission in accepted_devrooms:
+            if submission.title in existing_tracks:
+                continue
             track = Track(name=submission.title, event=dest_event)
             track.color="#FFFFFF" # not used, but otherwise it will ask when you open the page
-            tracksetting= TrackSettings(track=track)
-
-            tracksetting.slug=slugify(track.name)
-
             track.save()
+            tracksetting= TrackSettings(track=track)
+            tracksetting.track_type=TrackSettings.TrackType.DEVROOM
+
+            tracksetting.slug=slugify(track.name)[0:63]
+            print(f"adding {track.name}")
             tracksetting.save()
-            tracksetting.devroom_managers.set(submission.speakers.all())
-            tracksetting.save()
+            for user in submission.speakers.all():
+                track_manager = TrackManager(track=track, user=user).save()
 
