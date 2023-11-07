@@ -40,13 +40,21 @@ def check_and_save(sender, track, request, **kwargs):
     settings.save()
     f.save_m2m()
 
+
+def track_email(track):
+    """Get the track email if defined and return event mail otherwise"""
+    try:
+        mail = track.tracksettings.mail
+    except TrackSettings.DoesNotExist:
+        mail = track.event.email
+    return mail
 @receiver(register_mail_placeholders, dispatch_uid="devroom_settings_placeholders")
 def devroom_placeholders(sender, **kwargs):
     placeholders=[
     SimpleFunctionalMailTextPlaceholder(
         "track_mail",
         ["submission"],
-        lambda submission: str(submission.track.tracksettings.mail),
+        lambda submission: track_email(submission.track),
         "toothbrush-devroom-managers@fosdem.org",
         "Email of the track responsible"
     )]
