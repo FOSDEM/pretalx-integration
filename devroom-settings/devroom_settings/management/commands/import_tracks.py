@@ -20,19 +20,21 @@ class Command(BaseCommand):
         source=kwargs["source"]
         source_event = Event.objects.get(slug=source)
         with scope(event=source_event):
-            accepted_devrooms=source_event.submissions.filter(state__in =["confirmed", "accepted"])
+            accepted_devrooms=source_event.submissions.filter(state__in =["confirmed", "accepted"]).order_by("title")
 
         dest=kwargs["destination"]
         dest_event = Event.objects.get(slug=dest)
         with scope(event=dest_event):
             existing_tracks=list(Track.objects.all().values_list('name', flat=True))
 
-        for submission in accepted_devrooms:
+        for i, submission in enumerate(accepted_devrooms):
             if submission.title in existing_tracks:
                 continue
             track = Track(name=submission.title, event=dest_event)
             track.color="#FFFFFF" # not used, but otherwise it will ask when you open the page
+            track.position=i+len(existing_tracks)
             track.save()
+
             tracksetting= TrackSettings(track=track)
             tracksetting.track_type=TrackSettings.TrackType.DEVROOM
 
