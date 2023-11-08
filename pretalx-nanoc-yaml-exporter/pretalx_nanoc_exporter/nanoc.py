@@ -1,9 +1,11 @@
-from pathlib import Path
 import datetime
 from collections import defaultdict
+from pathlib import Path
 
 import pytz
 import yaml
+from devroom_settings.models import TrackSettings
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Prefetch
 from django.template.loader import get_template
 from django.utils.functional import cached_property
@@ -13,7 +15,8 @@ from pretalx.schedule.exporters import ScheduleData
 from pretalx.schedule.models import Room, TalkSlot
 from pretalx.submission.models import Submission, Track
 
-tz=pytz.timezone("Europe/Brussels")
+tz = pytz.timezone("Europe/Brussels")
+
 
 def represent_time(dumper, data):
     # return dumper.represent_scalar('tag:yaml.org,2002:timestamp', data.strftime('%H:%M:%S'))
@@ -25,6 +28,7 @@ def represent_timedelta(dumper, data):
     hours = int(seconds // 3600)
     minutes = int(seconds // 60 - 60 * hours)
     return dumper.represent_scalar("timedelta", f"{hours:02d}:{minutes:02d}:00")
+
 
 def represent_datetime(dumper, data):
     """Make sure that timezone is added"""
@@ -139,7 +143,7 @@ class NanocExporter(ScheduleData):
 
     @cached_property
     def tracks(self):
-        tracks = Track.objects.filter(event=self.event)
+        tracks = Track.objects.filter(event=self.event).prefetch_related("tracksettings")
         tracks_dict = {}
         for track in tracks:
             track_talks_day = {day: [] for day in self.days}
@@ -172,15 +176,21 @@ class NanocExporter(ScheduleData):
             for day in start_time:
                 start_time_index[day] = time_to_index(start_time[day])
                 end_time_index[day] = time_to_index(end_time[day])
+            try:
+                track_type = track.tracksettings.track_type
+                cfp = track.tracksettings.cfp_url
+            except track.tracksettings.RelatedObjectDoesNotExist:
+                track_type = "devroom"
+                cfp = ""
             tracks_dict[track.slug] = {
                 "conference_track": str(track.name),
                 "name": str(track.name),
                 "title": str(track.name),
                 "conference_track_id": track.pk,
-                "conference_call_for_papers_url": "",  # TODO?
+                "conference_call_for_papers_url": cfp,
                 "slug": track.slug,
                 "rank": track.position,
-                "type": "maintrack",  # TODO - either include in pretalx upstream/plugin or keep in exporter?
+                "type": track_type,
                 "rooms": track_rooms,
                 "events": track_talks,
                 "events_by_day": track_talks_day,
@@ -200,18 +210,27 @@ class NanocExporter(ScheduleData):
                 for talk in room["talks"]:
                     track = talk.submission.track
                     day_string = talk.start.strftime("%A")
-                    links = [{"title": resource.description, "url": resource.link} for resource in talk.submission.resources.filter(link__isnull=False)]
-                    attachments = [{"title": resource.description, 
-                                    "file": "/media-static/" + resource.resource.name,
-                                    "filename": Path(resource.resource.name).name,
-                                    "identifier": "/media-static/" + resource.resource.name,
-                                    "type": "slides", # TODO - or not -influences link+icon
-                                    "size": resource.resource.size,
-                                    "mime": "image/png", # TODO: is this actually used? we could use "magic" for this
-                                    "id": resource.pk,
-                                    "event_id": talk.pk,
-                                    "event_slug": talk.frab_slug
-                                    } for resource in talk.submission.resources.exclude(resource="")]
+                    links = [
+                        {"title": resource.description, "url": resource.link}
+                        for resource in talk.submission.resources.filter(
+                            link__isnull=False
+                        )
+                    ]
+                    attachments = [
+                        {
+                            "title": resource.description,
+                            "file": "/media-static/" + resource.resource.name,
+                            "filename": Path(resource.resource.name).name,
+                            "identifier": "/media-static/" + resource.resource.name,
+                            "type": "slides",  # TODO - or not -influences link+icon
+                            "size": resource.resource.size,
+                            "mime": "image/png",  # TODO: is this actually used? we could use "magic" for this
+                            "id": resource.pk,
+                            "event_id": talk.pk,
+                            "event_slug": talk.frab_slug,
+                        }
+                        for resource in talk.submission.resources.exclude(resource="")
+                    ]
                     talks[talk.frab_slug] = {
                         "event_id": talk.pk,
                         "conference_track_id": track.pk,
@@ -258,8 +277,8 @@ class NanocExporter(ScheduleData):
 
             # TODO FIXED for now as day["start"] is 00
             # and day["end"] will end up being before day["start"]
-            #start_time = day["start"].astimezone(tz).time()
-            #end_time = (day["start"].astimezone(tz) + datetime.timedelta(hours=10)).time()
+            # start_time = day["start"].astimezone(tz).time()
+            # end_time = (day["start"].astimezone(tz) + datetime.timedelta(hours=10)).time()
 
             start_time = datetime.time(hour=9)
             end_time = datetime.time(hour=17)
@@ -297,7 +316,9 @@ class NanocExporter(ScheduleData):
                                 "slug": speaker.code,
                                 "gender": "",  # check whether we need/want this
                                 "sortname": speaker.name.upper(),
-                                "abstract": speaker.profiles.get(event=self.event).biography,
+                                "abstract": speaker.profiles.get(
+                                    event=self.event
+                                ).biography,
                                 "description": "",  # TODO: do we use this anywhere where abstract is not shown? Pretalx does not have two fields
                                 "conference_person_id": speaker.pk,  # not equal to person_id in penta
                                 "links": [],
