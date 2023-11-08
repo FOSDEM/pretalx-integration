@@ -1,0 +1,35 @@
+{% extends "orga/cfp/base.html" %}
+{% load i18n %}
+
+{% block cfp_content %}
+
+<h2>Devroom manager report</h2>
+    <div class="alert alert-info">
+        This page lists all tracks at FOSDEM with their respective responsibles.
+    </div>
+    <div class="table-responsive">
+        <table class="table table-sm table-hover table-flip">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Mail</th>
+                    <th>Members</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for track in tracks %}
+                    <tr>
+                        <td>{{ track.name }}</td>
+                        <td>{{ track.tracksettings.mail }}
+                        </td>
+                        <td>{%for manager in track.trackmanager_set.all %}
+                            {{manager.user.email}}
+                        {% endfor %}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+{% endblock %}
