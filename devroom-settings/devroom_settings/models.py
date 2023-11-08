@@ -10,10 +10,10 @@ from django_scopes import ScopedManager
 
 class TrackSettings(models.Model):
     class TrackType(models.TextChoices):
-        MAIN_TRACK="MT"
-        LIGHTNING_TALK="LT"
-        DEVROOM="D"
-        BOF_ROOM="B"
+        MAIN_TRACK="MT", "main_track"
+        LIGHTNING_TALK="LT", "lightning_talk"
+        DEVROOM="D", "devroom"
+        BOF_ROOM="B", "bof"
     track = models.OneToOneField(to=Track, on_delete=models.CASCADE)
     track_type = models.CharField(choices=TrackType.choices)
     slug = models.SlugField(max_length=63, verbose_name="slug", help_text="SLUG used for URLS")

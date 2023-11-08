@@ -177,7 +177,7 @@ class NanocExporter(ScheduleData):
                 start_time_index[day] = time_to_index(start_time[day])
                 end_time_index[day] = time_to_index(end_time[day])
             try:
-                track_type = track.tracksettings.track_type
+                track_type = track.tracksettings.get_track_type_display()
                 cfp = track.tracksettings.cfp_url
             except track.tracksettings.RelatedObjectDoesNotExist:
                 track_type = "devroom"
