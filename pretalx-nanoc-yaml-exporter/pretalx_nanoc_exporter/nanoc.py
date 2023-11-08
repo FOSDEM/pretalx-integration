@@ -182,13 +182,13 @@ class NanocExporter(ScheduleData):
             except track.tracksettings.RelatedObjectDoesNotExist:
                 track_type = "devroom"
                 cfp = ""
-            tracks_dict[track.slug] = {
+            tracks_dict[track.tracksettings.slug] = {
                 "conference_track": str(track.name),
                 "name": str(track.name),
                 "title": str(track.name),
                 "conference_track_id": track.pk,
                 "conference_call_for_papers_url": cfp,
-                "slug": track.slug,
+                "slug": track.tracksettings.slug,
                 "rank": track.position,
                 "type": track_type,
                 "rooms": track_rooms,
@@ -253,10 +253,10 @@ class NanocExporter(ScheduleData):
                         "speakers": [
                             speaker.code for speaker in talk.submission.speakers.all()
                         ],
-                        "track": track.slug,
+                        "track": track.tracksettings.slug,
                         "track_name": str(track.name),
                         "track_full_name": str(track.name),
-                        "type": "maintrack",  # TODO
+                        "type": track.tracksettings.get_track_type_display(),
                         "room": str(talk.room.name).lower(),
                         "room_name": str(talk.room.name),
                         "room_rank": talk.room.position,
