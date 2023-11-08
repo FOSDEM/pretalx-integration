@@ -16,4 +16,6 @@ class Command(BaseCommand):
         mail = kwargs["mail"]
         team = Team.objects.get(pk=team_id)
         print(f"inviting {mail} to team {team.name}")
-        TeamInvite(email=mail, team=team).save()
+        invite=TeamInvite(email=mail, team=team)
+        invite.send()
+        invite.save()
