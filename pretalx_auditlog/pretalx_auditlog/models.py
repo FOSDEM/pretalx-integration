@@ -100,7 +100,7 @@ class TalkSlotProxy(TalkSlot):
 from pretalx.submission.models import Answer, Review, Submission, Track
 
 
-@pghistory.track(pghistory.Snapshot(), pghistory.BeforeDelete())
+@pghistory.track(pghistory.Snapshot(), pghistory.BeforeDelete(), exclude=["invitation_token"])
 class SubmissionProxy(Submission):
     class Meta:
         proxy = True
