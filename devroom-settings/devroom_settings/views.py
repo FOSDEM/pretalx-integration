@@ -7,6 +7,8 @@ from devroom_settings.models import TrackSettings, TrackManager
 from django.views.generic import ListView
 from django_scopes import scope, scopes_disabled
 
+from devroom_settings.forms import TrackManagerForm
+
 
 class DevroomReport(EventPermissionRequired, ListView):
     permission_required = "orga.change_submissions"
@@ -17,6 +19,10 @@ class DevroomReport(EventPermissionRequired, ListView):
         tracks = (
             self.request.event.tracks.all()
             .select_related("tracksettings")
-            .prefetch_related("trackmanager_set__user")
+            .select_related("tracksettings__manager_team")
+            .prefetch_related("tracksettings__manager_team__members")
+            .prefetch_related("tracksettings__manager_team__invites")
+
         )
         return tracks
+

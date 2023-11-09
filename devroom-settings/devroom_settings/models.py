@@ -20,7 +20,8 @@ class TrackSettings(models.Model):
     mail = models.EmailField(max_length=254, help_text="track responsible (must be fosdem list)", blank=True, default="")
     cfp_url = models.CharField(max_length=254, help_text="URL added to the CfP page", blank=True, default="")
     online_qa = models.BooleanField("Online Q&A", help_text="Should an online QA be added for this ROOM", default=False)
-    review_team = models.ForeignKey(Team, on_delete=models.SET_NULL, null=True)
+    review_team = models.ForeignKey(Team, on_delete=models.SET_NULL, null=True, related_name="review_track")
+    manager_team = models.ForeignKey(Team, on_delete=models.SET_NULL, null=True, related_name="manager_track")
     rooms = models.ManyToManyField(Room, help_text="Allowed rooms for track (not yet enforced)", blank=True)
 
 class TrackManager(models.Model):
