@@ -1,0 +1,6 @@
+recursive-include pretalx_auditlog/static *
+recursive-include pretalx_auditlog/templates *
+exclude pretalx_auditlog/locale/django.pot
+recursive-include pretalx_auditlog/locale *
+recursive-include pretalx_auditlog/ *.py
+include Makefile
