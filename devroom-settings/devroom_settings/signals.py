@@ -14,7 +14,6 @@ from django.urls import resolve, reverse
 
 @receiver(html_below_track, dispatch_uid="devroom_settings")
 def render_form_fragment(sender, track, **kwargs):
-    print("registering html below track")
     try:
         settings = track.tracksettings
     except TrackSettings.DoesNotExist:
@@ -73,7 +72,6 @@ def devroom_placeholders(sender, **kwargs):
 def navbar_info(sender, request, **kwargs):
     url = resolve(request.path_info)
     if not request.user.has_perm("orga.view_orga_area", request.event):
-        print("*** insufficient permissions navbar")
         return []
     return [
         {

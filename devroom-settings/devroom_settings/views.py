@@ -7,8 +7,6 @@ from devroom_settings.models import TrackSettings, TrackManager
 from django.views.generic import ListView
 from django_scopes import scope, scopes_disabled
 
-from devroom_settings.forms import TrackManagerForm
-
 
 class DevroomReport(EventPermissionRequired, ListView):
     permission_required = "orga.change_submissions"
