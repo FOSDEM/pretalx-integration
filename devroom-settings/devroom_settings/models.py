@@ -24,8 +24,3 @@ class TrackSettings(models.Model):
     manager_team = models.ForeignKey(Team, on_delete=models.SET_NULL, null=True, related_name="manager_track")
     rooms = models.ManyToManyField(Room, help_text="Allowed rooms for track (not yet enforced)", blank=True)
 
-class TrackManager(models.Model):
-    track = models.ForeignKey(to=Track, on_delete=models.CASCADE)
-    user = models.ForeignKey(to=User, on_delete=models.CASCADE)
-
-    objects = ScopedManager(event="track__event")
