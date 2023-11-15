@@ -24,4 +24,4 @@ class Changelog(PermissionRequired, TemplateView):
             if ev.pgh_context is not None:
                 user = User.objects.get(pk=ev.pgh_context['user'])
                 ev.user = user
-        return {"content": text, "events": events}
+        return {"events": events}
