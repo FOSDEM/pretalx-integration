@@ -16,7 +16,7 @@ from pretalx.event.models import Event, Organiser, Team, TeamInvite
 ## event
 
 
-@pghistory.track(pghistory.Snapshot(), pghistory.BeforeDelete())
+@pghistory.track(pghistory.Snapshot(), pghistory.BeforeDelete(), exclude='updated')
 class EventProxy(Event):
     class Meta:
         proxy = True
@@ -34,7 +34,7 @@ class TeamProxy(Team):
         proxy = True
 
 
-@pghistory.track(pghistory.Snapshot(), pghistory.BeforeDelete())
+@pghistory.track(pghistory.Snapshot(), pghistory.BeforeDelete(), exclude='token')
 class TeamInviteProxy(TeamInvite):
     class Meta:
         proxy = True
