@@ -129,7 +129,7 @@ class NanocExporter(ScheduleData):
                 "slug": str(room.name).lower(),
                 "chat_link": "https://chat.fosdem.org/todo",
                 "live_video_link": f"https://live.fosdem.org/watch/{str(room.name)}",
-                "title": str(room.name),
+                "title": str(room.description),
                 "events": [talk.frab_slug for talk in room.talks_current],
                 "events_by_day": events_by_day[room.pk],
                 "start_time": start_time[str(room.name).lower()],
