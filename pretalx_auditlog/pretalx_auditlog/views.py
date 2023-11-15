@@ -5,6 +5,7 @@ from pghistory.models import Events
 
 from django.views.generic.base import TemplateView
 from pretalx.common.mixins.views import EventPermissionRequired, PermissionRequired
+from pretalx.person.models import User
 
 class Changelog(PermissionRequired, TemplateView):
     permission_required = "person.is_administrator"
@@ -12,23 +13,15 @@ class Changelog(PermissionRequired, TemplateView):
 
     def get_context_data(self, **kwargs):
 
-        if "n" in kwargs:
-            n = kwargs[n]
+        if "n" in self.request.GET:
+            n = int(self.request.GET["n"])
         else:
             n = 50
     
-        events = Events.objects.order_by("-pgh_created_at")[:n].values()
-        text = ""
+        events = list(Events.objects.order_by("-pgh_created_at")[:n])
         for ev in events:
-            text += f'model: {ev["pgh_model"]}<br>time:{ev["pgh_created_at"]}<br>label:{ev["pgh_label"]}<br>'
-            if ev["pgh_diff"] is not None:
-                text += f'diff: {ev["pgh_diff"]}<br>'
-            else:
-                text += f'data: {ev["pgh_data"]}<br>'
-            text += f'obj_id: {ev["pgh_obj_id"]}<br>'
-            
-            if "pgh_context" in ev and ev["pgh_context"] is not None:
-                text += f'user: {ev["pgh_context"]["user"]}<br>'
-                text += f'url: {ev["pgh_context"]["url"]}<br>'
-            text += "<hr>"
-        return {"content": text}
+            ev.short_model = str(ev.pgh_model).removesuffix("ProxyEvent").removeprefix("pretalx_auditlog.")
+            if ev.pgh_context is not None:
+                user = User.objects.get(pk=ev.pgh_context['user'])
+                ev.user = user
+        return {"content": text, "events": events}

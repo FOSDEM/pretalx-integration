@@ -2,7 +2,16 @@
 
 {% block cfp_content %}
 <div>
-{{ content | safe }}
+{% for event in events %}
+model: {{ event.short_model }}</br>
+time: {{ event.pgh_created_at.isoformat}}</br>
+diff: {{ event.pgh_diff }}</br>
+data: {{ event.pgh_data }}</br>
+{%if event.pgh_context  %}
+user: {{ event.user }}({{ event.user.pk }})</br>
+url: {{ event.pgh_context.url }}
+{%endif%}
+<hr/>
+{% endfor %}
 </div>
-
 {% endblock %}
