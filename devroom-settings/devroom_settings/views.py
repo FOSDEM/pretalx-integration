@@ -2,7 +2,7 @@ from pretalx.common.mixins.views import EventPermissionRequired, PermissionRequi
 from django.views.generic import TemplateView
 from pretalx.event.models import Event
 from pretalx.submission.models import Track
-from devroom_settings.models import TrackSettings, TrackManager
+from devroom_settings.models import TrackSettings
 
 from django.views.generic import ListView
 from django_scopes import scope, scopes_disabled
