@@ -3,7 +3,7 @@ from pretalx.submission.models import Track
 from django import forms
 
 class TrackSettingsForm(forms.ModelForm):
-    mail=forms.EmailField(disabled=True) # should not be changed
+    #mail=forms.EmailField(disabled=True) # should not be changed, but disabling causes issues
     def __init__(self, *args, track=None, **kwargs):
         self.track = track
         super().__init__(*args, **kwargs)
