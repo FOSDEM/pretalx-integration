@@ -3,13 +3,16 @@
 {% block cfp_content %}
 <div>
 {% for event in events %}
-model: {{ event.short_model }}</br>
-time: {{ event.pgh_created_at.isoformat}}</br>
-diff: {{ event.pgh_diff }}</br>
-data: {{ event.pgh_data }}</br>
+    model: {{ event.short_model }}</br>
+    time: {{ event.pgh_created_at.isoformat}}</br>
+    {% if event.pgh_diff %}
+        diff: {{ event.pgh_diff }}</br>
+    {% else %}
+        data: {{ event.pgh_data }}</br>
+    {% endif %}
 {%if event.pgh_context  %}
-user: {{ event.user }}({{ event.user.pk }})</br>
-url: {{ event.pgh_context.url }}
+    user: {{ event.user }}({{ event.user.pk }})</br>
+    url: {{ event.pgh_context.url }}
 {%endif%}
 <hr/>
 {% endfor %}
