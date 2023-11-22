@@ -199,6 +199,7 @@ class NanocExporter(ScheduleData):
                 "end_time": end_time,
                 "start_time_index": start_time_index,
                 "end_time_index": end_time_index,
+                "online_qa": track.tracksettings.online_qa
             }
         return tracks_dict
 
