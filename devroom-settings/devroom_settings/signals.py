@@ -1,15 +1,13 @@
 from django.dispatch import receiver
-
-from pretalx.cfp.signals import html_below_track, on_save_track
-from pretalx.mail.signals import register_mail_placeholders
-
-from pretalx.orga.signals import nav_event
-from pretalx.mail.placeholders import SimpleFunctionalMailTextPlaceholder
-from .models import TrackSettings
-from .forms import TrackSettingsForm
-
 from django.template.loader import get_template
 from django.urls import resolve, reverse
+from pretalx.cfp.signals import html_below_track, on_save_track
+from pretalx.mail.placeholders import SimpleFunctionalMailTextPlaceholder
+from pretalx.mail.signals import register_mail_placeholders
+from pretalx.orga.signals import nav_event
+
+from .forms import TrackSettingsForm
+from .models import TrackSettings
 
 
 @receiver(html_below_track, dispatch_uid="devroom_settings")

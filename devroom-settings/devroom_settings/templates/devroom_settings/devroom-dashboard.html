@@ -1,0 +1,23 @@
+{% extends "orga/cfp/base.html" %}
+{% load bootstrap4 %}
+{% load i18n %}
+
+{% block cfp_content %}
+<form method="post">
+    {% csrf_token %}
+
+<h2>Devroom dashboard</h2>
+    <div class="alert alert-info">
+        This page allows setting things for your devroom(s)
+    </div>
+    {% for track, form in tracks %}
+        <h3>{{  track.slug }}</h3>
+            {% bootstrap_field form.online_qa layout='event' %}
+        {% bootstrap_field form.cfp_url layout='event' %}
+        <hr />
+    {% endfor %}
+            <button type="submit" class="btn btn-block btn-success font-weight-bold">
+                {% translate "Submit changes" %}
+            </button>
+</form>
+{% endblock %}
