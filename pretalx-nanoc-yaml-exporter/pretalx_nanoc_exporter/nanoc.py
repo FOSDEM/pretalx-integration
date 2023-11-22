@@ -179,9 +179,11 @@ class NanocExporter(ScheduleData):
             try:
                 track_type = track.tracksettings.get_track_type_display()
                 cfp = track.tracksettings.cfp_url
+                online_qa=track.tracksettings.online_qa
             except track.tracksettings.RelatedObjectDoesNotExist:
                 track_type = "devroom"
                 cfp = ""
+                online_qa = False
             tracks_dict[track.tracksettings.slug] = {
                 "conference_track": str(track.name),
                 "name": str(track.name),
@@ -191,6 +193,7 @@ class NanocExporter(ScheduleData):
                 "slug": track.tracksettings.slug,
                 "rank": track.position,
                 "type": track_type,
+                "online_qa": online_qa,
                 "rooms": track_rooms,
                 "events": track_talks,
                 "events_by_day": track_talks_day,
@@ -199,7 +202,6 @@ class NanocExporter(ScheduleData):
                 "end_time": end_time,
                 "start_time_index": start_time_index,
                 "end_time_index": end_time_index,
-                "online_qa": track.tracksettings.online_qa
             }
         return tracks_dict
 
