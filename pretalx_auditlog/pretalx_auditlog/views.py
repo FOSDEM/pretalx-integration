@@ -22,6 +22,10 @@ class Changelog(PermissionRequired, TemplateView):
         for ev in events:
             ev.short_model = str(ev.pgh_model).removesuffix("ProxyEvent").removeprefix("pretalx_auditlog.")
             if ev.pgh_context is not None:
-                user = User.objects.get(pk=ev.pgh_context['user'])
-                ev.user = user
+                try:
+                    user = User.objects.get(pk=ev.pgh_context['user'])
+                    ev.user = user
+                except (User.DoesNotExist, KeyError):
+                    pass
+
         return {"events": events}
