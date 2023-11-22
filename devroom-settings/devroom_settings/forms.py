@@ -9,6 +9,10 @@ class TrackSettingsForm(forms.ModelForm):
         self.track = track
         super().__init__(*args, **kwargs)
 
+    def form_valid(self):
+        self.instance.track=self.track
+        super().form_valid()
+
     class Meta:
         model = TrackSettings
         fields = ("track_type", "slug", "mail", "online_qa", "cfp_url", "manager_team")

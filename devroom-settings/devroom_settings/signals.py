@@ -27,19 +27,15 @@ def render_form_fragment(sender, track, **kwargs):
 @receiver(on_save_track, dispatch_uid="devroom_settings_save")
 def check_and_save(sender, track, request, **kwargs):
     """Checks and saves extra track settings"""
-    f = TrackSettingsForm(request.POST, track=track)
 
-    # There is most certainly a more Django way of doing this
-    # take the value from the form and add the track by hand
-    settings = f.save(commit=False)
-    # check for existing ids
     try:
-        settings.id = track.tracksettings.pk
+        settings = track.tracksettings
     except TrackSettings.DoesNotExist:
-        pass
-    settings.track = track
-    settings.save()
+        settings = TrackSettings(track=track)
 
+    form = TrackSettingsForm(request.POST, track=track, instance=settings)
+    if form.is_valid():
+        form.save()
 
 def track_email(track):
     """Get the track email if defined and return event mail otherwise"""
