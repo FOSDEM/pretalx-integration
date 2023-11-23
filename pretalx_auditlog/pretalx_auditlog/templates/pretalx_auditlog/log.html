@@ -3,7 +3,7 @@
 {% block cfp_content %}
 <div>
 {% for event in events %}
-    model: {{ event.short_model }}</br>
+    model: {{ event.short_model }} (id: {{ event.pgh_obj_id }})</br>
     time: {{ event.pgh_created_at.isoformat}}</br>
     {% if event.pgh_diff %}
         diff: {{ event.pgh_diff }}</br>
