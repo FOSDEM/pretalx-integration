@@ -1,5 +1,4 @@
 import pghistory
-
 from pretalx.event.models import Event, Organiser, Team, TeamInvite
 
 ## common
@@ -16,7 +15,7 @@ from pretalx.event.models import Event, Organiser, Team, TeamInvite
 ## event
 
 
-@pghistory.track(pghistory.Snapshot(), pghistory.BeforeDelete(), exclude='updated')
+@pghistory.track(pghistory.Snapshot(), pghistory.BeforeDelete(), exclude="updated")
 class EventProxy(Event):
     class Meta:
         proxy = True
@@ -34,7 +33,7 @@ class TeamProxy(Team):
         proxy = True
 
 
-@pghistory.track(pghistory.Snapshot(), pghistory.BeforeDelete(), exclude='token')
+@pghistory.track(pghistory.Snapshot(), pghistory.BeforeDelete(), exclude="token")
 class TeamInviteProxy(TeamInvite):
     class Meta:
         proxy = True
@@ -76,7 +75,13 @@ class UserProxy(User):
         proxy = True
 
 
-from pretalx.schedule.models import Room, Schedule, TalkSlot
+from pretalx.schedule.models import Availability, Room, Schedule, TalkSlot
+
+
+@pghistory.track(pghistory.Snapshot(), pghistory.BeforeDelete())
+class AvailabilityProxy(Availability):
+    class Meta:
+        proxy = True
 
 
 @pghistory.track(pghistory.Snapshot(), pghistory.BeforeDelete())
@@ -100,7 +105,9 @@ class TalkSlotProxy(TalkSlot):
 from pretalx.submission.models import Answer, Review, Submission, Track
 
 
-@pghistory.track(pghistory.Snapshot(), pghistory.BeforeDelete(), exclude=["invitation_token"])
+@pghistory.track(
+    pghistory.Snapshot(), pghistory.BeforeDelete(), exclude=["invitation_token"]
+)
 class SubmissionProxy(Submission):
     class Meta:
         proxy = True

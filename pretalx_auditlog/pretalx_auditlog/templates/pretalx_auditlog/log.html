@@ -1,20 +1,36 @@
 {% extends "orga/cfp/base.html" %}
-
+{% load bootstrap4 %}
+{% load compress %}
+{% load i18n %}
+{% load static %}
+{% block scripts %}
+    {% compress js %}
+        <script defer src="{% static "vendored/moment-with-locales.js" %}"></script>
+        <script defer src="{% static "vendored/moment-timezone-with-data-10-year-range.js" %}"></script>
+        <script defer src="{% static "vendored/datetimepicker/bootstrap-datetimepicker.js" %}"></script>
+        <script defer src="{% static "orga/js/datetimepicker.js" %}"></script>
+    {% endcompress %}
+{% endblock %}
 {% block cfp_content %}
-<div>
-{% for event in events %}
-    model: {{ event.short_model }} (id: {{ event.pgh_obj_id }})</br>
-    time: {{ event.pgh_created_at.isoformat}}</br>
-    {% if event.pgh_diff %}
-        diff: {{ event.pgh_diff }}</br>
-    {% else %}
-        data: {{ event.pgh_data }}</br>
-    {% endif %}
-{%if event.pgh_context  %}
-    user: {{ event.user }}({{ event.user.pk }})</br>
-    url: {{ event.pgh_context.url }}
-{%endif%}
-<hr/>
-{% endfor %}
-</div>
+    <h2>Audit log</h2>
+    <div>
+    <div class="submit-group search-submit-group"><form method="get" class="search-form">
+        {% bootstrap_field form.n layout='event' %}
+        {% bootstrap_field form.max_date layout='event' %}
+        <button type="submit" class="btn btn-info btn-search">Submit</button></form></div>
+    {% for event in events %}
+        model: {{ event.short_model }} (id: {{ event.pgh_obj_id }})</br>
+        time: {{ event.pgh_created_at.isoformat}}</br>
+        {% if event.pgh_diff %}
+            diff: {{ event.pgh_diff }}</br>
+        {% else %}
+            data: {{ event.pgh_data }}</br>
+        {% endif %}
+    {%if event.pgh_context  %}
+        user: {{ event.user }} ({{ event.user.pk }})</br>
+        url: {{ event.pgh_context.url }}
+    {%endif%}
+    <hr/>
+    {% endfor %}
+    </div>
 {% endblock %}
