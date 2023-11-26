@@ -13,6 +13,7 @@ maintainers = [
 ]
 
 dependencies = [
+    "python-magic",
 ]
 
 [project.entry-points."pretalx.plugin"]
