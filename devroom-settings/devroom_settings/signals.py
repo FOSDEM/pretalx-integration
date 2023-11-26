@@ -16,6 +16,8 @@ def render_form_fragment(sender, track, **kwargs):
         settings = track.tracksettings
     except TrackSettings.DoesNotExist:
         settings = TrackSettings(track=track)
+    except AttributeError:
+        settings=TrackSettings()
 
     form = TrackSettingsForm(instance=settings)
     template = get_template("devroom_settings/form_fragment.html")
