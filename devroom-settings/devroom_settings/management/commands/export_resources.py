@@ -6,7 +6,7 @@ from django_scopes import scope
 from PIL import Image
 from pretalx.event.models import Event
 
-from pretalx_nanoc_exporter.nanoc import NanocExporter
+from devroom_settings.nanoc import NanocExporter
 
 
 class Command(BaseCommand):

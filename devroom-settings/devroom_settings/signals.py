@@ -5,6 +5,7 @@ from pretalx.cfp.signals import html_below_track, on_save_track
 from pretalx.mail.placeholders import SimpleFunctionalMailTextPlaceholder
 from pretalx.mail.signals import register_mail_placeholders
 from pretalx.orga.signals import nav_event
+from pretalx.common.signals import register_data_exporters
 
 from .forms import TrackSettingsForm
 from .models import TrackSettings
@@ -82,3 +83,9 @@ def navbar_info(sender, request, **kwargs):
             "active": True,
         }
     ]
+
+@receiver(register_data_exporters, dispatch_uid="nanoc_export")
+def register_data_exporter(sender, **kwargs):
+    from .nanoc import NanocExporter
+
+    return NanocExporter
