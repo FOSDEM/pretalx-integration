@@ -15,7 +15,7 @@ class TrackSettingsForm(forms.ModelForm):
 
     class Meta:
         model = TrackSettings
-        fields = ("track_type", "slug", "mail", "online_qa", "cfp_url", "manager_team")
+        fields = ("track_type", "slug", "mail", "online_qa", "cfp_url", "manager_team", "review_team")
 
 
 class DevroomForm(forms.ModelForm):
