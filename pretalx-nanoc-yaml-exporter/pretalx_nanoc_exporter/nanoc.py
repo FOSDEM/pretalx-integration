@@ -1,14 +1,15 @@
 import datetime
 from collections import defaultdict
 from pathlib import Path
+from shutil import copy2
 
+import magic
 import pytz
 import yaml
-from devroom_settings.models import TrackSettings
-from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Prefetch
 from django.template.loader import get_template
 from django.utils.functional import cached_property
+from PIL import Image
 from pretalx.common.exporter import BaseExporter
 from pretalx.common.urls import get_base_url
 from pretalx.schedule.exporters import ScheduleData
@@ -56,6 +57,10 @@ class NanocExporter(ScheduleData):
     public = True  # easier for testing
     icon = "fa-microchip"
     group = "submission"
+
+    def __init__(self, event, schedule=None, dest_dir=None):
+        super().__init__(event, schedule=schedule)
+        self.dest_dir = dest_dir
 
     @cached_property
     def rooms(self):
@@ -143,7 +148,9 @@ class NanocExporter(ScheduleData):
 
     @cached_property
     def tracks(self):
-        tracks = Track.objects.filter(event=self.event).prefetch_related("tracksettings")
+        tracks = Track.objects.filter(event=self.event).prefetch_related(
+            "tracksettings"
+        )
         tracks_dict = {}
         for track in tracks:
             track_talks_day = {day: [] for day in self.days}
@@ -179,7 +186,7 @@ class NanocExporter(ScheduleData):
             try:
                 track_type = track.tracksettings.get_track_type_display()
                 cfp = track.tracksettings.cfp_url
-                online_qa=track.tracksettings.online_qa
+                online_qa = track.tracksettings.online_qa
             except track.tracksettings.RelatedObjectDoesNotExist:
                 track_type = "devroom"
                 cfp = ""
@@ -219,21 +226,35 @@ class NanocExporter(ScheduleData):
                             link__isnull=False
                         )
                     ]
-                    attachments = [
-                        {
+                    attachments = []
+                    for resource in talk.submission.resources.exclude(resource=""):
+                        src = Path(resource.resource.path)
+                        destination = Path(
+                            f"events/attachments/{talk.frab_slug}/slides/{str(talk.pk)}/{src.name}"
+                        )
+
+                        attachment = {
                             "title": resource.description,
-                            "file": "/media-static/" + resource.resource.name,
+                            "file": src.name,
                             "filename": Path(resource.resource.name).name,
-                            "identifier": "/media-static/" + resource.resource.name,
+                            "identifier": "/" + str(destination.with_suffix("")) + "/",
                             "type": "slides",  # TODO - or not -influences link+icon
                             "size": resource.resource.size,
-                            "mime": "image/png",  # TODO: is this actually used? we could use "magic" for this
                             "id": resource.pk,
                             "event_id": talk.pk,
                             "event_slug": talk.frab_slug,
                         }
-                        for resource in talk.submission.resources.exclude(resource="")
-                    ]
+                        attachments.append(attachment)
+                        if self.dest_dir:
+                            (self.dest_dir / destination.parent).mkdir(
+                                parents=True, exist_ok=True
+                            )
+                            copy2(src, self.dest_dir / destination)
+                            with open(
+                                self.dest_dir / destination.with_suffix(".yaml"), "w"
+                            ) as metadatafile:
+                                metadatafile.write(yaml.safe_dump(attachment))
+
                     talks[talk.frab_slug] = {
                         "event_id": talk.pk,
                         "conference_track_id": track.pk,
@@ -308,6 +329,70 @@ class NanocExporter(ScheduleData):
                 for talk in room["talks"]:
                     for speaker in talk.submission.speakers.all():
                         if speaker.code not in speakers_dict:
+                            if self.dest_dir and speaker.avatar:
+                                orig_path = Path(speaker.avatar.path)
+                                # store thumbnail
+
+                                thumb_dest = Path(
+                                    f"export/speaker/thumbnails/{speaker.code}{orig_path.suffix}"
+                                )
+                                if (
+                                    thumb_dest.is_file()
+                                    and thumb_dest.stat().st_mtime
+                                    < orig_path.stat().st_mtime
+                                ):
+                                    pass
+                                else:
+                                    thumb_dest.parent.mkdir(parents=True, exist_ok=True)
+                                    thumb = Image.open(speaker.avatar.path)
+                                    thumb.thumbnail((32, 32))
+                                    thumb.save(thumb_dest)
+                                meta_thumb = {
+                                    "identifier": f"/schedule/speaker/{speaker.code}/thumbnail/",
+                                    "file": str(thumb_dest),
+                                    "filename": orig_path.name,
+                                    "speaker_slug": speaker.code,
+                                    "size": thumb_dest.stat().st_size,
+                                    "title": speaker.name,
+                                    "name": speaker.name,
+                                    "width": thumb.width,
+                                    "height": thumb.height,
+                                    "mime": magic.from_file(thumb_dest, mime=True),
+                                }
+                                thumb_dest.with_suffix(".yaml").write_text(
+                                    yaml.safe_dump(meta_thumb)
+                                )
+
+                                photo_dest = Path(
+                                    f"export/speaker/photos/{speaker.code}{orig_path.suffix}"
+                                )
+                                if (
+                                    photo_dest.is_file()
+                                    and photo_dest.stat().st_mtime
+                                    < orig_path.stat().st_mtime
+                                ):
+                                    pass
+                                else:
+                                    photo_dest.parent.mkdir(exist_ok=True)
+                                    image = Image.open(speaker.avatar.path)
+                                    image.thumbnail((220, 180))
+                                    image.save(photo_dest)
+                                meta_photo = {
+                                    "identifier": f"/schedule/speaker/{speaker.code}/photo/",
+                                    "file": str(photo_dest),
+                                    "filename": orig_path.name,
+                                    "size": photo_dest.stat().st_size,
+                                    "speaker_slug": speaker.code,
+                                    "title": speaker.name,
+                                    "name": speaker.name,
+                                    "width": image.width,
+                                    "height": image.height,
+                                    "mime": magic.from_file(photo_dest, mime=True),
+                                }
+                                photo_dest.with_suffix(".yaml").write_text(
+                                    yaml.safe_dump(meta_photo)
+                                )
+
                             speakers_dict[speaker.code] = {
                                 "person_id": speaker.pk,  # TODO: check if this is actually used
                                 "title": speaker.name,
@@ -325,9 +410,12 @@ class NanocExporter(ScheduleData):
                                 "description": "",  # TODO: do we use this anywhere where abstract is not shown? Pretalx does not have two fields
                                 "conference_person_id": speaker.pk,  # not equal to person_id in penta
                                 "links": [],
-                                "events": [talk.frab_slug],
+                                "events": [talk.frab_slug]
                                 # "events_by_day:": events_by_day
                             }
+                            if self.dest_dir and speaker.avatar:
+                                speakers_dict[speaker.code]["thumbnail"] = meta_thumb
+                                speakers_dict[speaker.code]["photo"] = meta_photo
                         else:
                             speakers_dict[speaker.code]["events"].append(talk.frab_slug)
 
@@ -389,6 +477,7 @@ class NanocExporter(ScheduleData):
             "events": self.talks,
             "speakers": self.speakers,
         }
+        # note safe_dump is not used to allow timestamp handling below
         dumped_yaml = yaml.dump(
             content, default_flow_style=False, allow_unicode=True, sort_keys=False
         )
