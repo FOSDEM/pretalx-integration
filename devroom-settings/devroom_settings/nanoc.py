@@ -423,15 +423,6 @@ class NanocExporter(ScheduleData):
         return speakers_dict
 
     def render(self):
-        context = {
-            "data": self.data,
-            "metadata": self.metadata,
-            "schedule": self.schedule,
-            "event": self.event,
-            "version": "0.0.1",
-            "base_url": get_base_url(self.event),
-            "rooms": self.rooms,
-        }
         conference = {
             "conference_id": self.event.pk,
             "acronym": self.event.slug,
@@ -453,7 +444,7 @@ class NanocExporter(ScheduleData):
             "description_length": "",
             "export_base_url": "https://fosdem.org/2024/schedule",
             "schedule_html_include": "",
-            "schedule_version": self.schedule.version,
+            "schedule_version": self.schedule.version if self.schedule else "0",
             "feedback_base_url": "https://fosdem.org/TODO",
             "css": "",
             "email": "info@fosdem.org",
