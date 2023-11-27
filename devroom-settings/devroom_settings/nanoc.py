@@ -257,6 +257,7 @@ class NanocExporter(ScheduleData):
 
                     talks[talk.frab_slug] = {
                         "event_id": talk.pk,
+                        "guid": str(talk.uuid),
                         "conference_track_id": track.pk,
                         "title": talk.submission.title,
                         "subtitle": "",  # this does not exist in pretalx
@@ -435,7 +436,7 @@ class NanocExporter(ScheduleData):
             "conference_id": self.event.pk,
             "acronym": self.event.slug,
             "title": str(self.event.name),
-            "subtitle": "TODO- nanoc export test",
+            "subtitle": "",
             "conference_phase": "confusion",
             "venue": "ULB (Université Libre de Bruxelles)",
             "city": "Brussels",
@@ -452,6 +453,7 @@ class NanocExporter(ScheduleData):
             "description_length": "",
             "export_base_url": "https://fosdem.org/2024/schedule",
             "schedule_html_include": "",
+            "schedule_version": self.schedule.version,
             "feedback_base_url": "https://fosdem.org/TODO",
             "css": "",
             "email": "info@fosdem.org",
