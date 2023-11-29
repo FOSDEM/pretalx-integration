@@ -16,12 +16,13 @@ def navbar_info_event(sender, request, **kwargs):
             "url": reverse(
                 "plugins:pretalx_auditlog:auditlog",
             ),
-            "active": True,
+            "active": False,
         }
     ]
 
 @receiver(nav_global, dispatch_uid="audit_log")
 def navbar_info(sender, request, **kwargs):
+    url = resolve(request.path_info)
     if not request.user.has_perm("person.is_administrator", None):
         return []
     return [
@@ -31,6 +32,6 @@ def navbar_info(sender, request, **kwargs):
             "url": reverse(
                 "plugins:pretalx_auditlog:auditlog",
             ),
-            "active": True,
+            "active": url.url_name == 'auditlog',
         }
     ]
