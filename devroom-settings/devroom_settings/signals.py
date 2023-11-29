@@ -40,12 +40,12 @@ def check_and_save(sender, track, request, **kwargs):
     if form.is_valid():
         form.save()
 
-def track_email(track):
+def track_email(event, track):
     """Get the track email if defined and return event mail otherwise"""
     try:
         mail = track.tracksettings.mail
-    except TrackSettings.DoesNotExist:
-        mail = track.event.email
+    except:
+        mail = event.email
     return mail
 
 
@@ -57,7 +57,7 @@ def devroom_placeholders(sender, **kwargs):
         SimpleFunctionalMailTextPlaceholder(
             "track_mail",
             ["submission"],
-            lambda submission: track_email(submission.track),
+            lambda submission: track_email(sender, submission.track),
             "toothbrush-devroom-managers@fosdem.org",
             "Email of the track responsible",
         )
@@ -74,13 +74,24 @@ def navbar_info(sender, request, **kwargs):
         {
             "label": "Devrooms",
             "icon": "user-plus",
-            "url": reverse(
-                "plugins:devroom_settings:devroom-report",
-                kwargs={
-                    "event": request.event.slug,
+            "children": [
+                {
+                    "label": "Devroom-dashboard",
+                    "url": reverse("plugins:devroom_settings:devroom-dashboard",
+                                   kwargs={"event": request.event.slug}),
+                    "active": url.namespace == 'plugins:devroom_settings' and url.url_name == 'devroom-dashboard',
                 },
-            ),
-            "active": True,
+                {
+                "label": "Devroom-report",
+                "url": reverse(
+                    "plugins:devroom_settings:devroom-report",
+                    kwargs={
+                        "event": request.event.slug,
+                    },
+                ),
+                "active": url.namespace == 'plugins:devroom_settings' and url.url_name =='devroom-report',
+                }
+            ]
         }
     ]
 
