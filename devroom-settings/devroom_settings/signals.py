@@ -2,10 +2,10 @@ from django.dispatch import receiver
 from django.template.loader import get_template
 from django.urls import resolve, reverse
 from pretalx.cfp.signals import html_below_track, on_save_track
+from pretalx.common.signals import register_data_exporters
 from pretalx.mail.placeholders import SimpleFunctionalMailTextPlaceholder
 from pretalx.mail.signals import register_mail_placeholders
 from pretalx.orga.signals import nav_event
-from pretalx.common.signals import register_data_exporters
 
 from .forms import TrackSettingsForm
 from .models import TrackSettings
@@ -18,7 +18,7 @@ def render_form_fragment(sender, track, **kwargs):
     except TrackSettings.DoesNotExist:
         settings = TrackSettings(track=track)
     except AttributeError:
-        settings=TrackSettings()
+        settings = TrackSettings()
 
     form = TrackSettingsForm(instance=settings)
     template = get_template("devroom_settings/form_fragment.html")
@@ -39,6 +39,7 @@ def check_and_save(sender, track, request, **kwargs):
     form = TrackSettingsForm(request.POST, track=track, instance=settings)
     if form.is_valid():
         form.save()
+
 
 def track_email(event, track):
     """Get the track email if defined and return event mail otherwise"""
@@ -77,23 +78,28 @@ def navbar_info(sender, request, **kwargs):
             "children": [
                 {
                     "label": "Devroom-dashboard",
-                    "url": reverse("plugins:devroom_settings:devroom-dashboard",
-                                   kwargs={"event": request.event.slug}),
-                    "active": url.namespace == 'plugins:devroom_settings' and url.url_name == 'devroom-dashboard',
+                    "url": reverse(
+                        "plugins:devroom_settings:devroom-dashboard",
+                        kwargs={"event": request.event.slug},
+                    ),
+                    "active": url.namespace == "plugins:devroom_settings"
+                    and url.url_name == "devroom-dashboard",
                 },
                 {
-                "label": "Devroom-report",
-                "url": reverse(
-                    "plugins:devroom_settings:devroom-report",
-                    kwargs={
-                        "event": request.event.slug,
-                    },
-                ),
-                "active": url.namespace == 'plugins:devroom_settings' and url.url_name =='devroom-report',
-                }
-            ]
+                    "label": "Devroom-report",
+                    "url": reverse(
+                        "plugins:devroom_settings:devroom-report",
+                        kwargs={
+                            "event": request.event.slug,
+                        },
+                    ),
+                    "active": url.namespace == "plugins:devroom_settings"
+                    and url.url_name == "devroom-report",
+                },
+            ],
         }
     ]
+
 
 @receiver(register_data_exporters, dispatch_uid="nanoc_export")
 def register_data_exporter(sender, **kwargs):
