@@ -4,8 +4,9 @@ from django_scopes import scope, scopes_disabled
 from pretalx.common.mixins.views import EventPermissionRequired, PermissionRequired
 from pretalx.event.models import Event, Team, TeamInvite
 from pretalx.submission.models import Track
+from pretalx.event.forms import TeamInviteForm
 
-from devroom_settings.forms import DevroomForm, TeamInviteForm
+from devroom_settings.forms import DevroomForm
 from devroom_settings.models import TrackSettings
 
 
@@ -51,7 +52,7 @@ class DevroomDashboard(EventPermissionRequired, ListView):
             for track in context["tracks"]
         ]
         invite_forms = [
-            TeamInviteForm(prefix=track.slug, team=track.review_team)
+            TeamInviteForm(prefix=track.slug)
             for track in context["tracks"]
         ]
 
@@ -65,18 +66,17 @@ class DevroomDashboard(EventPermissionRequired, ListView):
             form = DevroomForm(self.request.POST, prefix=track.slug, instance=track)
             if form.is_valid():
                 form.save()
-            else:
-                print("form is invalid!")
+
 
             invite_form = TeamInviteForm(
-                self.request.POST, prefix=track.slug, team=track.review_team
+                self.request.POST, prefix=track.slug
             )
-            print(f"track review team: {track.review_team}")
             if invite_form.is_valid():
-                invite_form.save(commit=False)
-                invite_form.instance.team = track.review_team
-                invite_form.save()
-            else:
-                print("leeg")
-                print(invite_form)
+                invite = TeamInvite.objects.create(
+                    team=track.review_team,
+                    email=invite_form.cleaned_data["email"].lower().strip(),
+                )
+                invite.send()
+
+
         return self.get(request, *args, **kwargs)
