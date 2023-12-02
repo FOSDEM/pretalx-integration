@@ -29,13 +29,13 @@
                 </tr>
             </thead>
             <tbody>
-        {% for user in  rack.manager_team.members.all %}
+        {% for user in  track.manager_team.members.all %}
             <tr>
                 <td>{{ user.name }}</td>
                 <td>{{  user.email }}</td>
             </tr>
         {% endfor %}
-        {% for invite in  rack.manager_team.invites.all %}
+        {% for invite in  track.manager_team.invites.all %}
             <tr>
                 <td><i>pending Invitation</i></td>
                 <td>{{  user.email }}</td>
