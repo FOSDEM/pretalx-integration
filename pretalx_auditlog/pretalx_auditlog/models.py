@@ -113,7 +113,7 @@ class SubmissionProxy(Submission):
         proxy = True
 
 
-@pghistory.track(pghistory.Snapshot(), pghistory.BeforeDelete())
+@pghistory.track(pghistory.Snapshot(), pghistory.BeforeDelete(), exclude=["updated"])
 class ReviewProxy(Review):
     class Meta:
         proxy = True
