@@ -1,8 +1,6 @@
 from django.apps import AppConfig
 from django.utils.translation import gettext_lazy
 
-print("loading pretalx auditlog")
-
 
 class PluginApp(AppConfig):
     name = "pretalx_auditlog"
@@ -16,6 +14,5 @@ class PluginApp(AppConfig):
         version = "0.0.0"
 
     def ready(self):
-        print("loaded pretalx_auditlog")
         from . import models  # NOQA
         from . import signals  # NOQA

@@ -17,6 +17,7 @@
     <div class="submit-group search-submit-group"><form method="get" class="search-form">
         {% bootstrap_field form.n layout='event' %}
         {% bootstrap_field form.max_date layout='event' %}
+        {% bootstrap_field form.model layout='event' %}
         <button type="submit" class="btn btn-info btn-search">Submit</button></form></div>
     {% for event in events %}
         model: {{ event.short_model }} (id: {{ event.pgh_obj_id }})</br>
