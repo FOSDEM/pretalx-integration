@@ -119,7 +119,7 @@ class ReviewProxy(Review):
         proxy = True
 
 
-@pghistory.track(pghistory.Snapshot(), pghistory.BeforeDelete())
+@pghistory.track(pghistory.Snapshot(), pghistory.BeforeDelete(), exclude=["updated"])
 class AnswerProxy(Answer):
     class Meta:
         proxy = True
