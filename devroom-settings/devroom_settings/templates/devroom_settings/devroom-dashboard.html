@@ -8,17 +8,9 @@
 
     {% for track, form, invite_form in track_forms %}
         <h2>{{  track.track.name }}</h2>
-        <div>
-            This section allows setting things for the "{{track.track.name}}" devroom. New option may be added during the conference
-        </div>
-        <h3>Devroom settings</h3>
-        <div>
-            {% bootstrap_field form.online_qa layout='event' %}
-            {% bootstrap_field form.cfp_url layout='event' %}
-        </div>
 
 <h3>Devroom managers</h3>
-        <div>This are the devroom mangers for your track. Note that you can not add devroom managers yourself. Mail to devrooms@fosdem.org for that.</div>
+        <div class="alert alert-info">This are the devroom mangers for your track. Note that you can not add devroom managers yourself. Mail to devrooms@fosdem.org for that.</div>
 
         <table class="table table-sm table-hover table-flip">
             <thead>
@@ -48,8 +40,8 @@
                     <h3>
                 Review team members
             </h3>
-            <div>
-        This section allow setting reviewers for your track. Reviewers can review and vote proposals but have no access to the full admin interface.
+            <div class="alert alert-info">
+        This section allow setting reviewers for your track. Reviewers can review and vote proposals but have no access to the full admin interface. They will also only see submissions for your track (or any other track for which they are reviewer).
     </div>
 
             <form method="post">{% csrf_token %}
@@ -125,6 +117,15 @@
                     </table>
                 </div>
             </form>
+	<br />
+        <h3>Devroom settings</h3>
+        <div class="alert alert-info">
+            This section allows setting things for the "{{track.track.name}}" devroom. New options may be added before the conference
+        </div>
+        <div>
+            {% bootstrap_field form.online_qa layout='event' %}
+            {% bootstrap_field form.cfp_url layout='event' %}
+        </div>
 
         <hr />
     {% endfor %}
