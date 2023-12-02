@@ -10,7 +10,7 @@
         <h2>{{  track.track.name }}</h2>
 
 <h3>Devroom managers</h3>
-        <div class="alert alert-info">This are the devroom mangers for your track. Note that you can not add devroom managers yourself. Mail to devrooms@fosdem.org for that.</div>
+        <p>This are the devroom mangers for your track. Note that you can not add devroom managers yourself. Mail to devrooms@fosdem.org for that.</p>
 
         <table class="table table-sm table-hover table-flip">
             <thead>
@@ -40,9 +40,9 @@
                     <h3>
                 Review team members
             </h3>
-            <div class="alert alert-info">
+            <p>
         This section allow setting reviewers for your track. Reviewers can review and vote proposals but have no access to the full admin interface. They will also only see submissions for your track (or any other track for which they are reviewer).
-    </div>
+    </p>
 
             <form method="post">{% csrf_token %}
                 <div class="table-responsive">
@@ -119,9 +119,9 @@
             </form>
 	<br />
         <h3>Devroom settings</h3>
-        <div class="alert alert-info">
-            This section allows setting things for the "{{track.track.name}}" devroom. New options may be added before the conference
-        </div>
+        <p>
+            This section allows setting options for the "{{track.track.name}}" devroom. New options may be added before the conference
+        </p>
         <div>
             {% bootstrap_field form.online_qa layout='event' %}
             {% bootstrap_field form.cfp_url layout='event' %}
