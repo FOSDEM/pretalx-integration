@@ -198,7 +198,7 @@ class NanocExporter(ScheduleData):
                 "conference_track_id": track.pk,
                 "conference_call_for_papers_url": cfp,
                 "slug": track.tracksettings.slug,
-                "rank": track.position,
+                "rank": track.position if track.position else track.pk,
                 "type": track_type,
                 "online_qa": online_qa,
                 "rooms": track_rooms,
@@ -226,6 +226,9 @@ class NanocExporter(ScheduleData):
                             link__isnull=False
                         )
                     ]
+                    if bool(talk.submission.image):
+                        print(talk.submission.image.file.name)
+
                     attachments = []
                     for resource in talk.submission.resources.exclude(resource=""):
                         src = Path(resource.resource.path)
