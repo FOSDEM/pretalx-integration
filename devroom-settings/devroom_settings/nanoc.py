@@ -350,7 +350,7 @@ class NanocExporter(ScheduleData):
                                     thumb_dest.parent.mkdir(parents=True, exist_ok=True)
                                     thumb = Image.open(speaker.avatar.path)
                                     thumb.thumbnail((32, 32))
-                                    thumb.save(thumb_dest)
+                                    thumb.save(thumb_dest, format=thumb.format)
                                 meta_thumb = {
                                     "identifier": f"/schedule/speaker/{speaker.code}/thumbnail/",
                                     "file": str(thumb_dest),
@@ -380,7 +380,7 @@ class NanocExporter(ScheduleData):
                                     photo_dest.parent.mkdir(exist_ok=True)
                                     image = Image.open(speaker.avatar.path)
                                     image.thumbnail((220, 180))
-                                    image.save(photo_dest)
+                                    image.save(photo_dest, format=thumb.format)
                                 meta_photo = {
                                     "identifier": f"/schedule/speaker/{speaker.code}/photo/",
                                     "file": str(photo_dest),
