@@ -337,9 +337,13 @@ class NanocExporter(ScheduleData):
                                 orig_path = Path(speaker.avatar.path)
                                 # store thumbnail
 
-                                thumb_dest = Path(
-                                    f"export/speaker/thumbnails/{speaker.code}{orig_path.suffix}"
+                                thumb_dest = (
+                                    self.dest_dir
+                                    / "speaker"
+                                    / "thumbnails"
+                                    / f"{speaker.code}{orig_path.suffix}"
                                 )
+
                                 if (
                                     thumb_dest.is_file()
                                     and thumb_dest.stat().st_mtime
@@ -367,9 +371,11 @@ class NanocExporter(ScheduleData):
                                     yaml.safe_dump(meta_thumb)
                                 )
 
-                                photo_dest = Path(
-                                    f"export/speaker/photos/{speaker.code}{orig_path.suffix}"
+                                photo_dest = (
+                                    self.dest_dir
+                                    / f"speaker/photos/{speaker.code}{orig_path.suffix}"
                                 )
+
                                 if (
                                     photo_dest.is_file()
                                     and photo_dest.stat().st_mtime
