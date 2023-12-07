@@ -25,12 +25,10 @@ class Command(BaseCommand):
             if event.wip_schedule.changes["count"] > 0:
                 # Set the timezone to Europe/Brussels
                 brussels_timezone = pytz.timezone('Europe/Brussels')
-
                 # Get the current time in Brussels timezone
                 current_time = datetime.now(brussels_timezone)
-
                 # Format the current time to ISO 8601 with minute precision
-                current_time = current_time.strftime('%Y-%m-%d %H:%M%z')
-                event.wip_schedule.freeze(name=current_time)
+                current_time = current_time.strftime('%Y-%m-%d %H:%M')
+                event.wip_schedule.freeze(name=current_time, notify_speakers=True)
             else:
                 print("no changes - no release")
