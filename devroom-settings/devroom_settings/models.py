@@ -8,10 +8,12 @@ from pretalx.submission.models import Track
 
 class TrackSettings(models.Model):
     class TrackType(models.TextChoices):
-        MAIN_TRACK = "MT", "main_track"
-        LIGHTNING_TALK = "LT", "lightning_talk"
+        MAIN_TRACK = "MT", "maintrack"
+        LIGHTNING_TALK = "LT", "lightningtalk"
         DEVROOM = "D", "devroom"
         BOF_ROOM = "B", "bof"
+        CERTIFICATION = "C", "certification"
+        OTHER = "O", "other"
 
     track = models.OneToOneField(to=Track, on_delete=models.CASCADE)
     track_type = models.CharField(choices=TrackType.choices)
@@ -40,4 +42,24 @@ class TrackSettings(models.Model):
     )
     rooms = models.ManyToManyField(
         Room, help_text="Allowed rooms for track (not yet enforced)", blank=True
+    )
+
+
+class RoomSettings(models.Model):
+    room = models.OneToOneField(to=Room, on_delete=models.CASCADE)
+    visible = models.BooleanField(
+        "Room Visible",
+        help_text="Should content of this room be exported to the website",
+        default=True,
+    )
+
+
+class UserSettings(models.Model):
+    user = models.OneToOneField(to=User, on_delete=models.CASCADE)
+    visible = models.TextField(
+        "Matrix ID",
+        help_text="If you have a matrix account (mxid), you can specify it here. "
+                  "If you are given a role in the event, we use this to invite you "
+                  "to the correct rooms on chat.fosdem.org. "
+                  "The format is @username:homeserver.tld"
     )
