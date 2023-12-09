@@ -14,4 +14,9 @@ urlpatterns = [
         views.DevroomDashboard.as_view(),
         name="devroom-dashboard",
     ),
+    re_path(
+        rf"^p/api/matrix_id$",
+        views.DevroomDashboard.as_view(),
+        name="devroom-dashboard",
+    ),
 ]
