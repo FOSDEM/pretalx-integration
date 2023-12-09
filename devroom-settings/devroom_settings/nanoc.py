@@ -266,7 +266,7 @@ class NanocExporter(ScheduleData):
                         "subtitle": "",  # this does not exist in pretalx
                         "slug": talk.frab_slug,
                         "subtitle": "",
-                        "abstract": talk.submission.abstract if talk.submision.abstract else "",
+                        "abstract": talk.submission.abstract if talk.submission.abstract else "",
                         "description": str(talk.submission.description),
                         "start_time": talk.start.astimezone(tz).time(),
                         "end_time": talk.end.astimezone(tz).time(),
@@ -403,7 +403,7 @@ class NanocExporter(ScheduleData):
                                     yaml.safe_dump(meta_photo)
                                 )
 
-                            biography = peaker.profiles.get(
+                            biography = speaker.profiles.get(
                                     event=self.event
                                 ).biography
                             speakers_dict[speaker.code] = {
