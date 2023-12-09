@@ -6,7 +6,8 @@ from shutil import copy2
 import magic
 import pytz
 import yaml
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Q
+
 from django.template.loader import get_template
 from django.utils.functional import cached_property
 from PIL import Image
@@ -84,11 +85,12 @@ class NanocExporter(ScheduleData):
 
         """
         schedule = self.schedule
-        rooms = Room.objects.prefetch_related(
+        visible = Q(roomsettings__visible=True)|Q(roomsettings=None)
+        rooms = Room.objects.filter(visible).prefetch_related(
             Prefetch(
                 "talks",
                 queryset=TalkSlot.objects.filter(
-                    schedule=schedule, is_visible=True
+                    schedule=schedule, is_visible=True, submission__isnull=False
                 ).select_related("submission"),
                 to_attr="talks_current",
             )
