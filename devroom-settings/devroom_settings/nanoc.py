@@ -266,7 +266,7 @@ class NanocExporter(ScheduleData):
                         "subtitle": "",  # this does not exist in pretalx
                         "slug": talk.frab_slug,
                         "subtitle": "",
-                        "abstract": talk.submission.abstract if talk.submision.abstract else "",
+                        "abstract": talk.submission.abstract,
                         "description": str(talk.submission.description),
                         "start_time": talk.start.astimezone(tz).time(),
                         "end_time": talk.end.astimezone(tz).time(),
@@ -403,9 +403,6 @@ class NanocExporter(ScheduleData):
                                     yaml.safe_dump(meta_photo)
                                 )
 
-                            biography = peaker.profiles.get(
-                                    event=self.event
-                                ).biography
                             speakers_dict[speaker.code] = {
                                 "person_id": speaker.pk,  # TODO: check if this is actually used
                                 "title": speaker.name,
@@ -417,7 +414,9 @@ class NanocExporter(ScheduleData):
                                 "slug": speaker.code,
                                 "gender": "",  # check whether we need/want this
                                 "sortname": speaker.name.upper(),
-                                "abstract": biography if biography else "",
+                                "abstract": speaker.profiles.get(
+                                    event=self.event
+                                ).biography,
                                 "description": "",  # TODO: do we use this anywhere where abstract is not shown? Pretalx does not have two fields
                                 "conference_person_id": speaker.pk,  # not equal to person_id in penta
                                 "links": [],

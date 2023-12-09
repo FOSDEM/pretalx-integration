@@ -1,5 +1,4 @@
 from django.views.generic import FormView, ListView, TemplateView
-from django.http import JsonResponse
 from django.views.generic.edit import FormMixin
 from django_scopes import scope, scopes_disabled
 from pretalx.common.mixins.views import EventPermissionRequired, PermissionRequired
@@ -53,7 +52,8 @@ class DevroomDashboard(EventPermissionRequired, ListView):
             for track in context["tracks"]
         ]
         invite_forms = [
-            TeamInviteForm(prefix=track.slug) for track in context["tracks"]
+            TeamInviteForm(prefix=track.slug)
+            for track in context["tracks"]
         ]
 
         context["track_forms"] = zip(context["tracks"], forms, invite_forms)
@@ -67,7 +67,10 @@ class DevroomDashboard(EventPermissionRequired, ListView):
             if form.is_valid():
                 form.save()
 
-            invite_form = TeamInviteForm(self.request.POST, prefix=track.slug)
+
+            invite_form = TeamInviteForm(
+                self.request.POST, prefix=track.slug
+            )
             if invite_form.is_valid():
                 invite = TeamInvite.objects.create(
                     team=track.review_team,
@@ -75,11 +78,5 @@ class DevroomDashboard(EventPermissionRequired, ListView):
                 )
                 invite.send()
 
+
         return self.get(request, *args, **kwargs)
-
-
-class MatrixIdList(EventPermissionRequired):
-    permission_required = "orga.change_submissions"
-
-    def get(self, request, *args, **kwargs):
-        return JsonResponse(data, safe=True)
