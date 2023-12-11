@@ -158,7 +158,7 @@ class NanocExporter(ScheduleData):
             track_talks_day = {day: [] for day in self.days}
 
             talk_slots = TalkSlot.objects.filter(
-                submission__track=track, schedule=self.schedule, is_visible=True
+                submission__track=track, schedule=self.schedule, is_visible=True, room__isnull=False
             )
             start_time = {}
             end_time = {}
