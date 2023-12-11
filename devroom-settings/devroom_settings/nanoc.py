@@ -300,7 +300,7 @@ class NanocExporter(ScheduleData):
                         "subtitle": "",  # this does not exist in pretalx
                         "slug": talk.frab_slug,
                         "abstract": talk.submission.abstract if talk.submission.abstract else "",
-                        "description": str(talk.submission.description),
+                        "description": "", # no longer used
                         "start_time": talk.start.astimezone(tz).time(),
                         "end_time": talk.end.astimezone(tz).time(),
                         "start_datetime": talk.start,
