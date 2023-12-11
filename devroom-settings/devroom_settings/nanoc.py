@@ -228,8 +228,40 @@ class NanocExporter(ScheduleData):
                             link__isnull=False
                         )
                     ]
-                    if bool(talk.submission.image):
-                        print(talk.submission.image.file.name)
+                    if self.dest_dir and talk.submission.image:
+                        orig_path = Path(talk.submission.image.path)
+                        (self.dest_dir / f"events/logo/").mkdir(parents=True, exist_ok=True)
+                        image_dest = (
+                                self.dest_dir
+                                / f"events/logo/{talk.frab_slug}{orig_path.suffix}"
+                        )
+
+                        if (
+                                image_dest.is_file()
+                                and image_dest.stat().st_mtime
+                                < orig_path.stat().st_mtime
+                        ):
+                            pass
+                        else:
+                            image_dest.parent.mkdir(exist_ok=True)
+                            image = Image.open(talk.submission.image.path)
+                            image.thumbnail((200, 200))
+                            image.save(image_dest, format=image.format)
+                        meta_logo = {
+                            "identifier": f"/schedule/event/{talk.frab_slug}/logo/",
+                            "file": str(image_dest),
+                            "filename": image_dest.name,
+                            "size": image_dest.stat().st_size,
+                            "width": image.width,
+                            "height": image.height,
+                            "mime": magic.from_file(image_dest, mime=True),
+                            "event_id": talk.pk,
+                            "event_slug": talk.frab_slug,
+                        }
+                        image_dest.with_suffix(".yaml").write_text(
+                            yaml.safe_dump(meta_logo)
+                        )
+
 
                     attachments = []
                     for resource in talk.submission.resources.exclude(resource=""):
@@ -267,7 +299,6 @@ class NanocExporter(ScheduleData):
                         "title": talk.submission.title,
                         "subtitle": "",  # this does not exist in pretalx
                         "slug": talk.frab_slug,
-                        "subtitle": "",
                         "abstract": talk.submission.abstract if talk.submission.abstract else "",
                         "description": str(talk.submission.description),
                         "start_time": talk.start.astimezone(tz).time(),
@@ -294,8 +325,9 @@ class NanocExporter(ScheduleData):
                         "language": "en",
                         "attachments": attachments,
                         "links": links
-                        # logo TODO
                     }
+                    if self.dest_dir and talk.submission.image:
+                        talks[talk.frab_slug]["logo"] = meta_logo
         return talks
 
     @cached_property
