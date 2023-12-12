@@ -29,6 +29,6 @@ class Command(BaseCommand):
                 current_time = datetime.now(brussels_timezone)
                 # Format the current time to ISO 8601 with minute precision
                 current_time = current_time.strftime('%Y-%m-%d %H:%M')
-                event.wip_schedule.freeze(name=current_time, notify_speakers=True)
+                event.wip_schedule.freeze(name=current_time, notify_speakers=False)
             else:
                 print("no changes - no release")
