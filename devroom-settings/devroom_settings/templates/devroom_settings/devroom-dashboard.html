@@ -36,7 +36,7 @@
         {% for invite in  track.manager_team.invites.all %}
             <tr>
                 <td><i>pending Invitation</i></td>
-                <td>{{  user.email }}</td>
+                <td>{{  invite.email }}</td>
             </tr>
         {% endfor %}
                         </tbody>
