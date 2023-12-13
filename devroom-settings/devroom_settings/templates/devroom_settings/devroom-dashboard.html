@@ -6,7 +6,7 @@
 <form method="post">
     {% csrf_token %}
 
-    {% for track, form, invite_form in track_forms %}
+    {% for track, form, invite_form, devroom_form, access_codes in track_forms %}
         <h2>{{  track.track.name }}</h2>
 
 <h3>Devroom managers</h3>
@@ -122,10 +122,26 @@
         <p>
             This section allows setting options for the "{{track.track.name}}" devroom. New options may be added before the conference
         </p>
-        <div>
-            {% bootstrap_field form.online_qa layout='event' %}
+
+        <h4>Before the event</h4>
+        <p>Set the Call for papers URL which is used in the FOSDEM website.</p>
             {% bootstrap_field form.cfp_url layout='event' %}
-        </div>
+        <h4>Submission</h4>
+            <p>You can close submissions by requiring an access code. </p>
+            {% bootstrap_field devroom_form.requires_access_code layout='event' %}
+            <p> Access code(s) for your track:</p>
+                <ul>{% for ac in access_codes %}
+                    <li>
+                    <div data-destination="https://pretalx.fosdem.org/fosdem-2024/cfp?access_code={{ ac }}" title="Copy access code link" class="btn btn-sm btn-info copyable-text">
+                                    <i class="fa fa-link"></i>&nbsp;https://pretalx.fosdem.org/fosdem-2024/cfp?access_code={{ ac }}
+                                </div>
+                    </li>{% endfor %}
+                </ul>
+
+        <h4>During the event</h4>
+        <p>A Matrix chat will optionally be provided to each devroom. This will allow online participants to ask questions.
+            We will only provide this chat if it is actively monitored. In that case devroom managers and speakers will get moderation rights</p>
+            {% bootstrap_field form.online_qa layout='event' %}
 
         <hr />
     {% endfor %}

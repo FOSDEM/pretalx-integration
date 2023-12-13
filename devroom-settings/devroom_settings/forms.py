@@ -1,7 +1,7 @@
 from django import forms
 from pretalx.common.mixins.forms import I18nHelpText, ReadOnlyFlag
 from pretalx.event.models import TeamInvite
-
+from pretalx.submission.models import Track
 from .models import TrackSettings
 
 
@@ -28,10 +28,19 @@ class TrackSettingsForm(forms.ModelForm):
         )
 
 
-class DevroomForm(forms.ModelForm):
+class DevroomTrackSettingsForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     class Meta:
         model = TrackSettings
         fields = ("online_qa", "cfp_url")
+
+
+class DevroomTrackForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    class Meta:
+        model = Track
+        fields = ("requires_access_code",)
