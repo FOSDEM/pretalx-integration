@@ -319,7 +319,7 @@ class NanocExporter(ScheduleData):
                         "track_full_name": str(track.name),
                         "type": track.tracksettings.get_track_type_display(),
                         "room": str(talk.room.name).lower(),
-                        "room_name": str(talk.room.name),
+                        "room_name": str(talk.room.description),
                         "room_rank": talk.room.position,
                         "conference_room_id": talk.room.pk,
                         "language": "en",
@@ -481,7 +481,7 @@ class NanocExporter(ScheduleData):
             "timeslot_duration": datetime.timedelta(hours=0, minutes=5),
             "default_timeslots": 10,
             "max_timeslot_duration": 25,
-            "day_change": datetime.time(0, 0),  # TODO: might need time encoding
+            "day_change": '00:00:00',
             "remark": "",
             "homepage": "https://fosdem.org/",
             "abstract_length": "",
