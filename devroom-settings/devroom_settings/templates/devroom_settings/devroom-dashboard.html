@@ -3,8 +3,7 @@
 {% load i18n %}
 
 {% block cfp_content %}
-<form method="post">
-    {% csrf_token %}
+
 
     {% for track, form, invite_form, devroom_form, access_codes in track_forms %}
         <h2>{{  track.track.name }}</h2>
@@ -43,8 +42,6 @@
             <p>
         This section allow setting reviewers for your track. Reviewers can review and vote proposals but have no access to the full admin interface. They will also only see submissions for your track (or any other track for which they are reviewer).
     </p>
-
-            <form method="post">{% csrf_token %}
                 <div class="table-responsive">
                     <table class="table table-sm table-hover table-flip">
                         <thead>
@@ -116,8 +113,9 @@
                         </tbody>
                     </table>
                 </div>
-            </form>
 	<br />
+        <form method="post">
+    {% csrf_token %}
         <h3>Devroom settings</h3>
         <p>
             This section allows setting options for the "{{track.track.name}}" devroom. New options may be added before the conference
@@ -143,10 +141,11 @@
             We will only provide this chat if it is actively monitored. In that case devroom managers and speakers will get moderation rights</p>
             {% bootstrap_field form.online_qa layout='event' %}
 
-        <hr />
-    {% endfor %}
-            <button type="submit" class="btn btn-block btn-success font-weight-bold">
+                    <button type="submit" class="btn btn-block btn-success font-weight-bold">
                 {% translate "Submit changes" %}
             </button>
 </form>
+        <hr />
+    {% endfor %}
+
 {% endblock %}

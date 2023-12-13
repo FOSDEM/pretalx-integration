@@ -52,7 +52,7 @@ class DevroomDashboard(EventPermissionRequired, ListView):
             for track in context["trackssettings"]
         ]
         devroom_forms = [
-            DevroomTrackForm(prefix=track.slug, instance=track.track)
+            DevroomTrackForm(prefix=f"ds_{track.slug}", instance=track.track)
             for track in context["trackssettings"]
         ]
         invite_forms = [
@@ -77,6 +77,12 @@ class DevroomDashboard(EventPermissionRequired, ListView):
         for track in tracksettings:
             form = DevroomTrackSettingsForm(
                 self.request.POST, prefix=track.slug, instance=track
+            )
+            if form.is_valid():
+                form.save()
+
+            form = DevroomTrackForm(
+                self.request.POST, prefix=f"ds_{track.slug}", instance=track.track
             )
             if form.is_valid():
                 form.save()
