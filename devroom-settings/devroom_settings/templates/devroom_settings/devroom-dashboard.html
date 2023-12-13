@@ -1,6 +1,13 @@
 {% extends "orga/cfp/base.html" %}
 {% load bootstrap4 %}
+{% load copyable %}
 {% load i18n %}
+{% load static %}
+
+
+{% block scripts %}
+    <script defer src="{% static "common/js/copy.js" %}"></script>
+{% endblock %}
 
 {% block cfp_content %}
 
