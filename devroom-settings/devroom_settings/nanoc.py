@@ -1,6 +1,7 @@
 import datetime
 from collections import defaultdict
 from pathlib import Path
+import os
 from shutil import copy2
 
 import magic
@@ -247,6 +248,7 @@ class NanocExporter(ScheduleData):
                             image = Image.open(talk.submission.image.path)
                             image.thumbnail((200, 200))
                             image.save(image_dest, format=image.format)
+                            os.chmod(image_dest, 0o664)
                         meta_logo = {
                             "identifier": f"/schedule/event/{talk.frab_slug}/logo/",
                             "file": str(image_dest),
@@ -287,6 +289,7 @@ class NanocExporter(ScheduleData):
                                 parents=True, exist_ok=True
                             )
                             copy2(src, self.dest_dir / destination)
+                            os.chmod(self.dest_dir / destination, 0o664)
                             with open(
                                 self.dest_dir / destination.with_suffix(".yaml"), "w"
                             ) as metadatafile:
