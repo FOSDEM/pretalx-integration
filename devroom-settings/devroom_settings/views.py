@@ -42,7 +42,7 @@ class DevroomDashboard(EventPermissionRequired, ListView):
             .prefetch_related("review_team__members")
             .prefetch_related("manager_team")
             .prefetch_related("manager_team__members")
-        )
+        ).order_by("track__position")
         return tracksettings
 
     def get_context_data(self, **kwargs):
