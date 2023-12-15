@@ -17,6 +17,7 @@ from pretalx.common.urls import get_base_url
 from pretalx.schedule.exporters import ScheduleData
 from pretalx.schedule.models import Room, TalkSlot
 from pretalx.submission.models import Submission, Track
+from pretalx.person.models import SpeakerProfile
 
 tz = pytz.timezone("Europe/Brussels")
 
@@ -86,7 +87,7 @@ class NanocExporter(ScheduleData):
 
         """
         schedule = self.schedule
-        visible = Q(roomsettings__visible=True)|Q(roomsettings=None)
+        visible = Q(roomsettings__visible=True) | Q(roomsettings=None)
         rooms = Room.objects.filter(visible).prefetch_related(
             Prefetch(
                 "talks",
@@ -159,7 +160,10 @@ class NanocExporter(ScheduleData):
             track_talks_day = {day: [] for day in self.days}
 
             talk_slots = TalkSlot.objects.filter(
-                submission__track=track, schedule=self.schedule, is_visible=True, room__isnull=False
+                submission__track=track,
+                schedule=self.schedule,
+                is_visible=True,
+                room__isnull=False,
             )
             start_time = {}
             end_time = {}
@@ -231,16 +235,17 @@ class NanocExporter(ScheduleData):
                     ]
                     if self.dest_dir and talk.submission.image:
                         orig_path = Path(talk.submission.image.path)
-                        (self.dest_dir / f"events/logo/").mkdir(parents=True, exist_ok=True)
+                        (self.dest_dir / f"events/logo/").mkdir(
+                            parents=True, exist_ok=True
+                        )
                         image_dest = (
-                                self.dest_dir
-                                / f"events/logo/{talk.frab_slug}{orig_path.suffix}"
+                            self.dest_dir
+                            / f"events/logo/{talk.frab_slug}{orig_path.suffix}"
                         )
 
                         if (
-                                image_dest.is_file()
-                                and image_dest.stat().st_mtime
-                                < orig_path.stat().st_mtime
+                            image_dest.is_file()
+                            and image_dest.stat().st_mtime < orig_path.stat().st_mtime
                         ):
                             pass
                         else:
@@ -263,7 +268,6 @@ class NanocExporter(ScheduleData):
                         image_dest.with_suffix(".yaml").write_text(
                             yaml.safe_dump(meta_logo)
                         )
-
 
                     attachments = []
                     for resource in talk.submission.resources.exclude(resource=""):
@@ -302,8 +306,10 @@ class NanocExporter(ScheduleData):
                         "title": talk.submission.title,
                         "subtitle": "",  # this does not exist in pretalx
                         "slug": talk.frab_slug,
-                        "abstract": talk.submission.abstract if talk.submission.abstract else "",
-                        "description": "", # no longer used
+                        "abstract": talk.submission.abstract
+                        if talk.submission.abstract
+                        else "",
+                        "description": "",  # no longer used
                         "start_time": talk.start.astimezone(tz).time(),
                         "end_time": talk.end.astimezone(tz).time(),
                         "start_datetime": talk.start,
@@ -327,7 +333,7 @@ class NanocExporter(ScheduleData):
                         "conference_room_id": talk.room.pk,
                         "language": "en",
                         "attachments": attachments,
-                        "links": links
+                        "links": links,
                     }
                     if self.dest_dir and talk.submission.image:
                         talks[talk.frab_slug]["logo"] = meta_logo
@@ -439,10 +445,12 @@ class NanocExporter(ScheduleData):
                                 photo_dest.with_suffix(".yaml").write_text(
                                     yaml.safe_dump(meta_photo)
                                 )
-
-                            biography = speaker.profiles.get(
+                            try:
+                                biography = speaker.profiles.get(
                                     event=self.event
                                 ).biography
+                            except SpeakerProfile.DoesNotExist:
+                                biography = None
                             speakers_dict[speaker.code] = {
                                 "person_id": speaker.pk,  # TODO: check if this is actually used
                                 "title": speaker.name,
@@ -455,7 +463,7 @@ class NanocExporter(ScheduleData):
                                 "gender": "",  # check whether we need/want this
                                 "sortname": speaker.name.upper(),
                                 "abstract": biography if biography else "",
-                                "description": "",  # TODO: do we use this anywhere where abstract is not shown? Pretalx does not have two fields
+                                "description": "",  # Lets not make things more confusing
                                 "conference_person_id": speaker.pk,  # not equal to person_id in penta
                                 "links": [],
                                 "events": [talk.frab_slug]
@@ -484,7 +492,7 @@ class NanocExporter(ScheduleData):
             "timeslot_duration": datetime.timedelta(hours=0, minutes=5),
             "default_timeslots": 10,
             "max_timeslot_duration": 25,
-            "day_change": '00:00:00',
+            "day_change": "00:00:00",
             "remark": "",
             "homepage": "https://fosdem.org/",
             "abstract_length": "",
