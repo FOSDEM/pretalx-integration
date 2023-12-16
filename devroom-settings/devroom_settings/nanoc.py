@@ -7,6 +7,8 @@ from shutil import copy2
 import magic
 import pytz
 import yaml
+
+import markdown
 from django.db.models import Prefetch, Q
 
 from django.template.loader import get_template
@@ -306,7 +308,7 @@ class NanocExporter(ScheduleData):
                         "title": talk.submission.title,
                         "subtitle": "",  # this does not exist in pretalx
                         "slug": talk.frab_slug,
-                        "abstract": talk.submission.abstract
+                        "abstract": markdown.markdown(talk.submission.abstract)
                         if talk.submission.abstract
                         else "",
                         "description": "",  # no longer used
@@ -462,7 +464,7 @@ class NanocExporter(ScheduleData):
                                 "slug": speaker.code,
                                 "gender": "",  # check whether we need/want this
                                 "sortname": speaker.name.upper(),
-                                "abstract": biography if biography else "",
+                                "abstract": markdown.markdown(biography) if biography else "",
                                 "description": "",  # Lets not make things more confusing
                                 "conference_person_id": speaker.pk,  # not equal to person_id in penta
                                 "links": [],
