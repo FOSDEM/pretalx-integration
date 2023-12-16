@@ -11,6 +11,8 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("event", help="Event slug")
+        parser.add_argument('-W', '--ignore_warnings', action='store_true', help='Ignore warnings and release anyway')
+    
 
     def handle(self, *args, **kwargs):
         event_slug = kwargs["event"]
@@ -20,7 +22,10 @@ class Command(BaseCommand):
             if bool(warnings["talk_warnings"]):
                 print("there are talk warnings")
                 print(warnings["talk_warnings"])
-                sys.exit(1)
+                if not kwargs["ignore_warnings"]:
+                    sys.exit(1)
+                else:
+                    print("Ignoring warnings and releasing anyway")
 
             if event.wip_schedule.changes["count"] > 0:
                 # Set the timezone to Europe/Brussels
