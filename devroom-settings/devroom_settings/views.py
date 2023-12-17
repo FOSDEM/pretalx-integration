@@ -56,7 +56,7 @@ class DevroomDashboard(EventPermissionRequired, ListView):
             for track in context["trackssettings"]
         ]
         invite_forms = [
-            TeamInviteForm(prefix=track.slug) for track in context["trackssettings"]
+            TeamInviteForm(prefix=f"invite_{track.slug}") for track in context["trackssettings"]
         ]
 
         access_codes = [
@@ -78,16 +78,16 @@ class DevroomDashboard(EventPermissionRequired, ListView):
             form = DevroomTrackSettingsForm(
                 self.request.POST, prefix=track.slug, instance=track
             )
-            if form.is_valid():
+            if form.is_valid() and form.has_changed():
                 form.save()
 
             form = DevroomTrackForm(
                 self.request.POST, prefix=f"ds_{track.slug}", instance=track.track
             )
-            if form.is_valid():
+            if form.is_valid() and form.has_changed():
                 form.save()
 
-            invite_form = TeamInviteForm(self.request.POST, prefix=track.slug)
+            invite_form = TeamInviteForm(self.request.POST, prefix=f"invite_{track.slug}")
             if invite_form.is_valid():
                 invite = TeamInvite.objects.create(
                     team=track.review_team,
