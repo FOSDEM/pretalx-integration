@@ -49,6 +49,8 @@
             <p>
         This section allow setting reviewers for your track. Reviewers can review and vote proposals but have no access to the full admin interface. They will also only see submissions for your track (or any other track for which they are reviewer).
     </p>
+                <form method="post">
+    {% csrf_token %}
                 <div class="table-responsive">
                     <table class="table table-sm table-hover table-flip">
                         <thead>
@@ -120,6 +122,7 @@
                         </tbody>
                     </table>
                 </div>
+        </form>
 	<br />
         <form method="post">
     {% csrf_token %}
