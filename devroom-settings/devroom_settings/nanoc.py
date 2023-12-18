@@ -353,8 +353,8 @@ class NanocExporter(ScheduleData):
             # start_time = day["start"].astimezone(tz).time()
             # end_time = (day["start"].astimezone(tz) + datetime.timedelta(hours=10)).time()
 
-            start_time = datetime.time(hour=9)
-            end_time = datetime.time(hour=17)
+            start_time = datetime.time(hour=9, minutes=30) if day_slug == "saturday" else datetime.time(hour=9)
+            end_time = datetime.time(hour=19) if day_slug == "saturday" else datetime.time(hour=18, minute=15)
             days[day_slug] = {
                 "conference_day_id": day["start"].weekday(),
                 "name": day["start"].strftime("%A"),
