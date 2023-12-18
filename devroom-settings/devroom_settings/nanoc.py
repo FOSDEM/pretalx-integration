@@ -378,7 +378,7 @@ class NanocExporter(ScheduleData):
                 for talk in room["talks"]:
                     for speaker in talk.submission.speakers.all():
                         if speaker.code not in speakers_dict:
-                            if self.dest_dir and speaker.avatar:
+                            if self.dest_dir and speaker.avatar and not str(speaker.avatar.path).endswith('.svg'):
                                 orig_path = Path(speaker.avatar.path)
                                 # store thumbnail
 
