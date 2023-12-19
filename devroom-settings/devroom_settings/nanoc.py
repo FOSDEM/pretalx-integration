@@ -247,7 +247,7 @@ class NanocExporter(ScheduleData):
 
                         if (
                             image_dest.is_file()
-                            and image_dest.stat().st_mtime < orig_path.stat().st_mtime
+                            and image_dest.stat().st_mtime > orig_path.stat().st_mtime
                         ):
                             pass
                         else:
@@ -391,7 +391,7 @@ class NanocExporter(ScheduleData):
                                 if (
                                     thumb_dest.is_file()
                                     and thumb_dest.stat().st_mtime
-                                    < orig_path.stat().st_mtime
+                                    > orig_path.stat().st_mtime
                                 ):
                                     pass
                                 else:
@@ -423,7 +423,7 @@ class NanocExporter(ScheduleData):
                                 if (
                                     photo_dest.is_file()
                                     and photo_dest.stat().st_mtime
-                                    < orig_path.stat().st_mtime
+                                    > orig_path.stat().st_mtime
                                 ):
                                     pass
                                 else:
