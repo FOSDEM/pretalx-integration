@@ -184,11 +184,11 @@ class NanocExporter(ScheduleData):
                 events_per_room_per_day[day][room].append(slot.frab_slug)
 
                 if day in start_time:
-                    start_time[day] = min(slot.start.time(), start_time[day])
-                    end_time[day] = max(slot.end.time(), end_time[day])
+                    start_time[day] = min(slot.start.astimezone(self.event.tz).time(), start_time[day])
+                    end_time[day] = max(slot.end.astimezone(self.event.tz).time(), end_time[day])
                 else:
-                    start_time[day] = slot.start.time()
-                    end_time[day] = slot.end.time()
+                    start_time[day] = slot.start.astimezone(self.event.tz).time()
+                    end_time[day] = slot.end.astimezone(self.event.tz).time()
             for day in start_time:
                 start_time_index[day] = time_to_index(start_time[day])
                 end_time_index[day] = time_to_index(end_time[day])
