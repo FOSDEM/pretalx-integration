@@ -353,7 +353,7 @@ class NanocExporter(ScheduleData):
             # start_time = day["start"].astimezone(tz).time()
             # end_time = (day["start"].astimezone(tz) + datetime.timedelta(hours=10)).time()
 
-            start_time = datetime.time(hour=9, minutes=30) if day_slug == "saturday" else datetime.time(hour=9)
+            start_time = datetime.time(hour=9, minute=30) if day_slug == "saturday" else datetime.time(hour=9)
             end_time = datetime.time(hour=19) if day_slug == "saturday" else datetime.time(hour=18, minute=15)
             days[day_slug] = {
                 "conference_day_id": day["start"].weekday(),
@@ -362,7 +362,6 @@ class NanocExporter(ScheduleData):
                 "title": day["start"].strftime("%A"),
                 "conference_day": day["start"].date(),
                 "start_time": start_time,
-                # "end_time": day["end"].time() - will not work - next day!
                 "end_time": end_time,
                 "start_time_index": time_to_index(start_time),
                 "end_time_index": time_to_index(end_time),
@@ -494,14 +493,14 @@ class NanocExporter(ScheduleData):
             "timeslot_duration": datetime.timedelta(hours=0, minutes=5),
             "default_timeslots": 10,
             "max_timeslot_duration": 25,
-            "day_change": "00:00:00",
+            "day_change": datetime.timedelta(hours=9),# this is an interesting workaround
             "remark": "",
             "homepage": "https://fosdem.org/",
             "abstract_length": "",
             "description_length": "",
             "export_base_url": "https://fosdem.org/2024/schedule",
             "schedule_html_include": "",
-            "schedule_version": self.schedule.version if self.schedule else "0",
+            "schedule_version": self.schedule.version if self.schedule.version else "latest",
             "feedback_base_url": "https://fosdem.org/TODO",
             "css": "",
             "email": "info@fosdem.org",
