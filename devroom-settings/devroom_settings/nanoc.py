@@ -118,10 +118,10 @@ class NanocExporter(ScheduleData):
                 events_by_day[room.pk][day].append(talk.frab_slug)
                 if day in start_time[room_slug]:
                     start_time[room_slug][day] = min(
-                        talk.start.time(), start_time[room_slug][day]
+                        talk.start.astimezone(tz).time(), start_time[room_slug][day]
                     )
                     end_time[room_slug][day] = max(
-                        talk.end.time(), end_time[room_slug][day]
+                        talk.end.astimezone(tz).time(), end_time[room_slug][day]
                     )
                 else:
                     start_time[room_slug][day] = talk.start.astimezone(tz).time()
