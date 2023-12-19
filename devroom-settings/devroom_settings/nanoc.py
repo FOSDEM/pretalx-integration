@@ -256,20 +256,20 @@ class NanocExporter(ScheduleData):
                             image.thumbnail((200, 200))
                             image.save(image_dest, format=image.format)
                             os.chmod(image_dest, 0o664)
-                        meta_logo = {
-                            "identifier": f"/schedule/event/{talk.frab_slug}/logo/",
-                            "file": str(image_dest),
-                            "filename": image_dest.name,
-                            "size": image_dest.stat().st_size,
-                            "width": image.width,
-                            "height": image.height,
-                            "mime": magic.from_file(image_dest, mime=True),
-                            "event_id": talk.pk,
-                            "event_slug": talk.frab_slug,
-                        }
-                        image_dest.with_suffix(".yaml").write_text(
-                            yaml.safe_dump(meta_logo)
-                        )
+                            meta_logo = {
+                                "identifier": f"/schedule/event/{talk.frab_slug}/logo/",
+                                "file": str(image_dest),
+                                "filename": image_dest.name,
+                                "size": image_dest.stat().st_size,
+                                "width": image.width,
+                                "height": image.height,
+                                "mime": magic.from_file(image_dest, mime=True),
+                                "event_id": talk.pk,
+                                "event_slug": talk.frab_slug,
+                            }
+                            image_dest.with_suffix(".yaml").write_text(
+                                yaml.safe_dump(meta_logo)
+                            )
 
                     attachments = []
                     for resource in talk.submission.resources.exclude(resource=""):
@@ -338,7 +338,7 @@ class NanocExporter(ScheduleData):
                         "links": links,
                     }
                     if self.dest_dir and talk.submission.image:
-                        talks[talk.frab_slug]["logo"] = meta_logo
+                        talks[talk.frab_slug]["logo"] = {"identifier": f"/schedule/event/{talk.frab_slug}/logo/"}
         return talks
 
     @cached_property
@@ -399,21 +399,21 @@ class NanocExporter(ScheduleData):
                                     thumb = Image.open(speaker.avatar.path)
                                     thumb.thumbnail((32, 32))
                                     thumb.save(thumb_dest, format=thumb.format)
-                                meta_thumb = {
-                                    "identifier": f"/schedule/speaker/{speaker.code}/thumbnail/",
-                                    "file": str(thumb_dest),
-                                    "filename": orig_path.name,
-                                    "speaker_slug": speaker.code,
-                                    "size": thumb_dest.stat().st_size,
-                                    "title": speaker.name,
-                                    "name": speaker.name,
-                                    "width": thumb.width,
-                                    "height": thumb.height,
-                                    "mime": magic.from_file(thumb_dest, mime=True),
-                                }
-                                thumb_dest.with_suffix(".yaml").write_text(
-                                    yaml.safe_dump(meta_thumb)
-                                )
+                                    meta_thumb = {
+                                        "identifier": f"/schedule/speaker/{speaker.code}/thumbnail/",
+                                        "file": str(thumb_dest),
+                                        "filename": orig_path.name,
+                                        "speaker_slug": speaker.code,
+                                        "size": thumb_dest.stat().st_size,
+                                        "title": speaker.name,
+                                        "name": speaker.name,
+                                        "width": thumb.width,
+                                        "height": thumb.height,
+                                        "mime": magic.from_file(thumb_dest, mime=True),
+                                    }
+                                    thumb_dest.with_suffix(".yaml").write_text(
+                                        yaml.safe_dump(meta_thumb)
+                                    )
 
                                 photo_dest = (
                                     self.dest_dir
@@ -431,21 +431,21 @@ class NanocExporter(ScheduleData):
                                     image = Image.open(speaker.avatar.path)
                                     image.thumbnail((220, 180))
                                     image.save(photo_dest, format=thumb.format)
-                                meta_photo = {
-                                    "identifier": f"/schedule/speaker/{speaker.code}/photo/",
-                                    "file": str(photo_dest),
-                                    "filename": orig_path.name,
-                                    "size": photo_dest.stat().st_size,
-                                    "speaker_slug": speaker.code,
-                                    "title": speaker.name,
-                                    "name": speaker.name,
-                                    "width": image.width,
-                                    "height": image.height,
-                                    "mime": magic.from_file(photo_dest, mime=True),
-                                }
-                                photo_dest.with_suffix(".yaml").write_text(
-                                    yaml.safe_dump(meta_photo)
-                                )
+                                    meta_photo = {
+                                        "identifier": f"/schedule/speaker/{speaker.code}/photo/",
+                                        "file": str(photo_dest),
+                                        "filename": orig_path.name,
+                                        "size": photo_dest.stat().st_size,
+                                        "speaker_slug": speaker.code,
+                                        "title": speaker.name,
+                                        "name": speaker.name,
+                                        "width": image.width,
+                                        "height": image.height,
+                                        "mime": magic.from_file(photo_dest, mime=True),
+                                    }
+                                    photo_dest.with_suffix(".yaml").write_text(
+                                        yaml.safe_dump(meta_photo)
+                                    )
                             try:
                                 biography = speaker.profiles.get(
                                     event=self.event
@@ -471,8 +471,8 @@ class NanocExporter(ScheduleData):
                                 # "events_by_day:": events_by_day
                             }
                             if self.dest_dir and speaker.avatar:
-                                speakers_dict[speaker.code]["thumbnail"] = meta_thumb
-                                speakers_dict[speaker.code]["photo"] = meta_photo
+                                speakers_dict[speaker.code]["thumbnail"] = {"identifier": f"/schedule/speaker/{speaker.code}/thumbnail/"}
+                                speakers_dict[speaker.code]["photo"] = {"identifier": f"/schedule/speaker/{speaker.code}/photo/"}
                         else:
                             speakers_dict[speaker.code]["events"].append(talk.frab_slug)
 
