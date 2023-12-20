@@ -164,7 +164,7 @@ class NanocExporter(ScheduleData):
                 else:
                     start_time[room_slug][day] = talk.start.astimezone(tz).time()
                     end_time[room_slug][day] = talk.end.astimezone(tz).time()
-            for day in start_time_index[room_slug]:
+            for day in start_time[room_slug]:
                 start_time_index[room_slug][day] = time_to_index(
                     start_time[room_slug][day]
                 )
