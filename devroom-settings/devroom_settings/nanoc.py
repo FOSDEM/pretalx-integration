@@ -68,6 +68,7 @@ def write_image(src, dest, identifier, width, height, event_slug=None, speaker_s
 
     if src.name.endswith('.svg'):
         copy2(src, dest)
+        os.chmod(dest, 0o664)
     else:
         thumb = Image.open(src)
         thumb.thumbnail((width, height))
