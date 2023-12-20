@@ -78,7 +78,7 @@ def write_image(src, dest, identifier, width, height, event_slug=None, speaker_s
     }
     if speaker_slug:
         meta_thumb["speaker_slug"] = speaker_slug
-    if speaker_slug:
+    if event_slug:
         meta_thumb["event_slug"] = event_slug
 
     dest.with_suffix(".yaml").write_text(
