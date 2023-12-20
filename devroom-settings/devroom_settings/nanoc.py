@@ -54,6 +54,36 @@ yaml.add_representer(defaultdict, Representer.represent_dict)
 def time_to_index(timevalue):
     return int((timevalue.hour * 60 + timevalue.minute) // 5)
 
+def write_image(src, dest, identifier, width, height, event_slug=None, speaker_slug=None):
+    mime =  magic.from_file(src, mime=True)
+    if (
+            dest.is_file()
+            and dest.stat().st_mtime
+            > src.stat().st_mtime
+    ):
+        return
+
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    thumb = Image.open(src)
+    thumb.thumbnail((width, height))
+    thumb.save(dest, format=thumb.format)
+    meta_thumb = {
+        "identifier": identifier,
+        "file": str(dest),
+        "filename": src.name,
+        "size": dest.stat().st_size,
+        "width": thumb.width,
+        "height": thumb.height,
+        "mime": mime
+    }
+    if speaker_slug:
+        meta_thumb["speaker_slug"] = speaker_slug
+    if speaker_slug:
+        meta_thumb["event_slug"] = event_slug
+
+    dest.with_suffix(".yaml").write_text(
+        yaml.safe_dump(meta_thumb)
+    )
 
 class NanocExporter(ScheduleData):
     identifier = "NanocExporter"
@@ -244,32 +274,8 @@ class NanocExporter(ScheduleData):
                             self.dest_dir
                             / f"events/logo/{talk.frab_slug}{orig_path.suffix}"
                         )
-
-                        if (
-                            image_dest.is_file()
-                            and image_dest.stat().st_mtime > orig_path.stat().st_mtime
-                        ):
-                            pass
-                        else:
-                            image_dest.parent.mkdir(exist_ok=True)
-                            image = Image.open(talk.submission.image.path)
-                            image.thumbnail((200, 200))
-                            image.save(image_dest, format=image.format)
-                            os.chmod(image_dest, 0o664)
-                            meta_logo = {
-                                "identifier": f"/schedule/event/{talk.frab_slug}/logo/",
-                                "file": str(image_dest),
-                                "filename": image_dest.name,
-                                "size": image_dest.stat().st_size,
-                                "width": image.width,
-                                "height": image.height,
-                                "mime": magic.from_file(image_dest, mime=True),
-                                "event_id": talk.pk,
-                                "event_slug": talk.frab_slug,
-                            }
-                            image_dest.with_suffix(".yaml").write_text(
-                                yaml.safe_dump(meta_logo)
-                            )
+                        logo_identifier=f"/schedule/event/{talk.frab_slug}/logo/"
+                        logo_mime = write_image(orig_path, image_dest, logo_identifier, 200, 200, event_slug=talk.frab_slug)
 
                     attachments = []
                     for resource in talk.submission.resources.exclude(resource=""):
@@ -338,7 +344,7 @@ class NanocExporter(ScheduleData):
                         "links": links,
                     }
                     if self.dest_dir and talk.submission.image:
-                        talks[talk.frab_slug]["logo"] = {"identifier": f"/schedule/event/{talk.frab_slug}/logo/"}
+                        talks[talk.frab_slug]["logo"] = {"identifier": logo_identifier, "mime": logo_mime}
         return talks
 
     @cached_property
@@ -387,65 +393,16 @@ class NanocExporter(ScheduleData):
                                     / "thumbnails"
                                     / f"{speaker.code}{orig_path.suffix}"
                                 )
-
-                                if (
-                                    thumb_dest.is_file()
-                                    and thumb_dest.stat().st_mtime
-                                    > orig_path.stat().st_mtime
-                                ):
-                                    pass
-                                else:
-                                    thumb_dest.parent.mkdir(parents=True, exist_ok=True)
-                                    thumb = Image.open(speaker.avatar.path)
-                                    thumb.thumbnail((32, 32))
-                                    thumb.save(thumb_dest, format=thumb.format)
-                                    meta_thumb = {
-                                        "identifier": f"/schedule/speaker/{speaker.code}/thumbnail/",
-                                        "file": str(thumb_dest),
-                                        "filename": orig_path.name,
-                                        "speaker_slug": speaker.code,
-                                        "size": thumb_dest.stat().st_size,
-                                        "title": speaker.name,
-                                        "name": speaker.name,
-                                        "width": thumb.width,
-                                        "height": thumb.height,
-                                        "mime": magic.from_file(thumb_dest, mime=True),
-                                    }
-                                    thumb_dest.with_suffix(".yaml").write_text(
-                                        yaml.safe_dump(meta_thumb)
-                                    )
+                                thumb_identifier = f"/schedule/speaker/{speaker.code}/thumbnail/"
+                                thumb_mime = write_image(orig_path, thumb_dest, thumb_identifier, 32, 32, speaker_slug=speaker.code)
 
                                 photo_dest = (
                                     self.dest_dir
                                     / f"speaker/photos/{speaker.code}{orig_path.suffix}"
                                 )
+                                photo_identifier = f"/schedule/speaker/{speaker.code}/photo/"
+                                photo_mime = write_image(orig_path, photo_dest, photo_identifier, 220, 180, speaker_slug=speaker.code)
 
-                                if (
-                                    photo_dest.is_file()
-                                    and photo_dest.stat().st_mtime
-                                    > orig_path.stat().st_mtime
-                                ):
-                                    pass
-                                else:
-                                    photo_dest.parent.mkdir(exist_ok=True)
-                                    image = Image.open(speaker.avatar.path)
-                                    image.thumbnail((220, 180))
-                                    image.save(photo_dest, format=thumb.format)
-                                    meta_photo = {
-                                        "identifier": f"/schedule/speaker/{speaker.code}/photo/",
-                                        "file": str(photo_dest),
-                                        "filename": orig_path.name,
-                                        "size": photo_dest.stat().st_size,
-                                        "speaker_slug": speaker.code,
-                                        "title": speaker.name,
-                                        "name": speaker.name,
-                                        "width": image.width,
-                                        "height": image.height,
-                                        "mime": magic.from_file(photo_dest, mime=True),
-                                    }
-                                    photo_dest.with_suffix(".yaml").write_text(
-                                        yaml.safe_dump(meta_photo)
-                                    )
                             try:
                                 biography = speaker.profiles.get(
                                     event=self.event
@@ -471,8 +428,8 @@ class NanocExporter(ScheduleData):
                                 # "events_by_day:": events_by_day
                             }
                             if self.dest_dir and speaker.avatar:
-                                speakers_dict[speaker.code]["thumbnail"] = {"identifier": f"/schedule/speaker/{speaker.code}/thumbnail/"}
-                                speakers_dict[speaker.code]["photo"] = {"identifier": f"/schedule/speaker/{speaker.code}/photo/"}
+                                speakers_dict[speaker.code]["thumbnail"] = {"identifier": thumb_identifier, "mime": thumb_mime}
+                                speakers_dict[speaker.code]["photo"] = {"identifier": photo_identifier, "mime": photo_mime}
                         else:
                             speakers_dict[speaker.code]["events"].append(talk.frab_slug)
 
