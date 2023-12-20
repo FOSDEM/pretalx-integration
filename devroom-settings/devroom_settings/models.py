@@ -56,10 +56,11 @@ class RoomSettings(models.Model):
 
 class UserSettings(models.Model):
     user = models.OneToOneField(to=User, on_delete=models.CASCADE)
-    visible = models.TextField(
+    matrix_id = models.CharField(
         "Matrix ID",
         help_text="If you have a matrix account (mxid), you can specify it here. "
-                  "If you are given a role in the event, we use this to invite you "
-                  "to the correct rooms on chat.fosdem.org. "
-                  "The format is @username:homeserver.tld"
+        "If you are given a role in the event, we use this to invite you "
+        "to the correct rooms on chat.fosdem.org. "
+        "The format is @username:homeserver.tld",
+        default="",
     )
