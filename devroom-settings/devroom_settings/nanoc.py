@@ -56,24 +56,30 @@ def time_to_index(timevalue):
 
 def write_image(src, dest, identifier, width, height, event_slug=None, speaker_slug=None):
     mime =  magic.from_file(src, mime=True)
+
     if (
             dest.is_file()
             and dest.stat().st_mtime
             > src.stat().st_mtime
     ):
-        return
+        return mime
 
     dest.parent.mkdir(parents=True, exist_ok=True)
-    thumb = Image.open(src)
-    thumb.thumbnail((width, height))
-    thumb.save(dest, format=thumb.format)
+
+    if src.name.endswith('.svg'):
+        copy2(src, dest)
+    else:
+        thumb = Image.open(src)
+        thumb.thumbnail((width, height))
+        thumb.save(dest, format=thumb.format)
+
     meta_thumb = {
         "identifier": identifier,
         "file": str(dest),
         "filename": src.name,
         "size": dest.stat().st_size,
-        "width": thumb.width,
-        "height": thumb.height,
+        "width": width,
+        "height": height,
         "mime": mime
     }
     if speaker_slug:
@@ -84,6 +90,7 @@ def write_image(src, dest, identifier, width, height, event_slug=None, speaker_s
     dest.with_suffix(".yaml").write_text(
         yaml.safe_dump(meta_thumb)
     )
+    return mime
 
 class NanocExporter(ScheduleData):
     identifier = "NanocExporter"
@@ -383,7 +390,7 @@ class NanocExporter(ScheduleData):
                 for talk in room["talks"]:
                     for speaker in talk.submission.speakers.all():
                         if speaker.code not in speakers_dict:
-                            if self.dest_dir and speaker.avatar and not str(speaker.avatar.path).endswith('.svg'):
+                            if self.dest_dir and speaker.avatar:
                                 orig_path = Path(speaker.avatar.path)
                                 # store thumbnail
 
