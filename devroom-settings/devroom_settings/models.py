@@ -9,9 +9,11 @@ from pretalx.submission.models import Track
 class TrackSettings(models.Model):
     class TrackType(models.TextChoices):
         MAIN_TRACK = "MT", "maintrack"
+        KEYNOTE = "K", "keynote"
         LIGHTNING_TALK = "LT", "lightningtalk"
         DEVROOM = "D", "devroom"
         BOF_ROOM = "B", "bof"
+        JUNIOR = "J", "junior"
         CERTIFICATION = "C", "certification"
         OTHER = "O", "other"
 
