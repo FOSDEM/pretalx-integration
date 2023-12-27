@@ -1,13 +1,13 @@
-from django.views.generic import FormView, ListView, TemplateView
-from django.views.generic.edit import FormMixin
-from django_scopes import scope, scopes_disabled
-from pretalx.common.mixins.views import EventPermissionRequired, PermissionRequired
-from pretalx.event.models import Event, Team, TeamInvite
-from pretalx.submission.models import Track, SubmitterAccessCode
+from django.views.generic import ListView, UpdateView
+
+from django.urls import reverse
+from pretalx.common.mixins.views import EventPermissionRequired
+from pretalx.event.models import TeamInvite
+from pretalx.submission.models import SubmitterAccessCode
 from pretalx.event.forms import TeamInviteForm
 
-from devroom_settings.forms import DevroomTrackSettingsForm, DevroomTrackForm
-from devroom_settings.models import TrackSettings
+from devroom_settings.forms import DevroomTrackSettingsForm, DevroomTrackForm, UserSettingsForm
+from devroom_settings.models import TrackSettings, UserSettings
 
 
 class DevroomReport(EventPermissionRequired, ListView):
@@ -96,3 +96,19 @@ class DevroomDashboard(EventPermissionRequired, ListView):
                 invite.send()
 
         return self.get(request, *args, **kwargs)
+
+class UserSettingsView(EventPermissionRequired, UpdateView):
+    permission_required = "orga.change_submissions" # should only be login or sth
+    template_name = "devroom_settings/user_fragment.html"
+    model = UserSettings
+    form_class=UserSettingsForm
+
+    # fields = ("matrix_id",)
+    def get_object(self):
+        usersettings, created = UserSettings.objects.get_or_create(user=self.request.user)
+        print(usersettings)
+        return usersettings
+
+    def get_success_url(self):
+        return reverse("cfp:event.user.view", kwargs={"event": self.request.event.slug})
+    # http://localhost:8000/democon/me/

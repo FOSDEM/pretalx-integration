@@ -2,7 +2,7 @@ from django import forms
 from pretalx.common.mixins.forms import I18nHelpText, ReadOnlyFlag
 from pretalx.event.models import TeamInvite
 from pretalx.submission.models import Track
-from .models import TrackSettings
+from .models import TrackSettings, UserSettings
 
 
 class TrackSettingsForm(forms.ModelForm):
@@ -44,3 +44,9 @@ class DevroomTrackForm(forms.ModelForm):
     class Meta:
         model = Track
         fields = ("requires_access_code",)
+
+
+class UserSettingsForm(forms.ModelForm):
+    class Meta:
+        model = UserSettings
+        fields = ("matrix_id",)

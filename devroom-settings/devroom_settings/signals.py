@@ -1,7 +1,7 @@
 from django.dispatch import receiver
 from django.template.loader import get_template
 from django.urls import resolve, reverse
-from pretalx.cfp.signals import html_below_track, on_save_track
+from pretalx.cfp.signals import html_below_track, on_save_track, extra_user_settings
 from pretalx.common.signals import register_data_exporters
 from pretalx.mail.placeholders import SimpleFunctionalMailTextPlaceholder
 from pretalx.mail.signals import register_mail_placeholders
@@ -9,7 +9,7 @@ from pretalx.orga.signals import nav_event
 
 from .forms import TrackSettingsForm
 from .models import TrackSettings
-
+from .views import UserSettingsView
 
 @receiver(html_below_track, dispatch_uid="devroom_settings")
 def render_form_fragment(sender, track, **kwargs):
@@ -106,3 +106,9 @@ def register_data_exporter(sender, **kwargs):
     from .nanoc import NanocExporter
 
     return NanocExporter
+
+@receiver(extra_user_settings, dispatch_uid="fosdem_user_settings")
+def render_user_settings(sender, request, **kwargs):
+    view = UserSettingsView.as_view()
+    html = view(request).render()
+    return html.rendered_content

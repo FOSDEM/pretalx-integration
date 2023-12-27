@@ -14,4 +14,10 @@ urlpatterns = [
         views.DevroomDashboard.as_view(),
         name="devroom-dashboard",
     ),
+    re_path(
+        rf"^(?P<event>{SLUG_REGEX})/fosdem_usersetting/$",
+        views.UserSettingsView.as_view(),
+        name="fosdem_usersetting",
+
+    ),
 ]

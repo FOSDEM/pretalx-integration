@@ -1,0 +1,13 @@
+{% load bootstrap4 %}
+<form method="post" action="/{{ request.event.slug }}/fosdem_usersetting/">
+    {% csrf_token %}
+    <h2 id="fosdem">FOSDEM specific settings</h2>
+    {% bootstrap_field form.matrix_id layout='event' %}
+    <div class="row">
+            <div class="col-md-4 flip ml-auto">
+                <button type="submit" class="btn btn-block btn-success btn-lg" name="form" value="fosdem">
+                    Save
+                </button>
+            </div>
+            </div>
+</form>
