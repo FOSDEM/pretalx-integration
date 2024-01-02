@@ -35,15 +35,15 @@ def merge_users(user1, user2, interactive=True):
             submission.speakers.remove(user2)
         Answer.objects.filter(person=user2).update(person=user1)
 
-        user1_profile_events = {sp.event: sp for sp in SpeakerProfile.objects.filter(speakers=user1)}
-        profiles = SpeakerProfile.objects.filter(speakers=user2).exclude(biography=None)
+        user1_profile_events = {sp.event: sp for sp in SpeakerProfile.objects.filter(user=user1)}
+        profiles = SpeakerProfile.objects.filter(user=user2).exclude(biography=None)
         for profile in profiles:
             if profile.event not in user1_profile_events:
                 profile.update(user=user1)
             else:
                 print(f"bios for {profile.event}")
                 print(f"user1:\n{user1_profile_events[profile.event].biography}")
-                print("f:user2:\n{profile.biography}")
+                print(f":user2:\n{profile.biography}")
                 while True:
                     res=input("Keep 1 or 2?")
                     if res in ["1", "2"]:
@@ -55,10 +55,6 @@ def merge_users(user1, user2, interactive=True):
                 if res == "2":
                     user1_profile_events[profile.event].delete()
                     profile.update(user=user1)
-
-
-
-
 
     user2.shred()
 
@@ -79,8 +75,14 @@ class Command(BaseCommand):
         print_user_info(user2)
 
         print("Move all to User 1?")
-        merge_users(user1, user2)
-        print_user_info(user1)
+        while True:
+            res = input("Keep 1 or 2?")
+            if res == "1":
+                merge_users(user1, user2)
+                break
+            if res== "2":
+                merge_users(user2, user1)
+                break
 
 
 
