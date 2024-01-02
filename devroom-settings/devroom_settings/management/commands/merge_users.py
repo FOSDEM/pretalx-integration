@@ -16,7 +16,7 @@ def print_user_info(user):
         #profiles = ",".join(user.profiles.all())
         print("Submissions:")
         for submission in user.submissions.all():
-            print(f"- {submission.title}({submission.event.name})")
+            print(f"- {submission.title} ({submission.event.name})")
 
 
 def merge_users(user1, user2, interactive=True):
@@ -42,10 +42,11 @@ def merge_users(user1, user2, interactive=True):
                 profile.update(user=user1)
             else:
                 print(f"bios for {profile.event}")
+                print("")
                 print(f"user1:\n{user1_profile_events[profile.event].biography}")
                 print(f":user2:\n{profile.biography}")
                 while True:
-                    res=input("Keep 1 or 2?")
+                    res=input("Move to 1 or 2? ")
                     if res in ["1", "2"]:
                         break
                     else:
