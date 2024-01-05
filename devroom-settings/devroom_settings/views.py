@@ -1,14 +1,15 @@
-from django.views.generic import FormView, ListView, TemplateView
-from django.views.generic.edit import FormMixin
-from django_scopes import scope, scopes_disabled
-from pretalx.common.mixins.views import EventPermissionRequired, PermissionRequired
-from pretalx.event.models import Event, Team, TeamInvite
-from pretalx.submission.models import Track, SubmitterAccessCode
+from django.http import JsonResponse
+from django.views.generic import ListView, View
+
+from pretalx.common.mixins.views import EventPermissionRequired
+from pretalx.event.models import  TeamInvite
+from pretalx.submission.models import  SubmitterAccessCode, Submission, Answer
 from pretalx.event.forms import TeamInviteForm
 
 from devroom_settings.forms import DevroomTrackSettingsForm, DevroomTrackForm
 from devroom_settings.models import TrackSettings
 
+import pytz
 
 class DevroomReport(EventPermissionRequired, ListView):
     permission_required = "orga.change_submissions"
@@ -96,3 +97,42 @@ class DevroomDashboard(EventPermissionRequired, ListView):
                 invite.send()
 
         return self.get(request, *args, **kwargs)
+
+
+class MatrixExport(EventPermissionRequired, View):
+    permission_required = "orga.change_submissions"
+    model = Submission
+
+    def get(self, request, **kwargs):
+        data = []
+
+        schedule=self.request.event.wip_schedule.scheduled_talks.prefetch_related("submission__speakers").prefetch_related("submission__speakers__answers")
+        for slot in schedule.all():
+            # matrix tobe: s.usersettings.matrix_id if hasattr(s, "usersettings") else ""
+            # for now based on question but that covers speakers only!
+            persons = []
+            for s in slot.submission.speakers.all():
+                person_data = {
+                    "person_id": s.pk,
+                    "event_role": "speaker",
+                    "name": s.name,
+                    "email": s.email
+                }
+
+                try:
+                    answer = s.answers.get(question=12).answer
+                    person_data["matrix_id"] = answer
+                except Answer.DoesNotExist:
+                    person_data["matrix_id"] = None
+
+                persons.append(person_data)
+            talk = {"event_id": slot.submission.pk,
+                    "title": slot.submission.title,
+                    "persons": persons,
+                    "conference_room": str(slot.room.name),
+                    "start_datetime": slot.start.astimezone(pytz.timezone("Europe/Brussels")),
+                    "duration": (slot.end - slot.start).total_seconds(),
+                    "track_id": slot.submission.track_id}
+            data.append(talk)
+        return JsonResponse({"talks": data}, safe=True)
+

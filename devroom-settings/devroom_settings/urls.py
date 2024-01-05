@@ -14,4 +14,9 @@ urlpatterns = [
         views.DevroomDashboard.as_view(),
         name="devroom-dashboard",
     ),
+    re_path(
+        rf"^(?P<event>{SLUG_REGEX})/p/matrix/$",
+        views.MatrixExport.as_view(),
+        name="matrix-export",
+    ),
 ]
