@@ -106,26 +106,28 @@ class MatrixExport(EventPermissionRequired, View):
     def get(self, request, **kwargs):
         data = []
 
-        schedule=self.request.event.wip_schedule.scheduled_talks.prefetch_related("submission__speakers").prefetch_related("submission__speakers__answers")
+        schedule=self.request.event.wip_schedule.scheduled_talks.prefetch_related("submission__speakers").prefetch_related("submission__track__tracksettings__manager_team__members")
         for slot in schedule.all():
-            # matrix tobe: s.usersettings.matrix_id if hasattr(s, "usersettings") else ""
-            # for now based on question but that covers speakers only!
             persons = []
             for s in slot.submission.speakers.all():
                 person_data = {
                     "person_id": s.pk,
                     "event_role": "speaker",
                     "name": s.name,
-                    "email": s.email
+                    "email": s.email,
+                    "matrix_id": s.matrix_id
                 }
-
-                try:
-                    answer = s.answers.get(question=12).answer
-                    person_data["matrix_id"] = answer
-                except Answer.DoesNotExist:
-                    person_data["matrix_id"] = None
-
                 persons.append(person_data)
+            for s in slot.submission.track.tracksettings.manager_team.members.all():
+                person_data = {
+                    "person_id": s.pk,
+                    "event_role": "coordinator",
+                    "name": s.name,
+                    "email": s.email,
+                    "matrix_id": s.matrix_id
+                }
+                persons.append(person_data)
+
             talk = {"event_id": slot.submission.pk,
                     "title": slot.submission.title,
                     "persons": persons,
