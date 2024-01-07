@@ -19,4 +19,14 @@ urlpatterns = [
         views.MatrixExport.as_view(),
         name="matrix-export",
     ),
+    re_path(
+        rf"^(?P<event>{SLUG_REGEX})/p/videolink/$",
+        views.VideoSubmissionListView.as_view(),
+        name="videolink-list",
+    ),
+    re_path(
+        rf"^(?P<event>{SLUG_REGEX})/p/videolink/(?P<submission_id>\d+)/$",
+        views.VideoSubmissionView.as_view(),
+        name="videolink-update",
+    ),
 ]

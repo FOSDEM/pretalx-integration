@@ -1,15 +1,20 @@
-from django.http import JsonResponse
-from django.views.generic import ListView, View
-
-from pretalx.common.mixins.views import EventPermissionRequired
-from pretalx.event.models import  TeamInvite
-from pretalx.submission.models import  SubmitterAccessCode, Submission, Answer
-from pretalx.event.forms import TeamInviteForm
-
-from devroom_settings.forms import DevroomTrackSettingsForm, DevroomTrackForm
-from devroom_settings.models import TrackSettings
+import json
+import logging
 
 import pytz
+from django.db.models import Prefetch
+from django.http import JsonResponse
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+from django.views.generic import ListView, View
+from pretalx.common.mixins.views import EventPermissionRequired
+from pretalx.event.forms import TeamInviteForm
+from pretalx.event.models import TeamInvite
+from pretalx.submission.models import Resource, Submission, SubmitterAccessCode
+
+from devroom_settings.forms import DevroomTrackForm, DevroomTrackSettingsForm
+from devroom_settings.models import TrackSettings
+
 
 class DevroomReport(EventPermissionRequired, ListView):
     permission_required = "orga.change_submissions"
@@ -57,7 +62,8 @@ class DevroomDashboard(EventPermissionRequired, ListView):
             for track in context["trackssettings"]
         ]
         invite_forms = [
-            TeamInviteForm(prefix=f"invite_{track.slug}") for track in context["trackssettings"]
+            TeamInviteForm(prefix=f"invite_{track.slug}")
+            for track in context["trackssettings"]
         ]
 
         access_codes = [
@@ -88,7 +94,9 @@ class DevroomDashboard(EventPermissionRequired, ListView):
             if form.is_valid() and form.has_changed():
                 form.save()
 
-            invite_form = TeamInviteForm(self.request.POST, prefix=f"invite_{track.slug}")
+            invite_form = TeamInviteForm(
+                self.request.POST, prefix=f"invite_{track.slug}"
+            )
             if invite_form.is_valid():
                 invite = TeamInvite.objects.create(
                     team=track.review_team,
@@ -106,7 +114,9 @@ class MatrixExport(EventPermissionRequired, View):
     def get(self, request, **kwargs):
         data = []
 
-        schedule=self.request.event.wip_schedule.scheduled_talks.prefetch_related("submission__speakers").prefetch_related("submission__track__tracksettings__manager_team__members")
+        schedule = self.request.event.wip_schedule.scheduled_talks.prefetch_related(
+            "submission__speakers"
+        ).prefetch_related("submission__track__tracksettings__manager_team__members")
         for slot in schedule.all():
             persons = []
             for s in slot.submission.speakers.all():
@@ -115,7 +125,7 @@ class MatrixExport(EventPermissionRequired, View):
                     "event_role": "speaker",
                     "name": s.name,
                     "email": s.email,
-                    "matrix_id": s.matrix_id
+                    "matrix_id": s.matrix_id,
                 }
                 persons.append(person_data)
             for s in slot.submission.track.tracksettings.manager_team.members.all():
@@ -124,17 +134,123 @@ class MatrixExport(EventPermissionRequired, View):
                     "event_role": "coordinator",
                     "name": s.name,
                     "email": s.email,
-                    "matrix_id": s.matrix_id
+                    "matrix_id": s.matrix_id,
                 }
                 persons.append(person_data)
 
-            talk = {"event_id": slot.submission.pk,
-                    "title": slot.submission.title,
-                    "persons": persons,
-                    "conference_room": str(slot.room.name),
-                    "start_datetime": slot.start.astimezone(pytz.timezone("Europe/Brussels")),
-                    "duration": (slot.end - slot.start).total_seconds(),
-                    "track_id": slot.submission.track_id}
+            talk = {
+                "event_id": slot.submission.pk,
+                "title": slot.submission.title,
+                "persons": persons,
+                "conference_room": str(slot.room.name),
+                "start_datetime": slot.start.astimezone(
+                    pytz.timezone("Europe/Brussels")
+                ),
+                "duration": (slot.end - slot.start).total_seconds(),
+                "track_id": slot.submission.track_id,
+            }
             data.append(talk)
         return JsonResponse({"talks": data}, safe=True)
 
+
+VIDEO_RECORDING_STRING = "Video Recording"
+
+
+class VideoSubmissionListView(View):
+    def get(self, request, **kwargs):
+        schedule = request.event.wip_schedule
+        talks = schedule.scheduled_talks.prefetch_related("submission__resources").all()
+        result = []
+        for talk in talks:
+            video_links = [
+                {"link": link.link, "description": link.description}
+                for link in talk.submission.resources.filter(
+                    description__startswith=VIDEO_RECORDING_STRING
+                )
+            ]
+            result.append(
+                {
+                    "id": talk.submission.pk,
+                    "title": talk.submission.title,
+                    "video_links": video_links,
+                }
+            )
+        return JsonResponse(result, safe=False, status=200)
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class VideoSubmissionView(EventPermissionRequired, View):
+    permission_required = "orga.change_submissions"
+
+    def post(self, request, submission_id, **kwargs):
+        """Add or overwrite video links
+        expects a list of video links + their description
+        [{"description": "Video recording (WebM/VP9, 54M)", "link": "https://video.fosdem.org/2023/Janson/closing_fosdem.webm"}]
+        """
+
+        try:
+            submission = request.event.talks.get(pk=int(submission_id))
+        except Submission.DoesNotExist:
+            return JsonResponse(
+                {"error": "Invalid submission ID. Please provide a valid integer."},
+                status=404,
+            )
+
+        try:
+            data = json.loads(request.body)
+            resources = []
+            for record in data:
+                if not record["description"].startswith(VIDEO_RECORDING_STRING):
+                    return JsonResponse(
+                        {
+                            "error": "Invalid description, must start with 'Video Recording'"
+                        },
+                        status=404,
+                    )
+                resource = Resource(
+                    submission=submission,
+                    link=record["link"],
+                    description=record["description"],
+                )
+                resources.append(resource)
+        except:
+            logging.exception("invalid data posted to videolink")
+            return JsonResponse({"error": "Invalid data"}, status=400)
+
+        # if we end up here we assume everything is valid and we remove the existing records
+        # note you can send an empty array to remove previous values
+
+        existing_links = submission.resources.filter(
+            description__startswith=VIDEO_RECORDING_STRING
+        )
+        count_existing = existing_links.count()
+        existing_links.delete()
+
+        # and add the new ones
+        Resource.objects.bulk_create(resources)
+        status = 201 if len(resources) > 0 else 200
+        return JsonResponse(
+            {
+                "message": f"{len(resources)} links created successfully, {count_existing} removed"
+            },
+            status=status,
+        )
+
+    def get(self, request, submission_id, **kwargs):
+        if not Submission.objects.filter(pk=submission_id).exists():
+            return JsonResponse(
+                {"error": "Invalid submission ID. Please provide a valid integer."},
+                status=404,
+            )
+
+        try:
+            resources = Resource.objects.get(
+                description__startswith=VIDEO_RECORDING_STRING, submission=submission_id
+            )
+            data = [
+                {"description": str(r.description), "link": str(r.link)}
+                for r in resources
+            ]
+        except Resource.DoesNotExist:
+            data = []
+        return JsonResponse(data, safe=False, status=200)
