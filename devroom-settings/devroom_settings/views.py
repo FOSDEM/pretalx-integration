@@ -139,6 +139,9 @@ class MatrixExport(EventPermissionRequired, View):
                 }
                 persons.append(person_data)
 
+            duration = slot.submission.duration
+            if duration is None:
+                duration = (slot.end - slot.start).seconds // 60
             talk = {
                 "event_id": slot.submission.pk,
                 "title": slot.submission.title,
@@ -147,11 +150,12 @@ class MatrixExport(EventPermissionRequired, View):
                 "start_datetime": slot.start.astimezone(
                     pytz.timezone("Europe/Brussels")
                 ),
-                "duration": slot.submission.duration,
+                "duration": duration,
                 "track": {
                     "id": slot.submission.track.pk,
                     "slug": slot.submission.track.tracksettings.slug,
                     "email": slot.submission.track.tracksettings.mail,
+                    "name": str(slot.submission.track.name)
                 },
             }
             data.append(talk)
