@@ -1,25 +1,20 @@
 import datetime
+import os
 from collections import defaultdict
 from pathlib import Path
-import os
 from shutil import copy2
 
 import magic
+import markdown
 import pytz
 import yaml
-
-import markdown
-from django.db.models import Prefetch, Q
-
-from django.template.loader import get_template
+from django.db.models import DurationField, ExpressionWrapper, F, Prefetch, Q
 from django.utils.functional import cached_property
 from PIL import Image
-from pretalx.common.exporter import BaseExporter
-from pretalx.common.urls import get_base_url
+from pretalx.person.models import SpeakerProfile
 from pretalx.schedule.exporters import ScheduleData
 from pretalx.schedule.models import Room, TalkSlot
 from pretalx.submission.models import Submission, Track
-from pretalx.person.models import SpeakerProfile
 
 tz = pytz.timezone("Europe/Brussels")
 
@@ -55,7 +50,7 @@ def time_to_index(timevalue):
     return int((timevalue.hour * 60 + timevalue.minute) // 5)
 
 def write_image(src, dest, identifier, width, height, event_slug=None, speaker_slug=None):
-    mime =  magic.from_file(src, mime=True)
+    mime = magic.from_file(src, mime=True)
 
     if (
             dest.is_file()
@@ -93,6 +88,22 @@ def write_image(src, dest, identifier, width, height, event_slug=None, speaker_s
     )
     return mime
 
+def update_end_time(event):
+    """Make sure end time is set
+    In some rare cases it is not present and that breaks
+    the website logic
+    """
+    talk_slots_to_update = TalkSlot.objects.filter(
+        start__isnull=False,
+        end__isnull=True,
+        submission__isnull=False
+    )
+
+    for talk_slot in talk_slots_to_update:
+        duration_minutes = talk_slot.submission.duration
+        talk_slot.end = talk_slot.start + datetime.timedelta(minutes=duration_minutes)
+        talk_slot.save()
+
 class NanocExporter(ScheduleData):
     identifier = "NanocExporter"
     verbose_name = "Exports to nanoc for FOSDEM website"
@@ -102,6 +113,7 @@ class NanocExporter(ScheduleData):
     group = "submission"
 
     def __init__(self, event, schedule=None, dest_dir=None):
+        update_end_time(event)
         super().__init__(event, schedule=schedule)
         self.dest_dir = dest_dir
 
