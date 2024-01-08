@@ -375,14 +375,10 @@ class NanocExporter(ScheduleData):
         for day in self.data:
             day_slug = day["start"].strftime("%A").lower()
 
-            # TODO FIXED for now as day["start"] is 00
-            # and day["end"] will end up being before day["start"]
-            # start_time = day["start"].astimezone(tz).time()
-            # end_time = (day["start"].astimezone(tz) + datetime.timedelta(hours=10)).time()
-            
-            # the start time of 10:30 on saturday is not logical (we start at 9:30), but the website build breaks 
-            # if you specify anything else
-            start_time = datetime.time(hour=9)
+            # TODO: these values should be calculated and only be hardcoded when no schedule
+            # is published. If incorrect, the website rendering is not good
+
+            start_time = datetime.time(hour=9, minute=30) if day_slug == "saturday" else datetime.time(hour=9)
             end_time = datetime.time(hour=18, minute=55) if day_slug == "saturday" else datetime.time(hour=17, minute=00)
             days[day_slug] = {
                 "conference_day_id": day["start"].weekday(),
