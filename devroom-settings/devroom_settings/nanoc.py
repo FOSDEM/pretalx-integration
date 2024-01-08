@@ -370,7 +370,7 @@ class NanocExporter(ScheduleData):
             
             # the start time of 10:30 on saturday is not logical (we start at 9:30), but the website build breaks 
             # if you specify anything else
-            start_time = datetime.time(hour=10, minute=30) if day_slug == "saturday" else datetime.time(hour=9)
+            start_time = datetime.time(hour=9)
             end_time = datetime.time(hour=18, minute=55) if day_slug == "saturday" else datetime.time(hour=17, minute=00)
             days[day_slug] = {
                 "conference_day_id": day["start"].weekday(),
