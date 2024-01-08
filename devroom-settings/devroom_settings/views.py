@@ -117,6 +117,7 @@ class MatrixExport(EventPermissionRequired, View):
         schedule = self.request.event.wip_schedule.scheduled_talks.prefetch_related(
             "submission__speakers"
         ).prefetch_related("submission__track__tracksettings__manager_team__members")
+
         for slot in schedule.all():
             persons = []
             for s in slot.submission.speakers.all():
@@ -146,8 +147,12 @@ class MatrixExport(EventPermissionRequired, View):
                 "start_datetime": slot.start.astimezone(
                     pytz.timezone("Europe/Brussels")
                 ),
-                "duration": (slot.end - slot.start).total_seconds(),
-                "track_id": slot.submission.track_id,
+                "duration": slot.submission.duration,
+                "track": {
+                    "id": slot.submission.track.pk,
+                    "slug": slot.submission.track.tracksettings.slug,
+                    "email": slot.submission.track.tracksettings.mail,
+                },
             }
             data.append(talk)
         return JsonResponse({"talks": data}, safe=True)
