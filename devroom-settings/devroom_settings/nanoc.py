@@ -316,7 +316,7 @@ class NanocExporter(ScheduleData):
                                 metadatafile.write(yaml.safe_dump(attachment))
 
                     talks[talk.frab_slug] = {
-                        "event_id": talk.pk,
+                        "event_id": talk.submission.pk,
                         "guid": str(talk.uuid),
                         "conference_track_id": track.pk,
                         "title": talk.submission.title,
@@ -350,6 +350,7 @@ class NanocExporter(ScheduleData):
                         "language": "en",
                         "attachments": attachments,
                         "links": links,
+                        "feedback_url": talk.submission.urls.review.full()
                     }
                     if self.dest_dir and talk.submission.image:
                         talks[talk.frab_slug]["logo"] = {"identifier": logo_identifier, "mime": logo_mime}
