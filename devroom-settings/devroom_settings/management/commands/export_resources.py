@@ -3,12 +3,14 @@ from pathlib import Path
 from shutil import copy2
 
 import pytz
+from django.db import models
 from django.core.management.base import BaseCommand
 from django_scopes import scope
 from PIL import Image
 from pretalx.event.models import Event
-
+from pretalx.submission.models import SubmissionStates
 from devroom_settings.nanoc import NanocExporter
+
 
 
 class Command(BaseCommand):
@@ -23,18 +25,18 @@ class Command(BaseCommand):
         event = Event.objects.get(slug=event_slug)
         dest_dir = Path(kwargs["destination_dir"])
 
-        # create a release
-        if event.wip_schedule.changes["count"] > 0:
-            # Set the timezone to Europe/Brussels
-            brussels_timezone = pytz.timezone("Europe/Brussels")
-            # Get the current time in Brussels timezone
-            current_time = datetime.now(brussels_timezone)
-            # Format the current time to ISO 8601 with minute precision
-            current_time = current_time.strftime("%Y-%m-%d %H:%M")
-            event.wip_schedule.freeze(name=current_time, notify_speakers=False)
-
         with scope(event=event):
             schedule = event.current_schedule
+
+            # Set visibility of talkslots
+            filter = models.Q(models.Q(submission__state=SubmissionStates.CONFIRMED)
+                | models.Q(submission__isnull=True),
+                start__isnull=False, submission__on_website=True)
+            schedule.talks.all().update(is_visible=False)
+            schedule.talks.filter(filter
+            ).update(is_visible=True)
+            schedule.talks.exclude(filter).update(is_visible=False)
+
             nanoc_exporter = NanocExporter(
                 event=event, schedule=schedule, dest_dir=dest_dir
             )
