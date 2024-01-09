@@ -26,7 +26,7 @@ class Command(BaseCommand):
         dest_dir = Path(kwargs["destination_dir"])
 
         with scope(event=event):
-            schedule = event.current_schedule
+            schedule = event.wip_schedule
 
             # Set visibility of talkslots
             filter = models.Q(models.Q(submission__state=SubmissionStates.CONFIRMED)
