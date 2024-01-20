@@ -16,7 +16,7 @@ def navbar_info_event(sender, request, **kwargs):
             "icon": "wpforms",
             "url": reverse(
                 "plugins:pretalx_auditlog:auditlog",
-            ),
+            ) + "?model=SubmissionProxyEvent",
             "active": False,
         }
     ]
@@ -32,7 +32,7 @@ def navbar_info(sender, request, **kwargs):
             "icon": "wpforms",
             "url": reverse(
                 "plugins:pretalx_auditlog:auditlog",
-            ),
+            ) + "?model=SubmissionProxyEvent",
             "active": False,
         }
     ]
