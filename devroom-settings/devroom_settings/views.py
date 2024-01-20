@@ -162,7 +162,7 @@ class MatrixExport(EventPermissionRequired, View):
         return JsonResponse({"talks": data}, safe=True)
 
 
-VIDEO_RECORDING_STRING = "Video Recording"
+VIDEO_RECORDING_STRING = "Video recording"
 
 
 class VideoSubmissionListView(View):
@@ -212,7 +212,7 @@ class VideoSubmissionView(EventPermissionRequired, View):
                 if not record["description"].startswith(VIDEO_RECORDING_STRING):
                     return JsonResponse(
                         {
-                            "error": "Invalid description, must start with 'Video Recording'"
+                            "error": f"Invalid description, must start with '{VIDEO_RECORDING_STRING}'"
                         },
                         status=404,
                     )
