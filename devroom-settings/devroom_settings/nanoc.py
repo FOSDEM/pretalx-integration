@@ -362,7 +362,7 @@ class NanocExporter(ScheduleData):
                         "language": "en",
                         "attachments": attachments,
                         "links": links,
-                        "feedback_url": talk.submission.urls.review.full()
+                        "feedback_url": talk.submission.urls.feedback.full()
                     }
                     if self.dest_dir and talk.submission.image:
                         talks[talk.frab_slug]["logo"] = {"identifier": logo_identifier, "mime": logo_mime}
