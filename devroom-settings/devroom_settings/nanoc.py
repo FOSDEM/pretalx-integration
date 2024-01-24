@@ -1,5 +1,6 @@
 import datetime
 import os
+import shutil
 from collections import defaultdict
 from pathlib import Path
 from shutil import copy2
@@ -49,44 +50,6 @@ yaml.add_representer(defaultdict, Representer.represent_dict)
 def time_to_index(timevalue):
     return int((timevalue.hour * 60 + timevalue.minute) // 5)
 
-def write_image(src, dest, identifier, width, height, event_slug=None, speaker_slug=None):
-    mime = magic.from_file(src, mime=True)
-
-    if (
-            dest.is_file()
-            and dest.stat().st_mtime
-            > src.stat().st_mtime
-    ):
-        return mime
-
-    dest.parent.mkdir(parents=True, exist_ok=True)
-
-    if src.name.endswith('.svg'):
-        copy2(src, dest)
-        os.chmod(dest, 0o664)
-    else:
-        thumb = Image.open(src)
-        thumb.thumbnail((width, height))
-        thumb.save(dest, format=thumb.format)
-
-    meta_thumb = {
-        "identifier": identifier,
-        "file": str(dest),
-        "filename": src.name,
-        "size": dest.stat().st_size,
-        "width": width,
-        "height": height,
-        "mime": mime
-    }
-    if speaker_slug:
-        meta_thumb["speaker_slug"] = speaker_slug
-    if event_slug:
-        meta_thumb["event_slug"] = event_slug
-
-    dest.with_suffix(".yaml").write_text(
-        yaml.safe_dump(meta_thumb)
-    )
-    return mime
 
 def update_end_time(event):
     """Make sure end time is set
@@ -94,15 +57,14 @@ def update_end_time(event):
     the website logic
     """
     talk_slots_to_update = TalkSlot.objects.filter(
-        start__isnull=False,
-        end__isnull=True,
-        submission__isnull=False
+        start__isnull=False, end__isnull=True, submission__isnull=False
     )
 
     for talk_slot in talk_slots_to_update:
         duration_minutes = talk_slot.submission.duration
         talk_slot.end = talk_slot.start + datetime.timedelta(minutes=duration_minutes)
         talk_slot.save()
+
 
 class NanocExporter(ScheduleData):
     identifier = "NanocExporter"
@@ -116,6 +78,49 @@ class NanocExporter(ScheduleData):
         update_end_time(event)
         super().__init__(event, schedule=schedule)
         self.dest_dir = dest_dir
+        shutil.rmtree(dest_dir)
+        self.cache_dir = Path(str(dest_dir) + "_cache")
+
+    def write_image(
+        self, src, dest, identifier, width, height, event_slug=None, speaker_slug=None
+    ):
+        mime = magic.from_file(src, mime=True)
+
+        # (re)create cached thumbnail if needed
+        cache_dest = self.cache_dir / dest
+        if not (
+            cache_dest.is_file() and cache_dest.stat().st_mtime < src.stat().st_mtime
+        ):
+            cache_dest.parent.mkdir(parents=True, exist_ok=True)
+
+            if src.name.endswith(".svg"):
+                os.link(src, cache_dest)
+                os.chmod(cache_dest / dest, 0o664)
+            else:
+                thumb = Image.open(src)
+                thumb.thumbnail((width, height))
+                thumb.save(cache_dest, format=thumb.format)
+
+            meta_thumb = {
+                "identifier": identifier,
+                "file": str(self.dest_dir / dest),
+                "filename": src.name,
+                "size": cache_dest.stat().st_size,
+                "width": width,
+                "height": height,
+                "mime": mime,
+            }
+
+        if speaker_slug:
+            meta_thumb["speaker_slug"] = speaker_slug
+        if event_slug:
+            meta_thumb["event_slug"] = event_slug
+
+        dest_full = self.dest_dir / dest
+        dest_full.parent.mkdir(parents=True, exist_ok=True)
+        os.link(cache_dest, dest_full)
+        dest_full.with_suffix(".yaml").write_text(yaml.safe_dump(meta_thumb))
+        return mime
 
     @cached_property
     def rooms(self):
@@ -234,8 +239,12 @@ class NanocExporter(ScheduleData):
                 events_per_room_per_day[day][room].append(slot.frab_slug)
 
                 if day in start_time:
-                    start_time[day] = min(slot.start.astimezone(self.event.tz).time(), start_time[day])
-                    end_time[day] = max(slot.end.astimezone(self.event.tz).time(), end_time[day])
+                    start_time[day] = min(
+                        slot.start.astimezone(self.event.tz).time(), start_time[day]
+                    )
+                    end_time[day] = max(
+                        slot.end.astimezone(self.event.tz).time(), end_time[day]
+                    )
                 else:
                     start_time[day] = slot.start.astimezone(self.event.tz).time()
                     end_time[day] = slot.end.astimezone(self.event.tz).time()
@@ -290,12 +299,16 @@ class NanocExporter(ScheduleData):
                         (self.dest_dir / f"events/logo/").mkdir(
                             parents=True, exist_ok=True
                         )
-                        image_dest = (
-                            self.dest_dir
-                            / f"events/logo/{talk.frab_slug}{orig_path.suffix}"
+                        image_dest = f"events/logo/{talk.frab_slug}{orig_path.suffix}"
+                        logo_identifier = f"/schedule/event/{talk.frab_slug}/logo/"
+                        logo_mime = self.write_image(
+                            orig_path,
+                            image_dest,
+                            logo_identifier,
+                            200,
+                            200,
+                            event_slug=talk.frab_slug,
                         )
-                        logo_identifier=f"/schedule/event/{talk.frab_slug}/logo/"
-                        logo_mime = write_image(orig_path, image_dest, logo_identifier, 200, 200, event_slug=talk.frab_slug)
 
                     attachments = []
                     for resource in talk.submission.resources.exclude(resource=""):
@@ -320,7 +333,7 @@ class NanocExporter(ScheduleData):
                             (self.dest_dir / destination.parent).mkdir(
                                 parents=True, exist_ok=True
                             )
-                            copy2(src, self.dest_dir / destination)
+                            os.link(src, self.dest_dir / destination)
                             os.chmod(self.dest_dir / destination, 0o664)
                             with open(
                                 self.dest_dir / destination.with_suffix(".yaml"), "w"
@@ -342,7 +355,9 @@ class NanocExporter(ScheduleData):
                         "end_time": talk.end.astimezone(tz).time(),
                         "start_datetime": talk.start,
                         "end_datetime": talk.end,
-                        "start_time_index": time_to_index(talk.start.astimezone(tz).time()),
+                        "start_time_index": time_to_index(
+                            talk.start.astimezone(tz).time()
+                        ),
                         "end_time_index": time_to_index(talk.end.astimezone(tz).time()),
                         "duration": talk.end - talk.start,
                         "day": day_string.lower(),
@@ -362,10 +377,13 @@ class NanocExporter(ScheduleData):
                         "language": "en",
                         "attachments": attachments,
                         "links": links,
-                        "feedback_url": talk.submission.urls.feedback.full()
+                        "feedback_url": talk.submission.urls.feedback.full(),
                     }
                     if self.dest_dir and talk.submission.image:
-                        talks[talk.frab_slug]["logo"] = {"identifier": logo_identifier, "mime": logo_mime}
+                        talks[talk.frab_slug]["logo"] = {
+                            "identifier": logo_identifier,
+                            "mime": logo_mime,
+                        }
         return talks
 
     @cached_property
@@ -378,8 +396,16 @@ class NanocExporter(ScheduleData):
             # TODO: these values should be calculated and only be hardcoded when no schedule
             # is published. If incorrect, the website rendering is not good
 
-            start_time = datetime.time(hour=9, minute=30) if day_slug == "saturday" else datetime.time(hour=9)
-            end_time = datetime.time(hour=18, minute=55) if day_slug == "saturday" else datetime.time(hour=17, minute=00)
+            start_time = (
+                datetime.time(hour=9, minute=30)
+                if day_slug == "saturday"
+                else datetime.time(hour=9)
+            )
+            end_time = (
+                datetime.time(hour=18, minute=55)
+                if day_slug == "saturday"
+                else datetime.time(hour=17, minute=00)
+            )
             days[day_slug] = {
                 "conference_day_id": day["start"].weekday(),
                 "name": day["start"].strftime("%A"),
@@ -406,21 +432,35 @@ class NanocExporter(ScheduleData):
                                 orig_path = Path(speaker.avatar.path)
                                 # store thumbnail
 
-                                thumb_dest = (
-                                    self.dest_dir
-                                    / "speaker"
-                                    / "thumbnails"
-                                    / f"{speaker.code}{orig_path.suffix}"
+                                thumb_dest = f"speaker/thumbnails/{speaker.code}{orig_path.suffix}"
+
+                                thumb_identifier = (
+                                    f"/schedule/speaker/{speaker.code}/thumbnail/"
                                 )
-                                thumb_identifier = f"/schedule/speaker/{speaker.code}/thumbnail/"
-                                thumb_mime = write_image(orig_path, thumb_dest, thumb_identifier, 32, 32, speaker_slug=speaker.code)
+                                thumb_mime = self.write_image(
+                                    orig_path,
+                                    thumb_dest,
+                                    thumb_identifier,
+                                    32,
+                                    32,
+                                    speaker_slug=speaker.code,
+                                )
 
                                 photo_dest = (
-                                    self.dest_dir
-                                    / f"speaker/photos/{speaker.code}{orig_path.suffix}"
+                                    f"speaker/photos/{speaker.code}{orig_path.suffix}"
                                 )
-                                photo_identifier = f"/schedule/speaker/{speaker.code}/photo/"
-                                photo_mime = write_image(orig_path, photo_dest, photo_identifier, 220, 180, speaker_slug=speaker.code)
+
+                                photo_identifier = (
+                                    f"/schedule/speaker/{speaker.code}/photo/"
+                                )
+                                photo_mime = self.write_image(
+                                    orig_path,
+                                    photo_dest,
+                                    photo_identifier,
+                                    220,
+                                    180,
+                                    speaker_slug=speaker.code,
+                                )
 
                             try:
                                 biography = speaker.profiles.get(
@@ -439,7 +479,9 @@ class NanocExporter(ScheduleData):
                                 "slug": speaker.code,
                                 "gender": "",  # check whether we need/want this
                                 "sortname": speaker.name.upper(),
-                                "abstract": markdown.markdown(biography) if biography else "",
+                                "abstract": markdown.markdown(biography)
+                                if biography
+                                else "",
                                 "description": "",  # Lets not make things more confusing
                                 "conference_person_id": speaker.pk,  # not equal to person_id in penta
                                 "links": [],
@@ -447,8 +489,14 @@ class NanocExporter(ScheduleData):
                                 # "events_by_day:": events_by_day
                             }
                             if self.dest_dir and speaker.avatar:
-                                speakers_dict[speaker.code]["thumbnail"] = {"identifier": thumb_identifier, "mime": thumb_mime}
-                                speakers_dict[speaker.code]["photo"] = {"identifier": photo_identifier, "mime": photo_mime}
+                                speakers_dict[speaker.code]["thumbnail"] = {
+                                    "identifier": thumb_identifier,
+                                    "mime": thumb_mime,
+                                }
+                                speakers_dict[speaker.code]["photo"] = {
+                                    "identifier": photo_identifier,
+                                    "mime": photo_mime,
+                                }
                         else:
                             speakers_dict[speaker.code]["events"].append(talk.frab_slug)
 
@@ -469,14 +517,18 @@ class NanocExporter(ScheduleData):
             "timeslot_duration": datetime.timedelta(hours=0, minutes=5),
             "default_timeslots": 10,
             "max_timeslot_duration": 25,
-            "day_change": datetime.timedelta(hours=9),# this is an interesting workaround
+            "day_change": datetime.timedelta(
+                hours=9
+            ),  # this is an interesting workaround
             "remark": "",
             "homepage": "https://fosdem.org/",
             "abstract_length": "",
             "description_length": "",
             "export_base_url": "https://fosdem.org/2024/schedule",
             "schedule_html_include": "",
-            "schedule_version": self.schedule.version if self.schedule.version else "latest",
+            "schedule_version": self.schedule.version
+            if self.schedule.version
+            else "latest",
             "feedback_base_url": "https://fosdem.org/TODO",
             "css": "",
             "email": "info@fosdem.org",
