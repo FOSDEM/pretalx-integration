@@ -94,6 +94,8 @@ class NanocExporter(ScheduleData):
             cache_dest.parent.mkdir(parents=True, exist_ok=True)
 
             if src.name.endswith(".svg"):
+                if cache_dest.is_file():
+                    cache_dest.unlink()
                 os.link(src, cache_dest)
                 os.chmod(cache_dest / dest, 0o664)
             else:
