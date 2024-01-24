@@ -97,7 +97,7 @@ class NanocExporter(ScheduleData):
                 if cache_dest.is_file():
                     cache_dest.unlink()
                 os.link(src, cache_dest)
-                os.chmod(cache_dest / dest, 0o664)
+                os.chmod(cache_dest, 0o664)
             else:
                 thumb = Image.open(src)
                 thumb.thumbnail((width, height))
