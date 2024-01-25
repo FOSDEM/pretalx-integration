@@ -79,8 +79,17 @@ class DevroomDashboard(EventPermissionRequired, ListView):
             for track in context["trackssettings"]
         ]
 
+        room_days = [
+            get_track_room_days([track.track]) for track in context["trackssettings"]
+        ]
+
         context["track_forms"] = zip(
-            context["trackssettings"], forms, invite_forms, devroom_forms, access_codes
+            context["trackssettings"],
+            forms,
+            invite_forms,
+            devroom_forms,
+            access_codes,
+            room_days,
         )
 
         return context
@@ -303,16 +312,15 @@ class VideoInstructionsView(EventPermissionRequired, View):
             Path(settings.MEDIA_ROOT)
             / f"fosdem-2024/video_instructions/{day}-{room}.pdf"
         )
-        with open(
-            file_path,
-            "rb",
-        ) as file:
-            response = FileResponse(file.read())
+        if not file_path.exists():
+            return HttpResponse("File not found", status=404)
+        file = open(file_path, "rb")
+        response = FileResponse(file)
 
-            # Set the content type for the response
-            response["Content-Type"] = "application/octet-stream"
+        # Set the content type for the response
+        response["Content-Type"] = "application/pdf"
 
-            # Set the Content-Disposition header to force download
-            response["Content-Disposition"] = f'attachment; filename="{file_path.name}"'
+        # Set the Content-Disposition header to force download
+        response["Content-Disposition"] = f'attachment; filename="{file_path.name}"'
 
-            return response
+        return response
