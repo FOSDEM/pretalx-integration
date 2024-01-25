@@ -1,16 +1,22 @@
 import json
 import logging
+from pathlib import Path
 
 import pytz
-from django.db.models import Prefetch
-from django.http import JsonResponse
+from django.conf import settings
+from django.core.exceptions import PermissionDenied
+from django.db.models import CharField, F, Value
+from django.db.models.functions import Cast
+from django.http import FileResponse, JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import ListView, View
+from django_scopes import scope, scopes_disabled
 from pretalx.common.mixins.views import EventPermissionRequired
 from pretalx.event.forms import TeamInviteForm
 from pretalx.event.models import TeamInvite
-from pretalx.submission.models import Resource, Submission, SubmitterAccessCode
+from pretalx.schedule.models import Room, TalkSlot
+from pretalx.submission.models import Resource, Submission, SubmitterAccessCode, Track
 
 from devroom_settings.forms import DevroomTrackForm, DevroomTrackSettingsForm
 from devroom_settings.models import TrackSettings
@@ -155,7 +161,7 @@ class MatrixExport(EventPermissionRequired, View):
                     "id": slot.submission.track.pk,
                     "slug": slot.submission.track.tracksettings.slug,
                     "email": slot.submission.track.tracksettings.mail,
-                    "name": str(slot.submission.track.name)
+                    "name": str(slot.submission.track.name),
                 },
             }
             data.append(talk)
@@ -263,3 +269,50 @@ class VideoSubmissionView(EventPermissionRequired, View):
         except Resource.DoesNotExist:
             data = []
         return JsonResponse(data, safe=False, status=200)
+
+
+def get_track_room_days(tracks):
+    with scopes_disabled():
+        day_rooms = (
+            TalkSlot.objects.filter(submission__track__in=tracks, room__isnull=False)
+            .values_list("start__date__iso_week_day", "room__name")
+            .distinct()
+        )
+        day_rooms = list(day_rooms)
+        day_rooms = {(day - 5, room.localize("en")) for (day, room) in day_rooms}
+
+    return day_rooms
+
+
+class VideoInstructionsView(EventPermissionRequired, View):
+    permission_required = "orga.change_submissions"
+
+    def get(self, request, room, day, **kwargs):
+        teams = self.request.user.teams.all()
+        tracks = Track.objects.filter(
+            tracksettings__manager_team__in=teams, event=self.request.event
+        )
+        day_rooms = get_track_room_days(tracks)
+
+        if not (int(day), room) in day_rooms:
+            msg = f"{day}, {room} supplied, not part of {day_rooms}"
+            print(msg)
+            raise PermissionDenied(msg)
+
+        file_path = (
+            Path(settings.MEDIA_ROOT)
+            / f"fosdem-2024/video_instructions/{day}-{room}.pdf"
+        )
+        with open(
+            file_path,
+            "rb",
+        ) as file:
+            response = FileResponse(file)
+
+            # Set the content type for the response
+            response["Content-Type"] = "application/octet-stream"
+
+            # Set the Content-Disposition header to force download
+            response["Content-Disposition"] = f'attachment; filename="{file_path.name}"'
+
+            return response

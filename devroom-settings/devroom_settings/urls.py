@@ -15,6 +15,11 @@ urlpatterns = [
         name="devroom-dashboard",
     ),
     re_path(
+        rf"^orga/event/(?P<event>{SLUG_REGEX})/p/devroom-video/(?P<room>[a-zA-Z0-9.-]+)/(?P<day>[0-9]+)$",
+        views.VideoInstructionsView.as_view(),
+        name="devroom-videoinstructions",
+    ),
+    re_path(
         rf"^(?P<event>{SLUG_REGEX})/p/matrix/$",
         views.MatrixExport.as_view(),
         name="matrix-export",
