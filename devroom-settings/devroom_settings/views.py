@@ -307,7 +307,7 @@ class VideoInstructionsView(EventPermissionRequired, View):
             file_path,
             "rb",
         ) as file:
-            response = FileResponse(file)
+            response = FileResponse(file.read())
 
             # Set the content type for the response
             response["Content-Type"] = "application/octet-stream"
