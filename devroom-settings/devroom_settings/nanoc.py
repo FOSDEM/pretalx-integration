@@ -375,11 +375,8 @@ class NanocExporter(ScheduleData):
         for day in self.data:
             day_slug = day["start"].strftime("%A").lower()
 
-            # TODO: these values should be calculated and only be hardcoded when no schedule
-            # is published. If incorrect, the website rendering is not good
-
-            start_time = datetime.time(hour=9, minute=30) if day_slug == "saturday" else datetime.time(hour=9)
-            end_time = datetime.time(hour=18, minute=55) if day_slug == "saturday" else datetime.time(hour=17, minute=00)
+            start_time = day["first_start"].astimezone(tz).time()
+            end_time = day["last_end"].astimezone(tz).time()
             days[day_slug] = {
                 "conference_day_id": day["start"].weekday(),
                 "name": day["start"].strftime("%A"),
