@@ -300,8 +300,11 @@ class NanocExporter(ScheduleData):
                     attachments = []
                     for resource in talk.submission.resources.exclude(resource=""):
                         src = Path(resource.resource.path)
+                        # TODO: this is just one, we should also change other special symbols
+                        # the same way nanoc does this
+                        dest_name = src.stem.replace(".", "_")+src.suffix
                         destination = Path(
-                            f"events/attachments/{talk.frab_slug}/slides/{str(talk.pk)}/{src.name}"
+                            f"events/attachments/{talk.frab_slug}/slides/{str(talk.pk)}/{dest_name}"
                         )
 
                         attachment = {
