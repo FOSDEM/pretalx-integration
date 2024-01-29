@@ -1,5 +1,6 @@
 import datetime
 import os
+import re
 from collections import defaultdict
 from pathlib import Path
 from shutil import copy2
@@ -15,6 +16,7 @@ from pretalx.person.models import SpeakerProfile
 from pretalx.schedule.exporters import ScheduleData
 from pretalx.schedule.models import Room, TalkSlot
 from pretalx.submission.models import Submission, Track
+from unidecode import unidecode
 
 tz = pytz.timezone("Europe/Brussels")
 
@@ -44,6 +46,25 @@ yaml.add_representer(datetime.datetime, represent_datetime)
 from yaml.representer import Representer
 
 yaml.add_representer(defaultdict, Representer.represent_dict)
+
+
+def sanitize_filename(filename):
+    """Sanitize filename the same way nanoc would do it"""
+    b = Path(filename).stem
+    suffix = Path(filename).suffix
+
+    # Transliterate non-ASCII characters
+    b = unidecode(b)
+
+    b = re.sub(r'\/+', '', b)
+    b = re.sub(r'\s+', '_', b)
+    b = re.sub(r'["\']+', '', b)
+    b = re.sub(r'[^0-9A-Za-z\-]', '_', b)
+    b = re.sub(r'_+', '_', b)
+    b = re.sub(r'^_', '', b)
+    b = re.sub(r'_$', '', b)
+
+    return b + suffix
 
 
 def time_to_index(timevalue):
@@ -300,9 +321,7 @@ class NanocExporter(ScheduleData):
                     attachments = []
                     for resource in talk.submission.resources.exclude(resource=""):
                         src = Path(resource.resource.path)
-                        # TODO: this is just one, we should also change other special symbols
-                        # the same way nanoc does this
-                        dest_name = src.stem.replace(".", "_")+src.suffix
+                        dest_name = sanitize_filename(src)
                         destination = Path(
                             f"events/attachments/{talk.frab_slug}/slides/{str(talk.pk)}/{dest_name}"
                         )
