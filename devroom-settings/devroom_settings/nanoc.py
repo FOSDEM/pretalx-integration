@@ -377,6 +377,7 @@ class NanocExporter(ScheduleData):
                         "track_name": str(track.name),
                         "track_full_name": str(track.name),
                         "type": track.tracksettings.get_track_type_display(),
+                        "live_video_link": "https://live.fosdem.org/watch/" + str(talk.room.name)
                         "room": str(talk.room.name).lower(),
                         "room_name": str(talk.room.description),
                         "room_rank": talk.room.position,
