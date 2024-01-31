@@ -12,7 +12,7 @@
 {% block cfp_content %}
 
 
-    {% for track, form, invite_form, devroom_form, access_codes in track_forms %}
+    {% for track, form, invite_form, devroom_form, access_codes, room_days in track_forms %}
         <h2>{{  track.track.name }}</h2>
 
 <h3>Devroom managers</h3>
@@ -145,15 +145,28 @@
                                 </div>
                     </li>{% endfor %}
                 </ul>
-
-        <h4>During the event</h4>
-        <p>A Matrix chat will optionally be provided to each devroom. This will allow online participants to ask questions.
-            We will only provide this chat if it is actively monitored. In that case devroom managers and speakers will get moderation rights</p>
-            {% bootstrap_field form.online_qa layout='event' %}
-
-                    <button type="submit" class="btn btn-block btn-success font-weight-bold">
+            <button type="submit" class="btn btn-block btn-success font-weight-bold">
                 {% translate "Submit changes" %}
             </button>
+
+        <h4>During the event</h4>
+        <p>Instructions for video monitoring can be found in the document below. Direct links to your video interfaces are also included.
+            Feel free to share these links/documents with trusted volunteers.
+        <ul>
+            {% for day, room in room_days %}
+                <li><ul>
+				<li>{{room}}(day {{day}}): <a href="../video-instructions/{{room}}/{{day}}/">video-instructions/{{room}}/{{day}}/</a>
+                </ul></li>
+                </li>
+            {% endfor %}
+        </ul>
+
+        </p>
+        <p>A Matrix chat will optionally be provided to each devroom. This will allow online participants to ask questions.</p>
+        <p>This should be the link to your devroom channel: TODO</p>
+
+
+
 </form>
         <hr />
     {% endfor %}

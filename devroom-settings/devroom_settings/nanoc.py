@@ -1,6 +1,7 @@
 import datetime
 import os
 import shutil
+import re
 from collections import defaultdict
 from pathlib import Path
 from shutil import copy2
@@ -16,6 +17,7 @@ from pretalx.person.models import SpeakerProfile
 from pretalx.schedule.exporters import ScheduleData
 from pretalx.schedule.models import Room, TalkSlot
 from pretalx.submission.models import Submission, Track
+from unidecode import unidecode
 
 tz = pytz.timezone("Europe/Brussels")
 
@@ -45,6 +47,25 @@ yaml.add_representer(datetime.datetime, represent_datetime)
 from yaml.representer import Representer
 
 yaml.add_representer(defaultdict, Representer.represent_dict)
+
+
+def sanitize_filename(filename):
+    """Sanitize filename the same way nanoc would do it"""
+    b = Path(filename).stem
+    suffix = Path(filename).suffix
+
+    # Transliterate non-ASCII characters
+    b = unidecode(b)
+
+    b = re.sub(r'\/+', '', b)
+    b = re.sub(r'\s+', '_', b)
+    b = re.sub(r'["\']+', '', b)
+    b = re.sub(r'[^0-9A-Za-z\-]', '_', b)
+    b = re.sub(r'_+', '_', b)
+    b = re.sub(r'^_', '', b)
+    b = re.sub(r'_$', '', b)
+
+    return b + suffix
 
 
 def time_to_index(timevalue):
@@ -78,7 +99,9 @@ class NanocExporter(ScheduleData):
         update_end_time(event)
         super().__init__(event, schedule=schedule)
         self.dest_dir = dest_dir
-        shutil.rmtree(dest_dir)
+        shutil.rmtree(dest_dir, ignore_errors=True)
+
+        Path(dest_dir).mkdir()
         self.cache_dir = Path(str(dest_dir) + "_cache")
 
     def write_image(
@@ -89,7 +112,7 @@ class NanocExporter(ScheduleData):
         # (re)create cached thumbnail if needed
         cache_dest = self.cache_dir / dest
         if not (
-            cache_dest.is_file() and cache_dest.stat().st_mtime < src.stat().st_mtime
+            cache_dest.is_file() and cache_dest.stat().st_mtime >= src.stat().st_mtime
         ):
             cache_dest.parent.mkdir(parents=True, exist_ok=True)
 
@@ -99,19 +122,20 @@ class NanocExporter(ScheduleData):
                 os.link(src, cache_dest)
                 os.chmod(cache_dest, 0o664)
             else:
+
                 thumb = Image.open(src)
                 thumb.thumbnail((width, height))
                 thumb.save(cache_dest, format=thumb.format)
 
-            meta_thumb = {
-                "identifier": identifier,
-                "file": str(self.dest_dir / dest),
-                "filename": src.name,
-                "size": cache_dest.stat().st_size,
-                "width": width,
-                "height": height,
-                "mime": mime,
-            }
+        meta_thumb = {
+            "identifier": identifier,
+            "file": str(self.dest_dir / dest),
+            "filename": src.name,
+            "size": cache_dest.stat().st_size,
+            "width": width,
+            "height": height,
+            "mime": mime,
+        }
 
         if speaker_slug:
             meta_thumb["speaker_slug"] = speaker_slug
@@ -268,7 +292,7 @@ class NanocExporter(ScheduleData):
                 "conference_track_id": track.pk,
                 "conference_call_for_papers_url": cfp,
                 "slug": track.tracksettings.slug,
-                "rank": track.position if track.position else track.pk,
+                "rank": track.position,
                 "type": track_type,
                 "online_qa": online_qa,
                 "rooms": track_rooms,
@@ -315,8 +339,9 @@ class NanocExporter(ScheduleData):
                     attachments = []
                     for resource in talk.submission.resources.exclude(resource=""):
                         src = Path(resource.resource.path)
+                        dest_name = sanitize_filename(src)
                         destination = Path(
-                            f"events/attachments/{talk.frab_slug}/slides/{str(talk.pk)}/{src.name}"
+                            f"events/attachments/{talk.frab_slug}/slides/{str(talk.pk)}/{dest_name}"
                         )
 
                         attachment = {
@@ -372,6 +397,7 @@ class NanocExporter(ScheduleData):
                         "track_name": str(track.name),
                         "track_full_name": str(track.name),
                         "type": track.tracksettings.get_track_type_display(),
+                        "live_video_link": "https://live.fosdem.org/watch/" + str(talk.room.name),
                         "room": str(talk.room.name).lower(),
                         "room_name": str(talk.room.description),
                         "room_rank": talk.room.position,
