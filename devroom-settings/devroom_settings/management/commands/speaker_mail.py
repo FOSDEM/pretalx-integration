@@ -44,12 +44,15 @@ def send_speaker_mails(event, save=True):
                 submission__speakers=speaker
             )
 
+        # generate fosdem website links from slots
+        website_links = ["https://fosdem.org/2024/schedule/event/"+ slot.frab_slug for slot in slots]
+
         mail = QueuedMail(
             event=event,
             subject="Speaker Instructions for FOSDEM (test)",
             # to=speaker.email,
             text=get_template("speaker_mail.html").render(
-                context={"slots": slots}
+                context={"slots": slots, "links": website_links}
             ),
             locale=locale,
         )
