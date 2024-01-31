@@ -1,0 +1,22 @@
+Dear presenter,
+
+Thanks again for presenting at FOSDEM!
+
+Your talking schedule:
+|Title|timeslot|link|
+|-----|--------|----|
+{% for slot in slots %}|{{ slot.submission.title }}|{{slot.start}}-{{slot.end}}, {{slot.room}}|{% endfor %}
+
+
+Some tips for making the best of it:
+
+1) FOSDEM intends to record and stream the entire conference live. The recordings will be published under the same licence as all FOSDEM content (CC-BY). You are agreeing to this by taking part in the event.
+
+2) Any slide decks you present should be uploaded by about half-an-hour before the start of your talk so that people watching the live stream can follow them locally if their video resolution leaves slide content indistinct. (Our system does not hold back publication, so if you don't want people to see them too far in advance, don't upload them yet. You could also omit from the uploaded version any surprises or answers you don't want to reveal in advance.) You can upload your slides from https://pretalx.fosdem.org/fosdem-2024/me/submissions/: click your talk and click the blue button "Add another resource". We recommend uploading the slides rather than linking them.
+
+3) Please don't forget to bring an HDMI adaptor if you hope to present from a laptop that only has a different type of output connector! We also recommend bringing a spare copy of any slides on a USB stick.
+
+4) If you're visiting Brussels with a partner who doesn't want to spend all their time at the event, we have some free tours of Brussels available. More information at https://fosdem.org/2024/sightseeing/
+
+5) If your children are travelling with you, they might be interested in some of the workshops (7-17 years old) that are offered in the FOSDEM Junior track: https://fosdem.org/2024/news/2024-01-19-fosdem-junior/
+
