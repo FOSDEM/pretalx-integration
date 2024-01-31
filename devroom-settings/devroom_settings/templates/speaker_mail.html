@@ -3,10 +3,14 @@ Dear presenter,
 Thanks again for presenting at FOSDEM!
 
 Your talking schedule:
-|Title|timeslot|link|
-|-----|--------|----|
-{% for slot in slots %}|{{ slot.submission.title }}|{{slot.start}}-{{slot.end}}, {{slot.room}}|{% endfor %}
 
+<table>
+<tr><th>title</th><th>timeslot</th><th>room</th></tr>
+<tbody>
+{% for slot in slots %}<tr><td>{{ slot.submission.title }}</td><td>{{slot.start.date}}: {{slot.start.time}}-{{slot.end.time}}</td><td>{{slot.room}}</td></tr>{% endfor %}
+</tbody>
+</table>
+<br/>
 
 Some tips for making the best of it:
 

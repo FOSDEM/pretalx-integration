@@ -28,7 +28,7 @@ def send_speaker_mails(event, save=True):
     date_formats = {}
 
     with scope(event=event):
-        speakers = list(event.speakers.all())[0:2]
+        speakers = list(event.speakers.all())[0:1] # limiting to one for tests
 
     for speaker in speakers:
         locale = speaker.locale if speaker.locale in event.locales else event.locale
@@ -46,9 +46,9 @@ def send_speaker_mails(event, save=True):
 
         mail = QueuedMail(
             event=event,
-            subject="Speaker Instructions for FOSDEM",
+            subject="Speaker Instructions for FOSDEM (test)",
             # to=speaker.email,
-            text=get_template("devroom_settings/speaker_mail.md").render(
+            text=get_template("speaker_mail.html").render(
                 context={"slots": slots}
             ),
             locale=locale,
