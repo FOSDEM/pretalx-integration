@@ -3,7 +3,7 @@ from django_scopes import ScopedManager
 from pretalx.event.models import Team
 from pretalx.person.models import User
 from pretalx.schedule.models import Room
-from pretalx.submission.models import Track
+from pretalx.submission.models import Submission, Track
 
 
 class TrackSettings(models.Model):
@@ -54,3 +54,14 @@ class RoomSettings(models.Model):
         help_text="Should content of this room be exported to the website",
         default=True,
     )
+
+class FosdemFeedback(models.Model):
+    submission = models.ForeignKey(Submission, on_delete=models.CASCADE)
+    personal_knowledge = models.IntegerField(null=True, blank=True, help_text="How would you rate your personal knowledge about this topic?") 
+    content_importance = models.IntegerField(null=True, blank=True, help_text="How important is this topic for this conference?")
+    content_quality = models.IntegerField(null=True, blank=True, help_text="What is your impression of the quality of the content?")
+    presentation_quality = models.IntegerField(null=True, blank=True, help_text="What is your impression of the presentation?")
+    feedback = models.TextField()
+
+    class Meta:
+        db_table: "fosdem_feedback"
