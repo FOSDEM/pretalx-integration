@@ -10,16 +10,17 @@ from django.db.models.functions import Cast
 from django.http import FileResponse, JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
-from django.views.generic import ListView, View
+from django.views.generic import CreateView, ListView, View
 from django_scopes import scope, scopes_disabled
+from django.shortcuts import get_object_or_404
 from pretalx.common.mixins.views import EventPermissionRequired
 from pretalx.event.forms import TeamInviteForm
 from pretalx.event.models import TeamInvite
 from pretalx.schedule.models import Room, TalkSlot
 from pretalx.submission.models import Resource, Submission, SubmitterAccessCode, Track
 
-from devroom_settings.forms import DevroomTrackForm, DevroomTrackSettingsForm
-from devroom_settings.models import TrackSettings
+from devroom_settings.forms import DevroomTrackForm, DevroomTrackSettingsForm, FosdemFeedbackForm
+from devroom_settings.models import TrackSettings,FosdemFeedback
 
 
 class DevroomReport(EventPermissionRequired, ListView):
@@ -324,3 +325,31 @@ class VideoInstructionsView(EventPermissionRequired, View):
         response["Content-Disposition"] = f'attachment; filename="{file_path.name}"'
 
         return response
+
+class FeedbackCreateView(CreateView):
+    model = FosdemFeedback
+    form_class = FosdemFeedbackForm
+    template_name = 'devroom_settings/feedback_template.html'
+
+    def get_success_url(self):
+        # Redirect to a success page or adjust as needed
+        submission_code = self.kwargs.get('submission_code')
+        submission = get_object_or_404(Submission, code=submission_code)
+        return 'https://fosdem.org/schedule/event/{submission.slug}'
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        submission_code = self.kwargs.get('submission_code')
+        submission = Submission.objects.get(code=submission_code)
+        with scope(event=self.request.event):
+            submission = get_object_or_404(Submission, code=submission_code)
+        # check on schedule
+        if not submission.slot and slot.start:
+            raise Http404("Submission not found or not scheduled/open for feedback") 
+        kwargs['instance'] = FosdemFeedback(submission=submission)
+        return kwargs
+
+    def form_valid(self, form):
+        # Set the submission before saving the form
+        form.instance.submission = get_object_or_404(Submission, code=self.kwargs.get('submission_id'))
+        return super().form_valid(form)
