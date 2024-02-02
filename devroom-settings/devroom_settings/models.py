@@ -77,6 +77,7 @@ class FosdemFeedback(models.Model):
     content_quality = models.IntegerField(null=True, blank=True, help_text="What is your impression of the quality of the content?", choices=feedback_choices)
     presentation_quality = models.IntegerField(null=True, blank=True, help_text="What is your impression of the presentation?", choices=feedback_choices)
     feedback = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        db_table: "fosdem_feedback"
+        db_table= "fosdem_feedback"
