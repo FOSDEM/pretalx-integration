@@ -67,10 +67,13 @@ def sanitize_filename(filename):
 
     return b + suffix
 
-def chat_link(room):
+def chat_link(room, app=False):
     chat_room_name = re.sub(r'[()\s]+', '_', str(room.description).lower())
-
-    return "https://chat.fosdem.org/#/room/#2024-" + chat_room_name + ':fosdem.org'
+    if app:
+        link = f"https://matrix.to/#/#2024-{chat_room_name}:fosdem.org?web-instance[element.io]=chat.fosdem.org"
+    else:
+        link = f"https://chat.fosdem.org/#/room/#2024-{chat_room_name}:fosdem.org"
+    return link
 def time_to_index(timevalue):
     return int((timevalue.hour * 60 + timevalue.minute) // 5)
 
@@ -323,6 +326,10 @@ class NanocExporter(ScheduleData):
                             link__isnull=False
                         )
                     ]
+
+                    links += [{"title" : "Chat room(web)", "url": chat_link(talk.room)},
+                     {"title": "Chat room(app)", "url": chat_link(talk.room, app=True)}]
+
                     # add feedback link
                     links += [{"title": "Submit Feedback", "url": talk.submission.urls.feedback.full()}]
 
