@@ -67,7 +67,10 @@ def sanitize_filename(filename):
 
     return b + suffix
 
+def chat_link(room):
+    chat_room_name = re.sub(r'[()\s]+', '_', str(room.description).lower())
 
+    return "https://chat.fosdem.org/#/room/#2024-" + chat_room_name + ':fosdem.org'
 def time_to_index(timevalue):
     return int((timevalue.hour * 60 + timevalue.minute) // 5)
 
@@ -219,7 +222,7 @@ class NanocExporter(ScheduleData):
                 "size": room.capacity,
                 "rank": room.position,
                 "slug": str(room.name).lower(),
-                "chat_link": "https://chat.fosdem.org/todo",
+                "chat_link": chat_link(room),
                 "live_video_link": f"https://live.fosdem.org/watch/{str(room.name)}",
                 "title": str(room.description),
                 "events": [talk.frab_slug for talk in room.talks_current],
@@ -403,6 +406,7 @@ class NanocExporter(ScheduleData):
                         "track_full_name": str(track.name),
                         "type": track.tracksettings.get_track_type_display(),
                         "live_video_link": "https://live.fosdem.org/watch/" + str(talk.room.name),
+                        "chat_link": chat_link(talk.room),
                         "room": str(talk.room.name).lower(),
                         "room_name": str(talk.room.description),
                         "room_rank": talk.room.position,
