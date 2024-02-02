@@ -321,7 +321,7 @@ class NanocExporter(ScheduleData):
                         )
                     ]
                     # add feedback link
-                    links += {"title": "Submit Feedback", "url": talk.submission.urls.feedback.full()}
+                    links += [{"title": "Submit Feedback", "url": talk.submission.urls.feedback.full()}]
 
                     # add matrix links TODO!
 
