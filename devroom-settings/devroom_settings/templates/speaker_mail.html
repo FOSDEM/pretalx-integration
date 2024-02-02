@@ -1,0 +1,33 @@
+Dear presenter,
+
+Thanks again for presenting at FOSDEM!
+
+Checklist:
+* make sure that the schedule shows what you expect, if it is not the case, get in touch with us or the responsible devroom-manager
+* Upload a [photo, biography](https://pretalx.fosdem.org/fosdem-2024/me/) and a logo for your [talk](https://pretalx.fosdem.org/fosdem-2024/me/submissions/). Note you can use [markdown](https://docs.pretalx.org/en/latest/user/markdown.html) formatting.
+* check your presentation on the fosdem website and adjust if necessary (or contact us if needed) 
+
+<table>
+<tr><th>title</th><th>timeslot</th><th>room</th></tr>
+<tbody>
+{% for slot in slots %}<tr><td>{{ slot.submission.title }}</td><td>{{slot.start.date}}: {{slot.start.time}}-{{slot.end.time}}</td><td>{{slot.room}}</td></tr>{% endfor %}
+</tbody>
+</table>
+<br/>
+
+Please check the links on the public website of FOSDEM (the website rebuilds every 3 minutes: if you made changes, they don't appear immediately), to make sure your abstract and biography look good.
+
+{% for link in links %}
+* {{ link }}{% endfor %}
+
+Some tips for making the best of FOSDEM 2024:
+
+1) FOSDEM intends to record and stream the entire conference live. The recordings will be published under the same licence as all FOSDEM content (CC-BY). You are agreeing to this by taking part in the event.
+
+2) Any slide decks you present should be uploaded by about half-an-hour before the start of your talk so that people watching the live stream can follow them locally if their video resolution leaves slide content indistinct. (Our system does not hold back publication, so if you don't want people to see them too far in advance, don't upload them yet. You could also omit from the uploaded version any surprises or answers you don't want to reveal in advance.) You can upload your slides from https://pretalx.fosdem.org/fosdem-2024/me/submissions/: click your talk and click the blue button "Add another resource".
+
+3) Please don't forget to bring an HDMI adaptor if you hope to present from a laptop that only has a different type of output connector! We also recommend bringing a spare copy of any slides on a USB stick. 
+
+4) If you're visiting Brussels with a partner who doesn't want to spend all their time at the event, we have some free tours of Brussels available. More information at https://fosdem.org/2024/sightseeing/
+
+5) If your children are travelling with you, they might be interested in some of the workshops (7-17 years old) that are offered in the FOSDEM Junior track: https://fosdem.org/2024/news/2024-01-19-fosdem-junior/
