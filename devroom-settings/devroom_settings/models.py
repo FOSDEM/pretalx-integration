@@ -55,12 +55,27 @@ class RoomSettings(models.Model):
         default=True,
     )
 
+
+feedback_choices=[
+        (5, 'Very Good'),
+        (4, 'Good'),
+        (3, 'Neutral'),
+        (2, 'Bad'),
+        (1, 'Very Bad'),
+    ]
+important_choices=[
+        (5, 'Very Important'),
+        (4, 'Important'),
+        (3, 'Neutral'),
+        (2, 'Not Important'),
+        (1, 'Irrelevant'),
+    ]
 class FosdemFeedback(models.Model):
     submission = models.ForeignKey(Submission, on_delete=models.CASCADE)
-    personal_knowledge = models.IntegerField(null=True, blank=True, help_text="How would you rate your personal knowledge about this topic?") 
-    content_importance = models.IntegerField(null=True, blank=True, help_text="How important is this topic for this conference?")
-    content_quality = models.IntegerField(null=True, blank=True, help_text="What is your impression of the quality of the content?")
-    presentation_quality = models.IntegerField(null=True, blank=True, help_text="What is your impression of the presentation?")
+    personal_knowledge = models.IntegerField(null=True, blank=True, help_text="How would you rate your personal knowledge about this topic?", choices=feedback_choices)
+    content_importance = models.IntegerField(null=True, blank=True, help_text="How important is this topic for this conference?", choices=important_choices)
+    content_quality = models.IntegerField(null=True, blank=True, help_text="What is your impression of the quality of the content?", choices=feedback_choices)
+    presentation_quality = models.IntegerField(null=True, blank=True, help_text="What is your impression of the presentation?", choices=feedback_choices)
     feedback = models.TextField()
 
     class Meta:

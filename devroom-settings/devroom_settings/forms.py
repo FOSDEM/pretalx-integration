@@ -51,9 +51,4 @@ class FosdemFeedbackForm(forms.ModelForm):
     class Meta:
         model = FosdemFeedback
         fields = ['personal_knowledge', 'content_importance', 'content_quality', 'presentation_quality', 'feedback']
-        widgets = {
-            'personal_knowledge': forms.NumberInput(attrs={'min': 1, 'max': 10}),
-            'content_importance': forms.NumberInput(attrs={'min': 1, 'max': 10}),
-            'content_quality': forms.NumberInput(attrs={'min': 1, 'max': 10}),
-            'presentation_quality': forms.NumberInput(attrs={'min': 1, 'max': 10}),
-        }
+

@@ -35,7 +35,7 @@ urlpatterns = [
         name="videolink-update",
     ),
     re_path(
-        rf"^(?P<event>{SLUG_REGEX})/p/feedback/(?P<submission_code>[A-Z]*)/$",
+        rf"^(?P<event>{SLUG_REGEX})/p/feedback/(?P<submission_code>[A-Z0-9]+)/$",
         views.FeedbackCreateView.as_view(),
         name="fosdem_feedback",
     ),

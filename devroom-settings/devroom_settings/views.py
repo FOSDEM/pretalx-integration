@@ -331,25 +331,40 @@ class FeedbackCreateView(CreateView):
     form_class = FosdemFeedbackForm
     template_name = 'devroom_settings/feedback_template.html'
 
+    def dispatch(self, request, *args, **kwargs):
+        # Access the 'submission_code' from self.kwargs
+        submission_code = kwargs.get('submission_code')
+        self.submission = get_object_or_404(Submission, code=submission_code)
+
+        return super().dispatch(request, *args, **kwargs)
+
     def get_success_url(self):
         # Redirect to a success page or adjust as needed
-        submission_code = self.kwargs.get('submission_code')
-        submission = get_object_or_404(Submission, code=submission_code)
-        return 'https://fosdem.org/schedule/event/{submission.slug}'
+        return f'https://fosdem.org/schedule/event/{self.submission.slots.first().frab_slug}'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        slot = self.submission.slots.first()
+        day = slot.start.astimezone(pytz.timezone("Europe/Brussels")).strftime('%a')
+        start = slot.start.astimezone(pytz.timezone("Europe/Brussels")).strftime('%H:%M')
+        end = slot.end.astimezone(pytz.timezone("Europe/Brussels")).strftime('%H:%M')
+        context["talk"] = self.submission
+        context["fosdem_url"] = self.get_success_url()
+        context["time_room"] = f"{day} {start}-{end}, {slot.room.description}"
+        speakers = [speaker.name for speaker in self.submission.speakers.all()]
+        context["speakers"] = ", ".join(speakers)
+
+
+        return context
     def get_form_kwargs(self):
+
         kwargs = super().get_form_kwargs()
-        submission_code = self.kwargs.get('submission_code')
-        submission = Submission.objects.get(code=submission_code)
-        with scope(event=self.request.event):
-            submission = get_object_or_404(Submission, code=submission_code)
-        # check on schedule
-        if not submission.slot and slot.start:
+        if not self.submission.slot and self.submission.slot.start:
             raise Http404("Submission not found or not scheduled/open for feedback") 
-        kwargs['instance'] = FosdemFeedback(submission=submission)
+        kwargs['instance'] = FosdemFeedback(submission=self.submission)
         return kwargs
 
     def form_valid(self, form):
         # Set the submission before saving the form
-        form.instance.submission = get_object_or_404(Submission, code=self.kwargs.get('submission_id'))
+        form.instance.submission = self.submission
         return super().form_valid(form)
