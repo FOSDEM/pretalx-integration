@@ -320,6 +320,11 @@ class NanocExporter(ScheduleData):
                             link__isnull=False
                         )
                     ]
+                    # add feedback link
+                    links += {"title": "Submit Feedback", "url": talk.submission.urls.feedback.full()}
+
+                    # add matrix links TODO!
+
                     if self.dest_dir and talk.submission.image:
                         orig_path = Path(talk.submission.image.path)
                         (self.dest_dir / f"events/logo/").mkdir(
