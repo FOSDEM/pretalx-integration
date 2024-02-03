@@ -68,6 +68,12 @@ def sanitize_filename(filename):
     return b + suffix
 
 
+def speaker_slug(user):
+    name = unidecode(user.name)
+    re.sub(r"[()\s]+", "_", name).lower()
+    return name
+
+
 def chat_link(room, app=False):
     chat_room_name = re.sub(r"[()\s]+", "_", str(room.description).lower())
     if app:
@@ -419,7 +425,8 @@ class NanocExporter(ScheduleData):
                         "day_name": day_string,
                         "conference_day_id": talk.start.weekday(),
                         "speakers": [
-                            speaker.code for speaker in talk.submission.speakers.all()
+                            speaker_slug(speaker)
+                            for speaker in talk.submission.speakers.all()
                         ],
                         "track": track.tracksettings.slug,
                         "track_name": str(track.name),
@@ -490,31 +497,27 @@ class NanocExporter(ScheduleData):
             for room in day["rooms"]:
                 for talk in room["talks"]:
                     for speaker in talk.submission.speakers.all():
-                        if speaker.code not in speakers_dict:
+                        if speaker_slug(speaker) not in speakers_dict:
                             if self.dest_dir and speaker.avatar:
                                 orig_path = Path(speaker.avatar.path)
                                 # store thumbnail
 
-                                thumb_dest = f"speaker/thumbnails/{speaker.code}{orig_path.suffix}"
+                                thumb_dest = f"speaker/thumbnails/{speaker_slug(speaker)}{orig_path.suffix}"
 
-                                thumb_identifier = (
-                                    f"/schedule/speaker/{speaker.code}/thumbnail/"
-                                )
+                                thumb_identifier = f"/schedule/speaker/{speaker_slug(speaker)}/thumbnail/"
                                 thumb_mime = self.write_image(
                                     orig_path,
                                     thumb_dest,
                                     thumb_identifier,
                                     32,
                                     32,
-                                    speaker_slug=speaker.code,
+                                    speaker_slug=speaker_slug(speaker),
                                 )
 
-                                photo_dest = (
-                                    f"speaker/photos/{speaker.code}{orig_path.suffix}"
-                                )
+                                photo_dest = f"speaker/photos/{speaker_slug(speaker)}{orig_path.suffix}"
 
                                 photo_identifier = (
-                                    f"/schedule/speaker/{speaker.code}/photo/"
+                                    f"/schedule/speaker/{speaker_slug(speaker)}/photo/"
                                 )
                                 photo_mime = self.write_image(
                                     orig_path,
@@ -522,7 +525,7 @@ class NanocExporter(ScheduleData):
                                     photo_identifier,
                                     220,
                                     180,
-                                    speaker_slug=speaker.code,
+                                    speaker_slug=speaker_slug(speaker),
                                 )
 
                             try:
@@ -531,7 +534,7 @@ class NanocExporter(ScheduleData):
                                 ).biography
                             except SpeakerProfile.DoesNotExist:
                                 biography = None
-                            speakers_dict[speaker.code] = {
+                            speakers_dict[speaker_slug(speaker)] = {
                                 "person_id": speaker.pk,  # TODO: check if this is actually used
                                 "title": speaker.name,
                                 "public_name": speaker.name,
@@ -539,7 +542,7 @@ class NanocExporter(ScheduleData):
                                 "last_name": "",
                                 "nickname": "",
                                 "name": speaker.name,
-                                "slug": speaker.code,
+                                "slug": speaker_slug(speaker),
                                 "gender": "",  # check whether we need/want this
                                 "sortname": speaker.name.upper(),
                                 "abstract": markdown.markdown(biography)
@@ -552,16 +555,18 @@ class NanocExporter(ScheduleData):
                                 # "events_by_day:": events_by_day
                             }
                             if self.dest_dir and speaker.avatar:
-                                speakers_dict[speaker.code]["thumbnail"] = {
+                                speakers_dict[speaker_slug(speaker)]["thumbnail"] = {
                                     "identifier": thumb_identifier,
                                     "mime": thumb_mime,
                                 }
-                                speakers_dict[speaker.code]["photo"] = {
+                                speakers_dict[speaker_slug(speaker)]["photo"] = {
                                     "identifier": photo_identifier,
                                     "mime": photo_mime,
                                 }
                         else:
-                            speakers_dict[speaker.code]["events"].append(talk.frab_slug)
+                            speakers_dict[speaker_slug(speaker)]["events"].append(
+                                talk.frab_slug
+                            )
 
         return speakers_dict
 
