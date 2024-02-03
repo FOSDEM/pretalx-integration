@@ -101,8 +101,8 @@ def navbar_info(sender, request, **kwargs):
     ]
 
 
-#@receiver(register_data_exporters, dispatch_uid="nanoc_export")
-#def register_data_exporter(sender, **kwargs):
+# @receiver(register_data_exporters, dispatch_uid="nanoc_export")
+# def register_data_exporter(sender, **kwargs):
 #    from .nanoc import NanocExporter
 #
 #    return NanocExporter

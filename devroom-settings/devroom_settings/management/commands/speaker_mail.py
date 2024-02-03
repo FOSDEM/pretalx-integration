@@ -24,11 +24,10 @@ class Command(BaseCommand):
 def send_speaker_mails(event, save=True):
     """A list of unsaved :class:`~pretalx.mail.models.QueuedMail` objects
     to be sent to all speakers"""
-    mails = []
     date_formats = {}
 
     with scope(event=event):
-        speakers = list(event.speakers.all())[0:1] # limiting to one for tests
+        speakers = list(event.speakers.all())[0:1]  # limiting to one for tests
 
     for speaker in speakers:
         locale = speaker.locale if speaker.locale in event.locales else event.locale
@@ -45,7 +44,9 @@ def send_speaker_mails(event, save=True):
             )
 
         # generate fosdem website links from slots
-        website_links = ["https://fosdem.org/2024/schedule/event/"+ slot.frab_slug for slot in slots]
+        website_links = [
+            "https://fosdem.org/2024/schedule/event/" + slot.frab_slug for slot in slots
+        ]
 
         mail = QueuedMail(
             event=event,

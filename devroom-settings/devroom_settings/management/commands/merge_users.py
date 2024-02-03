@@ -2,8 +2,8 @@
 
 from django.core.management.base import BaseCommand
 from django_scopes import scopes_disabled
-from pretalx.person.models import User, SpeakerProfile
 from pretalx.event.models import Team, TeamInvite
+from pretalx.person.models import SpeakerProfile, User
 from pretalx.submission.models import Answer, Submission
 
 
@@ -13,7 +13,7 @@ def print_user_info(user):
     teams = ",".join(teams)
     print(f"Teams: {teams}")
     with scopes_disabled():
-        #profiles = ",".join(user.profiles.all())
+        # profiles = ",".join(user.profiles.all())
         print("Submissions:")
         for submission in user.submissions.all():
             print(f"- {submission.title} ({submission.event.name})")
@@ -35,7 +35,9 @@ def merge_users(user1, user2, interactive=True):
             submission.speakers.remove(user2)
         Answer.objects.filter(person=user2).update(person=user1)
 
-        user1_profile_events = {sp.event: sp for sp in SpeakerProfile.objects.filter(user=user1)}
+        user1_profile_events = {
+            sp.event: sp for sp in SpeakerProfile.objects.filter(user=user1)
+        }
         profiles = SpeakerProfile.objects.filter(user=user2).exclude(biography=None)
         for profile in profiles:
             if profile.event not in user1_profile_events:
@@ -46,7 +48,7 @@ def merge_users(user1, user2, interactive=True):
                 print(f"user1:\n{user1_profile_events[profile.event].biography}")
                 print(f":user2:\n{profile.biography}")
                 while True:
-                    res=input("Move to 1 or 2? ")
+                    res = input("Move to 1 or 2? ")
                     if res in ["1", "2"]:
                         break
                     else:
@@ -58,6 +60,7 @@ def merge_users(user1, user2, interactive=True):
                     profile.update(user=user1)
 
     user2.shred()
+
 
 class Command(BaseCommand):
     help = "Merge two users"
@@ -81,14 +84,6 @@ class Command(BaseCommand):
             if res == "1":
                 merge_users(user1, user2)
                 break
-            if res== "2":
+            if res == "2":
                 merge_users(user2, user1)
                 break
-
-
-
-
-
-
-
-

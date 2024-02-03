@@ -2,6 +2,7 @@ from django import forms
 from pretalx.common.mixins.forms import I18nHelpText, ReadOnlyFlag
 from pretalx.event.models import TeamInvite
 from pretalx.submission.models import Track
+
 from .models import TrackSettings
 
 
@@ -45,10 +46,17 @@ class DevroomTrackForm(forms.ModelForm):
         model = Track
         fields = ("requires_access_code",)
 
+
 from .models import FosdemFeedback
+
 
 class FosdemFeedbackForm(forms.ModelForm):
     class Meta:
         model = FosdemFeedback
-        fields = ['personal_knowledge', 'content_importance', 'content_quality', 'presentation_quality', 'feedback']
-
+        fields = [
+            "personal_knowledge",
+            "content_importance",
+            "content_quality",
+            "presentation_quality",
+            "feedback",
+        ]

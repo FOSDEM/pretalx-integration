@@ -3,16 +3,14 @@
 # you should not run it blindly but merge it carefully with the existing version
 
 
-from collections import defaultdict
 import inspect
 
-import pretalx.submission.models as submission_models
 import pretalx.common.models as common_models
 import pretalx.event.models as event_models
 import pretalx.mail.models as mail_models
 import pretalx.person.models as person_models
 import pretalx.schedule.models as schedule_models
-
+import pretalx.submission.models as submission_models
 from django.db import models
 
 template = """
@@ -32,15 +30,22 @@ exclude_fields = {
     "User": ["password"],
     "Submission": ["invitation_token"],
     "Review": ["updated"],
-    "Answer": ["updated"]
+    "Answer": ["updated"],
 }
 
-exclude_models = ["PretalxModel", "ActivityLog"] # abstract classes or not useful
+exclude_models = ["PretalxModel", "ActivityLog"]  # abstract classes or not useful
 
 print("import pghistory")
 
 
-for i in [submission_models, common_models, mail_models, event_models, person_models, schedule_models]:
+for i in [
+    submission_models,
+    common_models,
+    mail_models,
+    event_models,
+    person_models,
+    schedule_models,
+]:
     items = list(inspect.getmembers(i, inspect.isclass))
     for item in items:
         if issubclass(item[1], models.Model):
@@ -48,4 +53,3 @@ for i in [submission_models, common_models, mail_models, event_models, person_mo
                 pass
             print(f"from {i.__name__} import {item[0]}")
             print(template.format(item[0], str(exclude_fields.get(item[0], []))))
-

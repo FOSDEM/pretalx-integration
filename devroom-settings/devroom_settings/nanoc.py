@@ -1,10 +1,9 @@
 import datetime
 import os
-import shutil
 import re
+import shutil
 from collections import defaultdict
 from pathlib import Path
-from shutil import copy2
 
 import magic
 import markdown
@@ -57,23 +56,26 @@ def sanitize_filename(filename):
     # Transliterate non-ASCII characters
     b = unidecode(b)
 
-    b = re.sub(r'\/+', '', b)
-    b = re.sub(r'\s+', '_', b)
-    b = re.sub(r'["\']+', '', b)
-    b = re.sub(r'[^0-9A-Za-z\-]', '_', b)
-    b = re.sub(r'_+', '_', b)
-    b = re.sub(r'^_', '', b)
-    b = re.sub(r'_$', '', b)
+    b = re.sub(r"\/+", "", b)
+    b = re.sub(r"\s+", "_", b)
+    b = re.sub(r'["\']+', "", b)
+    b = re.sub(r"[^0-9A-Za-z\-]", "_", b)
+    b = re.sub(r"_+", "_", b)
+    b = re.sub(r"^_", "", b)
+    b = re.sub(r"_$", "", b)
 
     return b + suffix
 
+
 def chat_link(room, app=False):
-    chat_room_name = re.sub(r'[()\s]+', '_', str(room.description).lower())
+    chat_room_name = re.sub(r"[()\s]+", "_", str(room.description).lower())
     if app:
         link = f"https://matrix.to/#/#2024-{chat_room_name}:fosdem.org?web-instance[element.io]=chat.fosdem.org"
     else:
         link = f"https://chat.fosdem.org/#/room/#2024-{chat_room_name}:fosdem.org"
     return link
+
+
 def time_to_index(timevalue):
     return int((timevalue.hour * 60 + timevalue.minute) // 5)
 
@@ -128,7 +130,6 @@ class NanocExporter(ScheduleData):
                 os.link(src, cache_dest)
                 os.chmod(cache_dest, 0o664)
             else:
-
                 thumb = Image.open(src)
                 thumb.thumbnail((width, height))
                 thumb.save(cache_dest, format=thumb.format)
@@ -327,11 +328,21 @@ class NanocExporter(ScheduleData):
                         )
                     ]
 
-                    links += [{"title" : "Chat room(web)", "url": chat_link(talk.room)},
-                     {"title": "Chat room(app)", "url": chat_link(talk.room, app=True)}]
+                    links += [
+                        {"title": "Chat room(web)", "url": chat_link(talk.room)},
+                        {
+                            "title": "Chat room(app)",
+                            "url": chat_link(talk.room, app=True),
+                        },
+                    ]
 
                     # add feedback link
-                    links += [{"title": "Submit Feedback", "url": talk.submission.urls.feedback.full()}]
+                    links += [
+                        {
+                            "title": "Submit Feedback",
+                            "url": talk.submission.urls.feedback.full(),
+                        }
+                    ]
 
                     # add matrix links TODO!
 
@@ -412,7 +423,8 @@ class NanocExporter(ScheduleData):
                         "track_name": str(track.name),
                         "track_full_name": str(track.name),
                         "type": track.tracksettings.get_track_type_display(),
-                        "live_video_link": "https://live.fosdem.org/watch/" + str(talk.room.name),
+                        "live_video_link": "https://live.fosdem.org/watch/"
+                        + str(talk.room.name),
                         "chat_link": chat_link(talk.room),
                         "room": str(talk.room.name).lower(),
                         "room_name": str(talk.room.description),

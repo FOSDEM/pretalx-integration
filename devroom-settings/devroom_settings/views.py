@@ -8,19 +8,23 @@ from django.core.exceptions import PermissionDenied
 from django.db.models import CharField, F, Value
 from django.db.models.functions import Cast
 from django.http import FileResponse, JsonResponse
+from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import CreateView, ListView, View
 from django_scopes import scope, scopes_disabled
-from django.shortcuts import get_object_or_404
 from pretalx.common.mixins.views import EventPermissionRequired
 from pretalx.event.forms import TeamInviteForm
 from pretalx.event.models import TeamInvite
 from pretalx.schedule.models import Room, TalkSlot
 from pretalx.submission.models import Resource, Submission, SubmitterAccessCode, Track
 
-from devroom_settings.forms import DevroomTrackForm, DevroomTrackSettingsForm, FosdemFeedbackForm
-from devroom_settings.models import TrackSettings,FosdemFeedback
+from devroom_settings.forms import (
+    DevroomTrackForm,
+    DevroomTrackSettingsForm,
+    FosdemFeedbackForm,
+)
+from devroom_settings.models import FosdemFeedback, TrackSettings
 
 
 class DevroomReport(EventPermissionRequired, ListView):
@@ -326,42 +330,44 @@ class VideoInstructionsView(EventPermissionRequired, View):
 
         return response
 
+
 class FeedbackCreateView(CreateView):
     model = FosdemFeedback
     form_class = FosdemFeedbackForm
-    template_name = 'devroom_settings/feedback_template.html'
+    template_name = "devroom_settings/feedback_template.html"
 
     def dispatch(self, request, *args, **kwargs):
         # Access the 'submission_code' from self.kwargs
-        submission_code = kwargs.get('submission_code')
+        submission_code = kwargs.get("submission_code")
         self.submission = get_object_or_404(Submission, code=submission_code)
 
         return super().dispatch(request, *args, **kwargs)
 
     def get_success_url(self):
         # Redirect to a success page or adjust as needed
-        return f'https://fosdem.org/schedule/event/{self.submission.slots.first().frab_slug}'
+        return f"https://fosdem.org/schedule/event/{self.submission.slots.first().frab_slug}"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         slot = self.submission.slots.first()
-        day = slot.start.astimezone(pytz.timezone("Europe/Brussels")).strftime('%a')
-        start = slot.start.astimezone(pytz.timezone("Europe/Brussels")).strftime('%H:%M')
-        end = slot.end.astimezone(pytz.timezone("Europe/Brussels")).strftime('%H:%M')
+        day = slot.start.astimezone(pytz.timezone("Europe/Brussels")).strftime("%a")
+        start = slot.start.astimezone(pytz.timezone("Europe/Brussels")).strftime(
+            "%H:%M"
+        )
+        end = slot.end.astimezone(pytz.timezone("Europe/Brussels")).strftime("%H:%M")
         context["talk"] = self.submission
         context["fosdem_url"] = self.get_success_url()
         context["time_room"] = f"{day} {start}-{end}, {slot.room.description}"
         speakers = [speaker.name for speaker in self.submission.speakers.all()]
         context["speakers"] = ", ".join(speakers)
 
-
         return context
-    def get_form_kwargs(self):
 
+    def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         if not self.submission.slot and self.submission.slot.start:
-            raise Http404("Submission not found or not scheduled/open for feedback") 
-        kwargs['instance'] = FosdemFeedback(submission=self.submission)
+            raise Http404("Submission not found or not scheduled/open for feedback")
+        kwargs["instance"] = FosdemFeedback(submission=self.submission)
         return kwargs
 
     def form_valid(self, form):

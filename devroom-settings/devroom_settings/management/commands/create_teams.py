@@ -8,7 +8,6 @@ from pretalx.event.models import Event, Organiser, Team
 from pretalx.submission.models import Track
 
 
-
 class Command(BaseCommand):
     help = "Bulk create review teams for devrooms"
 
@@ -36,7 +35,6 @@ class Command(BaseCommand):
                 organiser=organiser,
                 can_change_submissions=False,
                 is_reviewer=True,
-
             )
             team.save()
             team.limit_events.set([event])
