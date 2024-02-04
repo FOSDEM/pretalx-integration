@@ -12,7 +12,7 @@
 {% block cfp_content %}
 
 
-    {% for track, form, invite_form, devroom_form, access_codes, room_days in track_forms %}
+    {% for track, form, invite_form, devroom_form, access_codes, day_room_pw in track_forms %}
         <h2>{{  track.track.name }}</h2>
 
 <h3>Devroom managers</h3>
@@ -151,20 +151,16 @@
 
         <h4>During the event</h4>
         <p>Instructions for video monitoring can be found in the document below. Direct links to your video interfaces are also included.
-            Feel free to share these links/documents with trusted volunteers.
+            Feel free to share these links/documents with trusted volunteers. Also use the link to set the room full api.
         <ul>
-            {% for day, room in room_days %}
-                <li><ul>
-				<li>{{room}}(day {{day}}): <a href="../video-instructions/{{room}}/{{day}}/">video-instructions/{{room}}/{{day}}/</a>
+            {% for day, room, password in day_room_pw %}
+                <li>{{room}}(day {{day}}): <ul>
+                    <li>direct link to control interface <a href="https://{{ day }}-{{ room }}:{{ password }}@control.video.fosdem.org/">https://{{ day }}-{{ room }}:{{ password }}@control.video.fosdem.org/</a></li>
+				    <li><a href="../video-instructions/{{room}}/{{day}}/">Video instructions (pdf)</a>
                 </ul></li>
                 </li>
             {% endfor %}
         </ul>
-
-        </p>
-        <p>A Matrix chat will optionally be provided to each devroom. This will allow online participants to ask questions.</p>
-        <p>This should be the link to your devroom channel: TODO</p>
-
 
 
 </form>

@@ -24,7 +24,7 @@ from devroom_settings.forms import (
     DevroomTrackSettingsForm,
     FosdemFeedbackForm,
 )
-from devroom_settings.models import FosdemFeedback, TrackSettings
+from devroom_settings.models import FosdemFeedback, TrackSettings, RoomSettings
 
 
 class DevroomReport(EventPermissionRequired, ListView):
@@ -84,9 +84,18 @@ class DevroomDashboard(EventPermissionRequired, ListView):
             for track in context["trackssettings"]
         ]
 
-        room_days = [
-            get_track_room_days([track.track]) for track in context["trackssettings"]
-        ]
+        day_room_pw = []
+        for track in context["trackssettings"]:
+            track_day_room_pw=[]
+            for day, room in get_track_room_days([track.track]):
+                try:
+                    password = RoomSettings.objects.get(room__name__contains=room, room__event=self.request.event).control_password
+                except RoomSettings.DoesNotExist:
+                    password = ''
+                track_day_room_pw.append((day, room, password))
+                print(password)
+            day_room_pw.append(track_day_room_pw)
+
 
         context["track_forms"] = zip(
             context["trackssettings"],
@@ -94,7 +103,7 @@ class DevroomDashboard(EventPermissionRequired, ListView):
             invite_forms,
             devroom_forms,
             access_codes,
-            room_days,
+            day_room_pw,
         )
 
         return context
