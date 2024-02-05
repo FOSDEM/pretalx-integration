@@ -8,7 +8,7 @@ from django.core.exceptions import PermissionDenied
 from django.db.models import CharField, F, Value
 from django.db.models.functions import Cast
 from django.http import FileResponse, JsonResponse
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import CreateView, ListView, View
@@ -24,7 +24,7 @@ from devroom_settings.forms import (
     DevroomTrackSettingsForm,
     FosdemFeedbackForm,
 )
-from devroom_settings.models import FosdemFeedback, TrackSettings, RoomSettings
+from devroom_settings.models import FosdemFeedback, RoomSettings, TrackSettings
 
 
 class DevroomReport(EventPermissionRequired, ListView):
@@ -86,16 +86,17 @@ class DevroomDashboard(EventPermissionRequired, ListView):
 
         day_room_pw = []
         for track in context["trackssettings"]:
-            track_day_room_pw=[]
+            track_day_room_pw = []
             for day, room in get_track_room_days([track.track]):
                 try:
-                    password = RoomSettings.objects.get(room__name__contains=room, room__event=self.request.event).control_password
+                    password = RoomSettings.objects.get(
+                        room__name__contains=room, room__event=self.request.event
+                    ).control_password
                 except RoomSettings.DoesNotExist:
-                    password = ''
+                    password = ""
                 track_day_room_pw.append((day, room, password))
                 print(password)
             day_room_pw.append(track_day_room_pw)
-
 
         context["track_forms"] = zip(
             context["trackssettings"],
@@ -349,6 +350,18 @@ class FeedbackCreateView(CreateView):
         # Access the 'submission_code' from self.kwargs
         submission_code = kwargs.get("submission_code")
         self.submission = get_object_or_404(Submission, code=submission_code)
+
+        talk = self.submission
+        if talk and request.user in talk.speakers.all():
+            print("*************")
+            return render(
+                self.request,
+                "devroom_settings/feedback_result.html",
+                context={
+                    "talk": talk,
+                    "feedbacks": FosdemFeedback.objects.filter(submission=talk.pk),
+                },
+            )
 
         return super().dispatch(request, *args, **kwargs)
 
