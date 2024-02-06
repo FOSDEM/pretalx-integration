@@ -26,7 +26,7 @@ class Command(BaseCommand):
                     room = Room.objects.get(name__contains=room_name, event=event)
 
                 room_settings, _ = RoomSettings.objects.get_or_create(room=room)
-                room_settings.password = password
+                room_settings.control_password = password
                 room_settings.save()
 
                 self.stdout.write(self.style.SUCCESS(f'Successfully imported password for room: {room_name}'))
