@@ -61,6 +61,13 @@ def devroom_placeholders(sender, **kwargs):
             lambda submission: track_email(sender, submission.track),
             "toothbrush-devroom-managers@fosdem.org",
             "Email of the track responsible",
+        ),
+        SimpleFunctionalMailTextPlaceholder(
+            "proposal_feedback_url",
+            ["submission"],
+            lambda submission: submission.urls.feedback,
+            "https://pretalx.com/democon/me/submissions/F8VVL/feedback",
+            "Url with talk feedback",
         )
     ]
     return placeholders
