@@ -20,10 +20,10 @@
         {% bootstrap_field form.model layout='event' %}
         <button type="submit" class="btn btn-info btn-search">Submit</button></form></div>
     {% for event in events %}
-        model: {{ event.short_model }} (id: {{ event.pgh_obj_id }})</br>
+    <dd>model</dd>: {{ event.short_model }} (id: {{ event.pgh_obj_id }})</br>
         time: {{ event.pgh_created_at.isoformat}}</br>
         {% if event.pgh_diff %}
-            diff: {{ event.pgh_diff }}</br>
+	diff: {% for k,v in event.pgh_diff.items %}'{{ k }}:<span class="old">{{ v }}</span>=&gt;<span class="new">{{ v }}</span>'{% endfor %}</br>
         {% else %}
             data: {{ event.pgh_data }}</br>
         {% endif %}

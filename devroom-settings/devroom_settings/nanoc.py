@@ -449,8 +449,24 @@ class NanocExporter(ScheduleData):
         for day in self.data:
             day_slug = day["start"].strftime("%A").lower()
 
-            start_time = day["first_start"].astimezone(tz).time()
-            end_time = day["last_end"].astimezone(tz).time()
+            # we need to fix times in the export
+            if day["first_start"]:
+                start_time = day["first_start"].astimezone(tz).time()
+            else:
+                start_time = (
+                    datetime.time(hour=9, minute=30)
+                    if day_slug == "saturday"
+                    else datetime.time(hour=9)
+                )
+            if day["last_end"]:
+                end_time = day["last_end"].astimezone(tz).time()
+            else:
+                end_time = (
+                    datetime.time(hour=19)
+                    if day_slug == "saturday"
+                    else datetime.time(hour=18, minute=15)
+                )
+
             days[day_slug] = {
                 "conference_day_id": day["start"].weekday(),
                 "name": day["start"].strftime("%A"),
@@ -569,7 +585,7 @@ class NanocExporter(ScheduleData):
             "homepage": "https://fosdem.org/",
             "abstract_length": "",
             "description_length": "",
-            "export_base_url": "https://fosdem.org/2024/schedule",
+            "export_base_url": "https://fosdem.org/2025/schedule",
             "schedule_html_include": "",
             "schedule_version": self.schedule.version
             if self.schedule.version
