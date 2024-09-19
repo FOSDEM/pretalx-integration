@@ -99,7 +99,7 @@ class NanocExporter(ScheduleData):
     identifier = "NanocExporter"
     verbose_name = "Exports to nanoc for FOSDEM website"
     show_qrcode = False
-    public = True  # easier for testing
+    public = True
     icon = "fa-microchip"
     group = "submission"
 
@@ -107,10 +107,11 @@ class NanocExporter(ScheduleData):
         update_end_time(event)
         super().__init__(event, schedule=schedule)
         self.dest_dir = dest_dir
-        shutil.rmtree(dest_dir, ignore_errors=True)
+        if dest_dir:
+            shutil.rmtree(dest_dir, ignore_errors=True)
 
-        Path(dest_dir).mkdir()
-        self.cache_dir = Path(str(dest_dir) + "_cache")
+            Path(dest_dir).mkdir()
+            self.cache_dir = Path(str(dest_dir) + "_cache")
 
     def write_image(
         self, src, dest, identifier, width, height, event_slug=None, speaker_slug=None
