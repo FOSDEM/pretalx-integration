@@ -68,7 +68,7 @@ def devroom_placeholders(sender, **kwargs):
             lambda submission: submission.urls.feedback,
             "https://pretalx.com/democon/me/submissions/F8VVL/feedback",
             "Url with talk feedback",
-        )
+        ),
     ]
     return placeholders
 
@@ -108,8 +108,8 @@ def navbar_info(sender, request, **kwargs):
     ]
 
 
-# @receiver(register_data_exporters, dispatch_uid="nanoc_export")
-# def register_data_exporter(sender, **kwargs):
-#    from .nanoc import NanocExporter
-#
-#    return NanocExporter
+@receiver(register_data_exporters, dispatch_uid="nanoc_export")
+def register_data_exporter(sender, **kwargs):
+    from .nanoc import NanocExporter
+
+    return NanocExporter
