@@ -4,10 +4,10 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 from django.utils.text import slugify
 from django_scopes import scope, scopes_disabled
-from pretalx.event.models import Event
+from pretalx.event.models import Event, Organiser, Team
 from pretalx.submission.models import Track
 
-from devroom_settings.models import TrackManager, TrackSettings
+from devroom_settings.models import TrackSettings
 
 
 class Command(BaseCommand):
@@ -27,15 +27,26 @@ class Command(BaseCommand):
 
         dest = kwargs["destination"]
         dest_event = Event.objects.get(slug=dest)
+        year = dest[-4:]
         with scope(event=dest_event):
             existing_tracks = list(Track.objects.all().values_list("name", flat=True))
 
+        # create organiser (groups teams)
+        organiser, _ = Organiser.objects.get_or_create(
+            slug=dest_event.slug, name=f"{dest_event.name} teams"
+        )
+        organiser.save()
+        organiser.events.add(dest_event)
+        organiser.save()
+
         for i, submission in enumerate(accepted_devrooms):
+            print(submission.answers)
+            raise Exception("stop")
             if submission.title in existing_tracks:
                 continue
             track = Track(name=submission.title, event=dest_event)
             track.color = (
-                "#FFFFFF"  # not used, but otherwise it will ask when you open the page
+                "#6F42C1"  # not used, but otherwise it will ask when you open the page
             )
             track.position = i + len(existing_tracks)
             track.save()
@@ -45,6 +56,30 @@ class Command(BaseCommand):
 
             tracksetting.slug = slugify(track.name)[0:63]
             print(f"adding {track.name}")
+
+            # create manager team
+            manager_team_name = f"managers-{tracksetting.slug}-{year}"
+            review_team_name = f"review-{tracksetting.slug}-{year}"
+
+            manager_team = Team(
+                name=manager_team_name, organiser=organiser, is_reviewer=True
+            )
+            review_team = Team(
+                name=review_team_name, organiser=organiser, is_reviewer=True
+            )
+            manager_team.save()
+            review_team.save()
+
+            manager_team.limit_events.set([dest_event])
+            review_team.limit_events.set([dest_event])
+            with scope(event=dest_event):
+                manager_team.limit_tracks.set([track])
+                review_team.limit_tracks.set([track])
+
+            tracksetting.manager_team = manager_team
+            tracksetting.review_team = review_team
             tracksetting.save()
+
             for user in submission.speakers.all():
-                track_manager = TrackManager(track=track, user=user).save()
+                manager_team.members.add(user)
+            manager_team.save()
