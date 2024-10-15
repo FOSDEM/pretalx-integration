@@ -40,8 +40,11 @@ class Command(BaseCommand):
         organiser.save()
 
         for i, submission in enumerate(accepted_devrooms):
-            print(submission.answers)
-            raise Exception("stop")
+            # for future: fetch answers from submission
+            # for CfP
+            # with scope(event=source_event):
+            #    answers = submission.answers.filter()
+
             if submission.title in existing_tracks:
                 continue
             track = Track(name=submission.title, event=dest_event)
@@ -55,6 +58,7 @@ class Command(BaseCommand):
             tracksetting.track_type = TrackSettings.TrackType.DEVROOM
 
             tracksetting.slug = slugify(track.name)[0:63]
+            tracksetting.mail = f"{tracksetting.slug}-devroom-manager@fosdem.org"
             print(f"adding {track.name}")
 
             # create manager team

@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils.text import slugify
 from django_scopes import ScopedManager
 from pretalx.event.models import Team
 from pretalx.person.models import User
@@ -46,6 +47,24 @@ class TrackSettings(models.Model):
         Room, help_text="Allowed rooms for track (not yet enforced)", blank=True
     )
 
+    def save(self, *args, **kwargs):
+        if self.pk:
+            self.slug = slugify(self.slug)
+            old_instance = TrackSettings.objects.get(pk=self.pk)
+            event = old_instance.track.event
+            year = str(event.name)[-4:]
+            if old_instance.slug != self.slug:
+                # Trigger action when the slug changes
+                if self.review_team:
+                    self.review_team.name = f"review-{self.slug}-{year}"
+                    self.review_team.save()
+                if self.manager_team:
+                    self.manager_team.name = f"manager-{self.slug}-{year}"
+                    self.manager_team.save()
+                self.mail = f"{self.slug}-devroom-manager@fosdem.org"
+
+        super().save(*args, **kwargs)
+
 
 class RoomSettings(models.Model):
     room = models.OneToOneField(to=Room, on_delete=models.CASCADE)
@@ -54,9 +73,7 @@ class RoomSettings(models.Model):
         help_text="Should content of this room be exported to the website",
         default=True,
     )
-    control_password = models.CharField(
-        "Password Video control", blank=True, null=True
-    )
+    control_password = models.CharField("Password Video control", blank=True, null=True)
 
 
 feedback_choices = [
