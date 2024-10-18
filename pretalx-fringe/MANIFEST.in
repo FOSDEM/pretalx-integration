@@ -1,0 +1,6 @@
+recursive-include pretalx_fringe/static *
+recursive-include pretalx_fringe/templates *
+exclude pretalx_fringe/locale/django.pot
+recursive-include pretalx_fringe/locale *
+recursive-include pretalx_fringe *.py
+include Makefile

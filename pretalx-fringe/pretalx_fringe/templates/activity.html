@@ -1,0 +1,52 @@
+{% extends "agenda/base.html" %}
+{% load bootstrap4 %}
+{% load compress %}
+{% load i18n %}
+{% load static %}
+{% block title %}Submit Fringe event {% endblock title %}
+
+{% block content %}
+<script src="{% static "common/js/formTools.js" %}" defer></script>
+<p>
+    <h2>Fringe Submission</h2>
+    <p>        
+        The FOSDEM Fringe consists of independent events that have selected locations and schedules that fit around the FOSDEM weekend.
+        
+        If you are the organiser of an event and you would like us to consider including it in our listings on this page please complete and submit the form below.
+        
+        The main criteria for inclusion are that, in our judgement, the focus of the event is related to content that falls within the scope of FOSDEM and that some FOSDEM visitors are likely to attend the event. Commercial training courses will not be included.
+        
+        Events that are included are entitled to say they are part of the {{ event }} fringe.
+        
+        Please send ideas and suggestions to fringe@fosdem.org.
+        <h3>Important</h3>
+        
+        This form should only be completed by an organiser of the event concerned. If you are aware of an event that you think could be listed on our website, please contact the organiser yourself and bring this form to their attention.
+        
+        </p>
+
+
+
+<form method="post" action="">
+    {% csrf_token %}
+    {% bootstrap_field form.name layout='event' %}
+    {% bootstrap_field form.location layout='event' %}
+    {% bootstrap_field form.description layout='event' %}
+    {% bootstrap_field form.why layout='event' %}
+    
+    {% bootstrap_field form.url layout='event' %}
+    {% bootstrap_field form.starts layout='event' %}
+    {% bootstrap_field form.ends layout='event' %}
+    {% bootstrap_field form.cost layout='event' %}
+    {% bootstrap_field form.registration layout='event' %}
+    {% bootstrap_field form.contact layout='event' %}
+
+    {%if admin %}
+    {% bootstrap_field form.online layout='event' %}
+    {% endif %}
+    <div class="col-md-3 flip ml-auto d-flex flex-column">
+        <button type="submit" name="form" class="btn btn-right btn-success font-weight-bold">Submit Activity</button>
+    </div>
+</form>
+{% endblock content %}
+

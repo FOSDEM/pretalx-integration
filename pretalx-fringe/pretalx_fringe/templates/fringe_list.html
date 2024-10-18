@@ -1,0 +1,21 @@
+<h2>Fringe Activity Submissions</h2>
+<ul>
+    {% for activity in fringe_activities %}
+    <li>
+        <strong>{{ activity.name }}</strong>: {{ activity.description }} <br>
+        <ul>
+            <li>Contact: {{ activity.contact }}</li>
+            <li>Start: {{ activity.start }}</li>
+            <li>End: {{ activity.end }}</li>
+            <li>Cost: {{ activity.coast }}</li>
+            <li>Registration: {{ activity.registration }}</li>
+            <li>Online: {{ activity.online }}</li>
+            <li>URL: {{ activity.url }}</li>
+        </ul>
+        
+        <a href="{{activity.pk}}">More Info</a>
+    </li>
+    {% empty %}
+    <li>No activities submitted yet.</li>
+    {% endfor %}
+</ul>
