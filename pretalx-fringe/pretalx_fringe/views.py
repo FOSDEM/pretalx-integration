@@ -8,6 +8,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views.generic import CreateView, ListView
 from django.views.generic.edit import UpdateView
 from pretalx.common.mixins.views import PermissionRequired
+from pretalx.mail.models import QueuedMail
 
 from .forms import FringeActivityForm
 from .models import FringeActivity
@@ -19,7 +20,7 @@ class FringeActivityView(UpdateView):
     # permission_required = "orga.change_settings"
     model = FringeActivity
     form_class = FringeActivityForm
-    template_name = "activity.html"
+    template_name = "pretalx_fringe/activity_edit.html"
 
     def get_success_url(self):
         # return reverse_lazy('plugins: pretalx_fringe:fringe_list', kwargs={'event': self.request.event.slug})
@@ -79,7 +80,9 @@ class FringeCreateView(LoginRequiredMixin, CreateView):
         form.instance.event = self.request.event
         form.instance.user = self.request.user
         logger.debug(form.instance)
-        return super().form_valid(form)
+        response = super().form_valid(form)
+        self.sendmail(form)
+        return response
 
     def get_login_url(self):
         login = f"/{self.request.event.slug}/login"
@@ -95,3 +98,47 @@ class FringeCreateView(LoginRequiredMixin, CreateView):
         context["event"] = self.request.event
         context["admin"] = False
         return context
+
+    def sendmail(self, form):
+        message = """
+            A new fringe submission was made
+
+            Name: {name}
+
+            Location: {location}
+
+            Description: {description}
+
+            Why: {why}
+
+            URL: {url}
+
+            Starts: {start}
+
+            Ends: {ends}
+
+            Cost: {cost}
+
+            Registration: {registration}
+
+            Contact: {contact}
+            """.format(
+            name=form.cleaned_data.get("name"),
+            location=form.cleaned_data.get("location"),
+            description=form.cleaned_data.get("description"),
+            why=form.cleaned_data.get("why"),
+            url=form.cleaned_data.get("url"),
+            start=form.cleaned_data.get("start"),
+            ends=form.cleaned_data.get("ends"),
+            cost=form.cleaned_data.get("cost"),
+            registration=form.cleaned_data.get("registration"),
+            contact=form.cleaned_data.get("contact"),
+        )
+
+        mail = QueuedMail.objects.create(
+            event=self.request.event,
+            subject="new fringe submission",
+            text=message,
+            to=f"fringe@fosdem.org, {form.cleaned_data.get('contact')}",
+        )
+        mail.send()

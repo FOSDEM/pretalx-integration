@@ -1,21 +1,21 @@
+{% extends "orga/cfp/base.html" %}
+{% load bootstrap4 %}
+{% load copyable %}
+{% load i18n %}
+{% load static %}
+
+{% block cfp_content %}
+
 <h2>Fringe Activity Submissions</h2>
-<ul>
+<div class="table-responsive">
+<table class="table table-sm table-hover table-flip">
+    <thead><tr><th>online</th><th>name</th><th>url</th><th>edit</th></tr></thead>
+    <tbody>
     {% for activity in fringe_activities %}
-    <li>
-        <strong>{{ activity.name }}</strong>: {{ activity.description }} <br>
-        <ul>
-            <li>Contact: {{ activity.contact }}</li>
-            <li>Start: {{ activity.start }}</li>
-            <li>End: {{ activity.end }}</li>
-            <li>Cost: {{ activity.coast }}</li>
-            <li>Registration: {{ activity.registration }}</li>
-            <li>Online: {{ activity.online }}</li>
-            <li>URL: {{ activity.url }}</li>
-        </ul>
-        
-        <a href="{{activity.pk}}">More Info</a>
-    </li>
-    {% empty %}
-    <li>No activities submitted yet.</li>
+    <tr><td>{{ activity.online }}</td><td>{{activity.name}}</td><td>{{ activity.url }}</td><td><a href="{{activity.pk}}">edit</a></td></tr>
     {% endfor %}
-</ul>
+</tbody>
+</table>
+</div>
+
+{% endblock %}

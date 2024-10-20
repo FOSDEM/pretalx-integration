@@ -1,4 +1,9 @@
+{%if admin %}
+{% extends "orga/cfp/base.html" %}
+{% else %}
 {% extends "agenda/base.html" %}
+{% endif %}
+{% extends "orga/cfp/base.html" %}
 {% load bootstrap4 %}
 {% load compress %}
 {% load i18n %}
