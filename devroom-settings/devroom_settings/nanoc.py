@@ -10,6 +10,7 @@ import markdown
 import pytz
 import yaml
 from django.db.models import DurationField, ExpressionWrapper, F, Prefetch, Q
+from django.forms.models import model_to_dict
 from django.utils.functional import cached_property
 from PIL import Image
 from pretalx.person.models import SpeakerProfile
@@ -70,9 +71,9 @@ def sanitize_filename(filename):
 def chat_link(room, app=False):
     chat_room_name = re.sub(r"[()\s]+", "_", str(room.description).lower())
     if app:
-        link = f"https://matrix.to/#/#2024-{chat_room_name}:fosdem.org?web-instance[element.io]=chat.fosdem.org"
+        link = f"https://matrix.to/#/#2025-{chat_room_name}:fosdem.org?web-instance[element.io]=chat.fosdem.org"
     else:
-        link = f"https://chat.fosdem.org/#/room/#2024-{chat_room_name}:fosdem.org"
+        link = f"https://chat.fosdem.org/#/room/#2025-{chat_room_name}:fosdem.org"
     return link
 
 
@@ -564,6 +565,15 @@ class NanocExporter(ScheduleData):
 
         return speakers_dict
 
+    @cached_property
+    def fringe(self):
+        try:
+            from pretalx_fringe.models import FringeActivity
+        except ImportError:
+            return []
+        activities = FringeActivity.objects.filter(event=self.event, online=True)
+        return [model_to_dict(act) for act in activities]
+
     def render(self):
         conference = {
             "conference_id": self.event.pk,
@@ -615,6 +625,7 @@ class NanocExporter(ScheduleData):
             "tracks": self.tracks,
             "events": self.talks,
             "speakers": self.speakers,
+            "fringe": self.fringe,
         }
         # note safe_dump is not used to allow timestamp handling below
         dumped_yaml = yaml.dump(
