@@ -572,7 +572,7 @@ class NanocExporter(ScheduleData):
         except ImportError:
             return []
         activities = FringeActivity.objects.filter(event=self.event, online=True)
-        return [model_to_dict(act) for act in activities]
+        return {act.name: model_to_dict(act) for act in activities}
 
     def render(self):
         conference = {
