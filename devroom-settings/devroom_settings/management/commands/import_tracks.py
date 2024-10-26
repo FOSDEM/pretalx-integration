@@ -66,7 +66,10 @@ class Command(BaseCommand):
             review_team_name = f"review-{tracksetting.slug}-{year}"
 
             manager_team = Team(
-                name=manager_team_name, organiser=organiser, is_reviewer=True
+                name=manager_team_name,
+                organiser=organiser,
+                is_reviewer=True,
+                can_change_submissions=True,
             )
             review_team = Team(
                 name=review_team_name, organiser=organiser, is_reviewer=True

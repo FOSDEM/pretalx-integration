@@ -18,3 +18,15 @@ class PluginApp(AppConfig):
 
     def ready(self):
         from . import signals  # NOQA
+
+
+import rules
+
+
+@rules.predicate
+def is_fosdem_staff(user, obj):
+    groups = [str(t.name).lower() for t in user.teams.all()]
+    return "fosdem staff team" in groups
+
+
+rules.add_perm("orga.fringe_edit", is_fosdem_staff)

@@ -16,8 +16,8 @@ from .models import FringeActivity
 logger = logging.getLogger(__name__)
 
 
-class FringeActivityView(UpdateView):
-    # permission_required = "orga.change_settings"
+class FringeActivityView(PermissionRequired, UpdateView):
+    permission_required = "orga.fringe_edit"
     model = FringeActivity
     form_class = FringeActivityForm
     template_name = "pretalx_fringe/activity_edit.html"
@@ -52,9 +52,9 @@ class FringeActivityView(UpdateView):
         return super().form_invalid(form)
 
 
-class FringeActivityListView(ListView):
+class FringeActivityListView(PermissionRequired, ListView):
+    permission_required = "orga.fringe_edit"
     model = FringeActivity
-    permission_required = "orga.change_settings"
 
     template_name = "fringe_list.html"  # Specify your template
     context_object_name = "fringe_activities"  # Name for the context in the template

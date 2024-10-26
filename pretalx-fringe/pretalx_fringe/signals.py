@@ -5,8 +5,10 @@ from pretalx.orga.signals import nav_event
 
 @receiver(nav_event, dispatch_uid="fringe_toolbar")
 def pretalx_fringe_list(sender, request, **kwargs):
-    if not request.user.has_perm("person.is_administrator", None):
+    if not request.user.has_perm("orga.fringe_edit", request.event):
         return []
+
+    print("should show fringe")
     return [
         {
             "label": "Fringe",
