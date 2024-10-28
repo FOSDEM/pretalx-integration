@@ -19,7 +19,7 @@ class TrackSettings(models.Model):
         OTHER = "O", "other"
 
     track = models.OneToOneField(to=Track, on_delete=models.CASCADE)
-    track_type = models.CharField(choices=TrackType.choices)
+    track_type = models.CharField(choices=TrackType.choices, max_length=50)
     slug = models.SlugField(
         max_length=63, verbose_name="slug", help_text="SLUG used for URLS"
     )
@@ -61,7 +61,10 @@ class TrackSettings(models.Model):
                 if self.manager_team:
                     self.manager_team.name = f"manager-{self.slug}-{year}"
                     self.manager_team.save()
-                self.mail = f"{self.slug}-devroom-manager@fosdem.org"
+                # mail should be stable from now on
+                # self.mail = f"{self.slug}-devroom-manager@fosdem.org"
+        if self.cfp_url and self.cfp_url != "":
+            self.track.description = f"Read the Call for papers at {self.cfp_url}"
 
         super().save(*args, **kwargs)
 
@@ -73,7 +76,9 @@ class RoomSettings(models.Model):
         help_text="Should content of this room be exported to the website",
         default=True,
     )
-    control_password = models.CharField("Password Video control", blank=True, null=True)
+    control_password = models.CharField(
+        "Password Video control", blank=True, null=True, max_length=64
+    )
 
 
 feedback_choices = [
