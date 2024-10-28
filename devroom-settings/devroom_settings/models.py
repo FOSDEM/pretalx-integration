@@ -65,6 +65,7 @@ class TrackSettings(models.Model):
                 # self.mail = f"{self.slug}-devroom-manager@fosdem.org"
         if self.cfp_url and self.cfp_url != "":
             self.track.description = f"Read the Call for papers at {self.cfp_url}"
+            self.track.save()
 
         super().save(*args, **kwargs)
 
