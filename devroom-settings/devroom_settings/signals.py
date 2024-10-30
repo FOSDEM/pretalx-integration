@@ -75,9 +75,9 @@ def devroom_placeholders(sender, **kwargs):
 
 @receiver(nav_event, dispatch_uid="devroom_report")
 def navbar_info(sender, request, **kwargs):
-    url = resolve(request.path_info)
     if not request.user.has_perm("orga.view_orga_area", request.event):
         return []
+    url = resolve(request.path_info)
     return [
         {
             "label": "Devrooms",
