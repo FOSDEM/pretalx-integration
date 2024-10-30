@@ -9,6 +9,13 @@ from pretalx.submission.models import Track
 
 from devroom_settings.models import TrackSettings
 
+def boolean_input(question, default=None):
+    result = input("%s " % question)
+    if not result and default is not None:
+        return default
+    while len(result) < 1 or result[0].lower() not in "yn":
+        result = input("Please answer yes or no: ")
+    return result[0].lower() == "y"
 
 class Command(BaseCommand):
     help = "Import accepted devrooms from another CfP as devrooms (track)"
@@ -30,6 +37,7 @@ class Command(BaseCommand):
         year = dest[-4:]
         with scope(event=dest_event):
             existing_tracks = list(Track.objects.all().values_list("name", flat=True))
+        existing_tracks = [str(track) for track in existing_tracks]
 
         # create organiser (groups teams)
         organiser, _ = Organiser.objects.get_or_create(
@@ -38,7 +46,6 @@ class Command(BaseCommand):
         organiser.save()
         organiser.events.add(dest_event)
         organiser.save()
-
         for i, submission in enumerate(accepted_devrooms):
             # for future: fetch answers from submission
             # for CfP
@@ -46,6 +53,8 @@ class Command(BaseCommand):
             #    answers = submission.answers.filter()
 
             if submission.title in existing_tracks:
+                continue
+            if not boolean_input(f"Import {submission.title}"):
                 continue
             track = Track(name=submission.title, event=dest_event)
             track.color = (
