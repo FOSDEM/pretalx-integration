@@ -31,14 +31,6 @@ class Command(BaseCommand):
         with scope(event=dest_event):
             existing_tracks = list(Track.objects.all().values_list("name", flat=True))
 
-        # create organiser (groups teams)
-        organiser, _ = Organiser.objects.get_or_create(
-            slug=dest_event.slug, name=f"{dest_event.name} teams"
-        )
-        organiser.save()
-        organiser.events.add(dest_event)
-        organiser.save()
-
         for i, submission in enumerate(accepted_devrooms):
             # for future: fetch answers from submission
             # for CfP
