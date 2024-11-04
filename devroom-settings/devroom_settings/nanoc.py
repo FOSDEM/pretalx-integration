@@ -575,7 +575,7 @@ class NanocExporter(ScheduleData):
         try:
             from pretalx_fringe.models import FringeActivity
         except ImportError:
-            return []
+            return {}
         activities = FringeActivity.objects.filter(event=self.event, online=True)
         activities = activities.values(
             "url",
