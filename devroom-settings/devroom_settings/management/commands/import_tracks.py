@@ -9,6 +9,7 @@ from pretalx.submission.models import Track
 
 from devroom_settings.models import TrackSettings
 
+
 def boolean_input(question, default=None):
     result = input("%s " % question)
     if not result and default is not None:
@@ -16,6 +17,7 @@ def boolean_input(question, default=None):
     while len(result) < 1 or result[0].lower() not in "yn":
         result = input("Please answer yes or no: ")
     return result[0].lower() == "y"
+
 
 class Command(BaseCommand):
     help = "Import accepted devrooms from another CfP as devrooms (track)"
@@ -39,13 +41,7 @@ class Command(BaseCommand):
             existing_tracks = list(Track.objects.all().values_list("name", flat=True))
         existing_tracks = [str(track) for track in existing_tracks]
 
-        # create organiser (groups teams)
-        organiser, _ = Organiser.objects.get_or_create(
-            slug=dest_event.slug, name=f"{dest_event.name} teams"
-        )
-        organiser.save()
-        organiser.events.add(dest_event)
-        organiser.save()
+        organiser, _ = Organiser.objects.get(name=f"FOSDEM")
         for i, submission in enumerate(accepted_devrooms):
             # for future: fetch answers from submission
             # for CfP
