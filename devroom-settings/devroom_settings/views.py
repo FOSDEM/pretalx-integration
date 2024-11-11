@@ -142,7 +142,7 @@ class MatrixExport(EventPermissionRequired, View):
     model = Submission
 
     def get(self, request, **kwargs):
-        data = []
+        talks = []
 
         schedule = self.request.event.wip_schedule.scheduled_talks.prefetch_related(
             "submission__speakers"
@@ -188,8 +188,35 @@ class MatrixExport(EventPermissionRequired, View):
                     "name": str(slot.submission.track.name),
                 },
             }
-            data.append(talk)
-        return JsonResponse({"talks": data}, safe=True)
+            talks.append(talk)
+
+        track_objects = self.request.event.tracks.select_related(
+            "tracksettings"
+        ).prefetch_related("tracksettings__manager_team__members")
+        tracks = []
+        for t in track_objects:
+            persons = []
+            for p in t.tracksettings.manager_team.members.all():
+                person_data = {
+                    "person_id": p.pk,
+                    "event_role": "coordinator",
+                    "name": p.name,
+                    "email": p.email,
+                    "matrix_id": p.matrix_id,
+                }
+                persons.append(person_data)
+            tracks.append(
+                {
+                    "id": t.id,
+                    "slug": t.tracksettings.slug,
+                    "name": str(t.name),
+                    "email": t.tracksettings.mail,
+                    "type": t.tracksettings.get_track_type_display(),
+                    "managers": persons,
+                }
+            )
+
+        return JsonResponse({"talks": talks, "tracks": tracks}, safe=True)
 
 
 VIDEO_RECORDING_STRING = "Video recording"
