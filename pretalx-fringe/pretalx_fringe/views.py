@@ -128,7 +128,7 @@ class FringeCreateView(LoginRequiredMixin, CreateView):
             description=form.cleaned_data.get("description"),
             why=form.cleaned_data.get("why"),
             url=form.cleaned_data.get("url"),
-            start=form.cleaned_data.get("start"),
+            start=form.cleaned_data.get("starts"),
             ends=form.cleaned_data.get("ends"),
             cost=form.cleaned_data.get("cost"),
             registration=form.cleaned_data.get("registration"),
