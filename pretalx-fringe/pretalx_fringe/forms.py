@@ -1,4 +1,6 @@
 from django import forms
+from django.core.exceptions import ValidationError
+from django.utils.timezone import timedelta
 from pretalx.common.mixins.forms import I18nHelpText, ReadOnlyFlag
 
 from .models import FringeActivity
@@ -21,6 +23,27 @@ class FringeActivityForm(forms.ModelForm):
             instance.save()
         return instance
 
+    def clean(self):
+        cleaned_data = super().clean()
+        starts = cleaned_data.get("starts")
+        ends = cleaned_data.get("ends")
+
+        if starts and ends and ends < starts:
+            raise ValidationError(
+                {
+                    "ends": "The end time must be greater than or equal to the start time."
+                }
+            )
+
+        if starts < self.event.date_from - timedelta(days=30):
+            raise ValidationError(
+                {"starts": "Event starts more than 30 days before FOSDEM"}
+            )
+        if ends > self.event.date_to + timedelta(days=30):
+            raise ValidationError({"ends": "Event ends more than 30 days after FOSDEM"})
+
+        return cleaned_data
+
     class Meta:
         model = FringeActivity
         fields = [
@@ -37,6 +60,6 @@ class FringeActivityForm(forms.ModelForm):
             "online",
         ]
         widgets = {
-            "starts": forms.DateTimeInput(attrs={"type": "datetime-local"}),
-            "ends": forms.DateTimeInput(attrs={"type": "datetime-local"}),
+            "starts": forms.DateInput(format="%Y-%m-%d"),
+            "ends": forms.DateInput(format="%Y-%m-%d"),
         }

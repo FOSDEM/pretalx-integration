@@ -21,8 +21,8 @@ class FringeActivity(models.Model):
     why = models.TextField(
         help_text="Why should it be listed as part of FOSDEM Fringe?"
     )
-    starts = models.DateTimeField()
-    ends = models.DateTimeField()
+    starts = models.DateField(help_text="Start date (format %Y-%M-%d)")
+    ends = models.DateField(help_text="End date (format %Y-%M-%d)")
     cost = models.CharField(max_length=255, blank=True, null=True)
     registration = models.CharField(
         max_length=255,
