@@ -580,7 +580,6 @@ class NanocExporter(ScheduleData):
         activities = activities.values(
             "url",
             "location",
-            "why",
             "starts",
             "ends",
             "cost",
