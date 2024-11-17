@@ -28,19 +28,24 @@ class FringeActivityForm(forms.ModelForm):
         starts = cleaned_data.get("starts")
         ends = cleaned_data.get("ends")
 
-        if starts and ends and ends < starts:
-            raise ValidationError(
-                {
-                    "ends": "The end time must be greater than or equal to the start time."
-                }
-            )
+        try:
+            if starts and ends and ends < starts:
+                raise ValidationError(
+                    {
+                        "ends": "The end time must be greater than or equal to the start time."
+                    }
+                )
 
-        if starts < self.event.date_from - timedelta(days=30):
-            raise ValidationError(
-                {"starts": "Event starts more than 30 days before FOSDEM"}
-            )
-        if ends > self.event.date_to + timedelta(days=30):
-            raise ValidationError({"ends": "Event ends more than 30 days after FOSDEM"})
+            if starts < self.event.date_from - timedelta(days=30):
+                raise ValidationError(
+                    {"starts": "Event starts more than 30 days before FOSDEM"}
+                )
+            if ends > self.event.date_to + timedelta(days=30):
+                raise ValidationError(
+                    {"ends": "Event ends more than 30 days after FOSDEM"}
+                )
+        except:
+            raise ValidationError({"starts": "Invalid start or end date"})
 
         return cleaned_data
 

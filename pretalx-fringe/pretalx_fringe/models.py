@@ -35,3 +35,15 @@ class FringeActivity(models.Model):
         default=False, help_text="Publish to the FOSDEM website"
     )
     submitter = models.ForeignKey(to=User, on_delete=models.CASCADE)
+    sort_order = models.IntegerField(null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        # Set sort_order to id * 10 if not defined
+        if self.sort_order is None:
+            if self.id is None:
+                super().save(*args, **kwargs)
+            self.sort_order = self.id * 10
+        super().save(*args, **kwargs)
+
+    class Meta:
+        ordering = ["sort_order"]
