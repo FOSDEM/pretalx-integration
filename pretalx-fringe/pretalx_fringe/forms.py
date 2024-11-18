@@ -1,3 +1,5 @@
+import datetime
+
 from django import forms
 from django.core.exceptions import ValidationError
 from django.utils.timezone import timedelta
@@ -28,24 +30,26 @@ class FringeActivityForm(forms.ModelForm):
         starts = cleaned_data.get("starts")
         ends = cleaned_data.get("ends")
 
-        try:
-            if starts and ends and ends < starts:
-                raise ValidationError(
-                    {
-                        "ends": "The end time must be greater than or equal to the start time."
-                    }
-                )
+        if !isinstance(starts, datetime.date):
+            raise ValidationError({"starts": "Invalid start date"})
+        if !isinstance(ends, datetime.date):
+            raise ValidationError({"ends": "Invalid end date"})
 
-            if starts < self.event.date_from - timedelta(days=30):
-                raise ValidationError(
-                    {"starts": "Event starts more than 30 days before FOSDEM"}
-                )
-            if ends > self.event.date_to + timedelta(days=30):
-                raise ValidationError(
-                    {"ends": "Event ends more than 30 days after FOSDEM"}
-                )
-        except:
-            raise ValidationError({"starts": "Invalid start or end date"})
+        if starts and ends and ends < starts:
+            raise ValidationError(
+                {
+                    "ends": "The end time must be greater than or equal to the start time."
+                }
+            )
+
+        if starts < self.event.date_from - timedelta(days=30):
+            raise ValidationError(
+                {"starts": "Event starts more than 30 days before FOSDEM"}
+            )
+        if ends > self.event.date_to + timedelta(days=30):
+            raise ValidationError(
+                {"ends": "Event ends more than 30 days after FOSDEM"}
+            )
 
         return cleaned_data
 
