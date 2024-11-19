@@ -1,5 +1,5 @@
 from django import forms
-from pretalx.common.mixins.forms import I18nHelpText, ReadOnlyFlag
+from pretalx.common.forms.mixins import I18nHelpText, ReadOnlyFlag
 from pretalx.event.models import TeamInvite
 from pretalx.submission.models import Track
 

@@ -3,7 +3,7 @@ import datetime
 from django import forms
 from django.core.exceptions import ValidationError
 from django.utils.timezone import timedelta
-from pretalx.common.mixins.forms import I18nHelpText, ReadOnlyFlag
+from pretalx.common.forms.mixins import I18nHelpText, ReadOnlyFlag
 
 from .models import FringeActivity
 
