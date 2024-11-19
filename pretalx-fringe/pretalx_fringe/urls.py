@@ -3,6 +3,8 @@ from pretalx.event.models.event import SLUG_REGEX
 
 from .views import FringeActivityListView, FringeActivityView, FringeCreateView
 
+print("***fringe url loaded")
+
 urlpatterns = [
     re_path(
         rf"^orga/event/(?P<event>{SLUG_REGEX})/p/fringe/(?P<pk>\d+)/$",

@@ -17,8 +17,11 @@ class PluginApp(AppConfig):
         category = "FEATURE"
 
     def ready(self):
-        from . import signals  # NOQA
+        from . import signals  # noqa
+        from . import urls
 
+
+default_app_config = "pretalx_fringe.PluginApp"
 
 import rules
 

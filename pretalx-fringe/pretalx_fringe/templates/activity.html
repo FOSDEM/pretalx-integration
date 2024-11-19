@@ -1,9 +1,11 @@
-{% extends "agenda/base.html" %}
-{% load bootstrap4 %}
+{% extends "cfp/event/base.html" %}
 {% load compress %}
 {% load i18n %}
 {% load static %}
 {% block title %}Submit Fringe event {% endblock title %}
+{% block cfp_header %}
+    {% include "cfp/includes/forms_header.html" %}
+{% endblock cfp_header%}
 
 {% block content %}
 <script src="{% static "common/js/formTools.js" %}" defer></script>
@@ -29,21 +31,20 @@
 
 <form method="post" action="">
     {% csrf_token %}
-    {% bootstrap_field form.name layout='event' %}
-    {% bootstrap_field form.location layout='event' %}
-    {% bootstrap_field form.description layout='event' %}
-    {% bootstrap_field form.why layout='event' %}
-    
-    {% bootstrap_field form.url layout='event' %}
-    {% bootstrap_field form.starts layout='event' %}
-    {% bootstrap_field form.ends layout='event' %}
-    {% bootstrap_field form.cost layout='event' %}
-    {% bootstrap_field form.registration layout='event' %}
-    {% bootstrap_field form.contact layout='event' %}
+    {% include "common/forms/errors.html" with form=profile_form %}
 
-    {%if admin %}
-    {% bootstrap_field form.online layout='event' %}
-    {% endif %}
+    {{ form.name.as_field_group }}
+    {{ form.location.as_field_group }}
+    {{ form.description.as_field_group }}
+    {{ form.why.as_field_group }}
+    
+    {{ form.url.as_field_group }}
+    {{ form.starts.as_field_group}}
+    {{ form.ends.as_field_group }}
+    {{ form.cost.as_field_group }}
+    {{ form.registration.as_field_group }}
+    {{ form.contact.as_field_group }}
+
     <div class="col-md-3 flip ml-auto d-flex flex-column">
         <button type="submit" name="form" class="btn btn-right btn-success font-weight-bold">Submit Activity</button>
     </div>

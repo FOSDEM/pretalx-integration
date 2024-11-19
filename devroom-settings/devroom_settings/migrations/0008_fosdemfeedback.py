@@ -6,7 +6,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("submission", "0075_user_matrix_id"),
+        ("submission", "0074_created_updated_everywhere"),
         ("devroom_settings", "0007_delete_usersettings"),
     ]
 

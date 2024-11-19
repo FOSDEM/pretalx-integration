@@ -13,7 +13,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import CreateView, ListView, View
 from django_scopes import scope, scopes_disabled
-from pretalx.common.mixins.views import EventPermissionRequired
+from pretalx.common.views.mixins import EventPermissionRequired
 from pretalx.event.forms import TeamInviteForm
 from pretalx.event.models import TeamInvite
 from pretalx.schedule.models import Room, TalkSlot

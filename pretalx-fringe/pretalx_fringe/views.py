@@ -7,7 +7,7 @@ from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import CreateView, ListView
 from django.views.generic.edit import UpdateView
-from pretalx.common.mixins.views import PermissionRequired
+from pretalx.common.views.mixins import PermissionRequired
 from pretalx.mail.models import QueuedMail
 
 from .forms import FringeActivityForm
