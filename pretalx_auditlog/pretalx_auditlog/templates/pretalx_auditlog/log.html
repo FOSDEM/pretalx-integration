@@ -1,5 +1,4 @@
-{% extends "orga/cfp/base.html" %}
-{% load bootstrap4 %}
+{% extends "orga/base.html" %}
 {% load compress %}
 {% load i18n %}
 {% load static %}
@@ -11,13 +10,13 @@
         <script defer src="{% static "orga/js/datetimepicker.js" %}"></script>
     {% endcompress %}
 {% endblock %}
-{% block cfp_content %}
+{% block content %}
     <h2>Audit log</h2>
     <div>
     <div class="submit-group search-submit-group"><form method="get" class="search-form">
-        {% bootstrap_field form.n layout='event' %}
-        {% bootstrap_field form.max_date layout='event' %}
-        {% bootstrap_field form.model layout='event' %}
+	{{  form.n.as_field_group }}
+	{{  form.max_date.as_field_group }}
+	{{  form.model.as_field_group }}
         <button type="submit" class="btn btn-info btn-search">Submit</button></form></div>
     {% for event in events %}
     <dd>model</dd>: {{ event.short_model }} (id: {{ event.pgh_obj_id }})</br>

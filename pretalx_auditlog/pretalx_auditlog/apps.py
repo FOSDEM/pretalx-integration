@@ -16,3 +16,4 @@ class PluginApp(AppConfig):
     def ready(self):
         from . import models  # NOQA
         from . import signals  # NOQA
+        from . import urls  # NOQA

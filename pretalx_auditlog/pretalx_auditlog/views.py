@@ -1,10 +1,11 @@
 import inspect
 
-import pretalx_auditlog.models as models
 from django.views.generic.base import TemplateView
 from pghistory.models import Events
-from pretalx.common.mixins.views import PermissionRequired
+from pretalx.common.views.mixins import PermissionRequired
 from pretalx.person.models import User
+
+import pretalx_auditlog.models as models
 
 from .forms import Search
 

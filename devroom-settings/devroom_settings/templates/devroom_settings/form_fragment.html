@@ -1,8 +1,7 @@
-{% load bootstrap4 %}
-{% bootstrap_field context.track_type layout='event' %}
-{% bootstrap_field context.slug layout='event' %}
-{% bootstrap_field context.mail layout='event' %}
-{% bootstrap_field context.online_qa layout='event' %}
-{% bootstrap_field context.cfp_url layout='event' %}
-{% bootstrap_field context.manager_team layout='event' %}
-{% bootstrap_field context.review_team layout='event' %}
+{{  context.track_type.as_field_group }}
+{{  context.slug.as_field_group }}
+{{  context.mail.as_field_group }}
+{{  context.online_qa.as_field_group }}
+{{  context.cfp_url.as_field_group }}
+{{  context.manager_team.as_field_group }}
+{{  context.review_team.as_field_group }}
