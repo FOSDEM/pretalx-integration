@@ -50,6 +50,6 @@ for i in [
     for item in items:
         if issubclass(item[1], models.Model):
             if item[0] in exclude_models:
-                pass
+                continue
             print(f"from {i.__name__} import {item[0]}")
             print(template.format(item[0], str(exclude_fields.get(item[0], []))))
