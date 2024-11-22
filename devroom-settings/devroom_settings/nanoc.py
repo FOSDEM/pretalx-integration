@@ -318,6 +318,8 @@ class NanocExporter(ScheduleData):
                 "end_time": end_time,
                 "start_time_index": start_time_index,
                 "end_time_index": end_time_index,
+                "description": str(track.description),
+
             }
         return tracks_dict
 
