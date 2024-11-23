@@ -2,14 +2,6 @@
 {% load compress %}
 {% load i18n %}
 {% load static %}
-{% block scripts %}
-    {% compress js %}
-        <script defer src="{% static "vendored/moment-with-locales.js" %}"></script>
-        <script defer src="{% static "vendored/moment-timezone-with-data-10-year-range.js" %}"></script>
-        <script defer src="{% static "vendored/datetimepicker/bootstrap-datetimepicker.js" %}"></script>
-        <script defer src="{% static "orga/js/datetimepicker.js" %}"></script>
-    {% endcompress %}
-{% endblock %}
 {% block content %}
     <h2>Audit log</h2>
     <div>
