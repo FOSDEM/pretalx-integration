@@ -232,7 +232,7 @@ class NanocExporter(ScheduleData):
                 "conference_room_id": room.pk,
                 "conference_room": str(room.description),
                 "size": room.capacity,
-                "rank": room.position,
+                "rank": room.position if room.position else room.pk,
                 "slug": str(room.name).lower(),
                 "chat_link": chat_link(room),
                 "live_video_link": f"https://live.fosdem.org/watch/{str(room.name)}",
