@@ -138,8 +138,8 @@
             <p> Access code(s) for your track:</p>
                 <ul>{% for ac in access_codes %}
                     <li>
-                    <div data-destination="https://pretalx.fosdem.org/fosdem-2024/cfp?access_code={{ ac }}" title="Copy access code link" class="btn btn-sm btn-info copyable-text">
-                                    <i class="fa fa-link"></i>&nbsp;https://pretalx.fosdem.org/fosdem-2024/cfp?access_code={{ ac }}
+			    <div data-destination="{{ request.scheme }}://{{ request.get_host }}/{{ request.event.slug }}/cfp?access_code={{ ac }}" title="Copy access code link" class="btn btn-sm btn-info copyable-text">
+				    <i class="fa fa-link"></i>&nbsp;{{ request.scheme }}://{{ request.get_host }}/{{ request.event.slug }}/cfp?access_code={{ ac }}
                                 </div>
                     </li>{% endfor %}
                 </ul>
