@@ -43,9 +43,6 @@ class TrackSettings(models.Model):
     manager_team = models.ForeignKey(
         Team, on_delete=models.SET_NULL, null=True, related_name="manager_track"
     )
-    rooms = models.ManyToManyField(
-        Room, help_text="Allowed rooms for track (not yet enforced)", blank=True
-    )
 
     def save(self, *args, **kwargs):
         if self.pk:
@@ -64,10 +61,21 @@ class TrackSettings(models.Model):
                 # mail should be stable from now on
                 # self.mail = f"{self.slug}-devroom-manager@fosdem.org"
         if self.cfp_url and self.cfp_url != "":
-            self.track.description = f"Make sure you read the track CfP details at {self.cfp_url}"
+            self.track.description = (
+                f"Make sure you read the track CfP details at {self.cfp_url}"
+            )
             self.track.save()
 
         super().save(*args, **kwargs)
+
+
+class TrackRoom(models.Model):
+    track = models.ForeignKey(Track, on_delete=models.CASCADE)
+    room = models.ForeignKey(Room, on_delete=models.CASCADE)
+    saturday_morning = models.BooleanField(default=False)
+    saturday_afternoon = models.BooleanField(default=False)
+    sunday_morning = models.BooleanField(default=False)
+    sunday_afternoon = models.BooleanField(default=False)
 
 
 class RoomSettings(models.Model):
