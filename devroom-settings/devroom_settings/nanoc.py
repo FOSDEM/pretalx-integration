@@ -437,7 +437,9 @@ class NanocExporter(ScheduleData):
                         "chat_link": chat_link(talk.room),
                         "room": str(talk.room.name).lower(),
                         "room_name": str(talk.room.description),
-                        "room_rank": talk.room.position,
+                        "room_rank": talk.room.position
+                        if talk.room.position
+                        else talk.room.id,
                         "conference_room_id": talk.room.pk,
                         "language": "en",
                         "attachments": attachments,
