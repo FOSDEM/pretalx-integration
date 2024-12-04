@@ -322,7 +322,7 @@ class NanocExporter(ScheduleData):
         return tracks_dict
 
     @cached_property
-    def talks(self):
+    def talks(self, matrix_links=False, feedback_links=False):
         talks = {}
         for day in self.data:
             for room in day["rooms"]:
@@ -335,24 +335,22 @@ class NanocExporter(ScheduleData):
                             link__isnull=False
                         )
                     ]
+                    if matrix_links:
+                        links += [
+                            {"title": "Chat room(web)", "url": chat_link(talk.room)},
+                            {
+                                "title": "Chat room(app)",
+                                "url": chat_link(talk.room, app=True),
+                            },
+                        ]
 
-                    links += [
-                        {"title": "Chat room(web)", "url": chat_link(talk.room)},
-                        {
-                            "title": "Chat room(app)",
-                            "url": chat_link(talk.room, app=True),
-                        },
-                    ]
-
-                    # add feedback link
-                    links += [
-                        {
-                            "title": "Submit Feedback",
-                            "url": talk.submission.urls.feedback.full(),
-                        }
-                    ]
-
-                    # add matrix links TODO!
+                    if feedback_links:
+                        links += [
+                            {
+                                "title": "Submit Feedback",
+                                "url": talk.submission.urls.feedback.full(),
+                            }
+                        ]
 
                     if self.dest_dir and talk.submission.image:
                         orig_path = Path(talk.submission.image.path)
