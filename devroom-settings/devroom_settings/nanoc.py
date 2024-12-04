@@ -70,7 +70,7 @@ def sanitize_filename(filename):
 
 def speaker_slug(user):
     name = unidecode(user.name)
-    re.sub(r"[()\s]+", "_", name).lower()
+    name = re.sub(r"[()\s]+", "_", name).lower()
     return name
 
 
