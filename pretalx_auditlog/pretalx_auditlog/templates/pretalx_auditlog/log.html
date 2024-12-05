@@ -2,27 +2,54 @@
 {% load compress %}
 {% load i18n %}
 {% load static %}
+{% block head %}
+    <style>
+        .event-block {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+    </style>
+{% endblock %}
+
 {% block content %}
-    <h2>Audit log</h2>
-    <div>
-    <div class="submit-group search-submit-group"><form method="get" class="search-form">
-	{{  form.n.as_field_group }}
-	{{  form.max_date.as_field_group }}
-	{{  form.model.as_field_group }}
-        <button type="submit" class="btn btn-info btn-search">Submit</button></form></div>
-    {% for event in events %}
-    <dd>model</dd>: {{ event.short_model }} (id: {{ event.pgh_obj_id }})</br>
-        time: {{ event.pgh_created_at.isoformat}}</br>
-        {% if event.pgh_diff %}
-	diff: {% for k,v in event.pgh_diff.items %}'{{ k }}:<span class="old">{{ v }}</span>=&gt;<span class="new">{{ v }}</span>'{% endfor %}</br>
-        {% else %}
-            data: {{ event.pgh_data }}</br>
-        {% endif %}
-    {%if event.pgh_context  %}
-        user: {{ event.user }} ({{ event.user.pk }})</br>
-        url: {{ event.pgh_context.url }}
-    {%endif%}
-    <hr/>
-    {% endfor %}
+<h2>Audit log</h2>
+<div>
+    <div class="submit-group search-submit-group">
+        <form method="get" class="search-form">
+            {{  form.n.as_field_group }}
+            {{  form.max_date.as_field_group }}
+            {{  form.model.as_field_group }}
+            <button type="submit" class="btn btn-info btn-search">Submit</button>
+        </form>
     </div>
+    {% for event in events %}
+    <div class="event-block">
+        <strong>model: </strong>{{ event.short_model }} (id: {{ event.pgh_obj_id }})<br>
+        <strong>time: </strong> {{ event.pgh_created_at.isoformat}}</br>
+            {% if event.pgh_diff %}
+        <strong>diff:</strong>
+        <ul>
+            {% for k,v in event.pgh_diff.items %}
+                <li>{{ k }}: <span class="old">'{{ v.0 }}'</span>&nbsp;=&gt;&nbsp;<span class="new">'{{ v.1 }}'</span></li>
+            {% endfor %}
+        </ul>
+        
+            {% else %}
+                <strong>data:</strong>
+                <ul>{% for k,v in event.pgh_data.items %}
+                        <li><strong>{{ k }}: </strong> {{ v }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {%if event.pgh_context  %}
+            <strong>user:</strong> {{ event.user }} ({{ event.user.pk }})<br>
+            <strong>url:</strong> {{ event.pgh_context.url }}
+        {%endif%}
+        <hr/>
+    </div>
+    {% endfor %}
+</div>
 {% endblock %}
