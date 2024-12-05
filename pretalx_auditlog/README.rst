@@ -12,7 +12,7 @@ Development setup
 
 3. Activate the virtual environment you use for pretalx development.
 
-4. Execute ``pip install -e .`` within this directory to register this application with pretalx's plugin registry. Also install `pip install django-pghistory==2.8.0`
+4. Execute ``pip install -e .`` within this directory to register this application with pretalx's plugin registry. Also install `pip install django-pghistory==3.5.0`
 
 5. This is important: you need a custom settings file in order for the module to capture which user makes changes and to install apps. This is currently not configurable in other means. 
    Add a file eg auditlog_settings.py on the same location as settings.py

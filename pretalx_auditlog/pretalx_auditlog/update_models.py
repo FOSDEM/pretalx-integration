@@ -14,8 +14,7 @@ import pretalx.submission.models as submission_models
 from django.db import models
 
 template = """
-@pghistory.track(
-    pghistory.Snapshot(), pghistory.BeforeDelete(), exclude={1})
+@pghistory.track(pghistory.InsertEvent(), pghistory.UpdateEvent(), pghistory.DeleteEvent(), exclude={1})
 class {0}Proxy({0}):
     class Meta:
         proxy=True
@@ -28,9 +27,10 @@ exclude_fields = {
     "Event": ["updated"],
     "TeamInvite": ["token"],
     "User": ["password"],
-    "Submission": ["invitation_token"],
+    "Submission": ["invitation_token", "updated"],
     "Review": ["updated"],
     "Answer": ["updated"],
+    "Track": ["updated"],
 }
 
 exclude_models = ["PretalxModel", "ActivityLog"]  # abstract classes or not useful

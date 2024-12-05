@@ -28,7 +28,8 @@
     {% for event in events %}
     <div class="event-block">
         <strong>model: </strong>{{ event.short_model }} (id: {{ event.pgh_obj_id }})<br>
-        <strong>time: </strong> {{ event.pgh_created_at.isoformat}}</br>
+        <strong>time: </strong> {{ event.pgh_created_at.isoformat}}<br>
+        <strong>action: </strong> {{ event.pgh_label}}<br>
             {% if event.pgh_diff %}
         <strong>diff:</strong>
         <ul>
