@@ -1,0 +1,36 @@
+{% extends "orga/base.html" %}
+{% load compress %}
+{% load i18n %}
+{% load static %}
+
+
+{% block content %}
+
+{% for event in events %}
+<div class="event-block">
+    <strong>model: </strong>{{ event.short_model }} (id: {{ event.pgh_obj_id }})<br>
+    <strong>time: </strong> {{ event.pgh_created_at.isoformat}}<br>
+    <strong>action: </strong> {{ event.pgh_label}}<br>
+        {% if event.pgh_diff %}
+    <strong>diff:</strong>
+    <ul>
+        {% for k,v in event.pgh_diff.items %}
+            <li>{{ k }}: <span class="old">'{{ v.0 }}'</span>&nbsp;=&gt;&nbsp;<span class="new">'{{ v.1 }}'</span></li>
+        {% endfor %}
+    </ul>
+    
+        {% else %}
+            <strong>data:</strong>
+            <ul>{% for k,v in event.pgh_data.items %}
+                    <li><strong>{{ k }}: </strong> {{ v }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {%if event.pgh_context  %}
+        <strong>user:</strong> {{ event.user }} ({{ event.user.pk }})<br>
+        <strong>url:</strong> {{ event.pgh_context.url }}
+    {%endif%}
+    <hr/>
+</div>
+{% endfor %}
+{% endblock %}
