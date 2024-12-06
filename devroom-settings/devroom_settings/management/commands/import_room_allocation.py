@@ -15,8 +15,8 @@ def import_rooms(file_path):
         reader = csv.DictReader(csvfile)
         for row in reader:
             # Fetch related models
-            track, _ = Track.objects.get_or_create(name=row["track"], event=event)
-            room, _ = Room.objects.get_or_create(name=row["room"], event=event)
+            track, _ = Track.objects.get(name=row["track"], event=event)
+            room, _ = Room.objects.get(name=row["room"], event=event)
 
             TrackRoom.objects.create(
                 track=track,

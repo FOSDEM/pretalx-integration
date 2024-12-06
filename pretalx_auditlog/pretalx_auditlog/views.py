@@ -1,11 +1,10 @@
 import inspect
 
+import pretalx_auditlog.models as models
 from django.views.generic.base import TemplateView
 from pghistory.models import Events
 from pretalx.common.views.mixins import PermissionRequired
 from pretalx.person.models import User
-
-import pretalx_auditlog.models as models
 
 from .forms import Search
 
@@ -53,3 +52,18 @@ class Changelog(PermissionRequired, TemplateView):
             model_names=model_names,
         )
         return {"events": events, "form": form}
+
+
+class Modellog(PermissionRequired, TemplateView):
+    """Show the history of a specific model"""
+
+    permission_required = "person.is_administrator"
+    template_name = "pretalx_auditlog/model-log.html"
+
+    def get_context_data(self, **kwargs):
+        id = int(self.request.GET["id"])
+        model = self.request.GET["model"]
+        events = Events.objects.filter(
+            pgh_model=f"pretalx_auditlog.{model}", pgh_obj_id=id
+        ).order_by("-pgh_created_at")
+        return {"events": events}
