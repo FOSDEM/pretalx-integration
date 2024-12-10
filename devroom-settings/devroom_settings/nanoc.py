@@ -70,7 +70,7 @@ def sanitize_filename(filename):
 
 def speaker_slug(user):
     name = unidecode(user.name)
-    name = re.sub(r"[()\s]+", "_", name).lower()
+    name = re.sub(r"[().\s]+", "_", name).lower()
     # Remove double underscores
     name = re.sub(r"__+", "_", name)
     # Remove leading or trailing underscores
