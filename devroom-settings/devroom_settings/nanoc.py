@@ -69,13 +69,16 @@ def sanitize_filename(filename):
 
 
 def speaker_slug(user):
-    name = unidecode(user.name)
-    name = re.sub(r"[().\s]+", "_", name).lower()
-    # Remove double underscores
-    name = re.sub(r"__+", "_", name)
-    # Remove leading or trailing underscores
-    name = name.strip("_")
-    return name
+    b = unidecode(user.name)
+    b = re.sub(r"\/+", "", b)
+    b = re.sub(r"\s+", "_", b)
+    b = re.sub(r'["\']+', "", b)
+    b = re.sub(r"[^0-9A-Za-z\-]", "_", b)
+    b = re.sub(r"_+", "_", b)
+    b = re.sub(r"^_", "", b)
+    b = re.sub(r"_$", "", b)
+
+    return b
 
 
 def chat_link(room, app=False):
