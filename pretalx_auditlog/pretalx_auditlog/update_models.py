@@ -26,7 +26,7 @@ class {0}Proxy({0}):
 exclude_fields = {
     "Event": ["updated"],
     "TeamInvite": ["token"],
-    "User": ["password"],
+    "User": ["password", "pw_reset_token"],
     "Submission": ["invitation_token", "updated"],
     "Review": ["updated"],
     "Answer": ["updated"],

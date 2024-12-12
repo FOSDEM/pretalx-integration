@@ -328,7 +328,7 @@ from pretalx.person.models import User
     pghistory.InsertEvent(),
     pghistory.UpdateEvent(),
     pghistory.DeleteEvent(),
-    exclude=["password"],
+    exclude=["password", "pw_reset_token"],
 )
 class UserProxy(User):
     class Meta:
