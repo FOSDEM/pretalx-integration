@@ -134,10 +134,10 @@ class FringeCreateView(LoginRequiredMixin, CreateView):
             registration=form.cleaned_data.get("registration"),
             contact=form.cleaned_data.get("contact"),
         )
-
+        name = form.cleaned_data.get("name")
         mail = QueuedMail.objects.create(
             event=self.request.event,
-            subject="new fringe submission",
+            subject=f"new fringe submission: {name}",
             text=message,
             to=f"fringe@fosdem.org, {form.cleaned_data.get('contact')}",
         )
