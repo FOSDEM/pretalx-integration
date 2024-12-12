@@ -1,10 +1,13 @@
+import datetime
 import inspect
 
-import pretalx_auditlog.models as models
+from django.utils.dateparse import parse_datetime
 from django.views.generic.base import TemplateView
 from pghistory.models import Events
 from pretalx.common.views.mixins import PermissionRequired
 from pretalx.person.models import User
+
+import pretalx_auditlog.models as models
 
 from .forms import Search
 
@@ -32,6 +35,13 @@ class Changelog(PermissionRequired, TemplateView):
             events = events.filter(pgh_created_at__lt=max_date)
         if model and model != "All":
             events = events.filter(pgh_model=f"pretalx_auditlog.{model}")
+        else:
+            # a min_date is set for query performance
+            if max_date:
+                min_date = parse_datetime(max_date) - datetime.timedelta(minutes=30)
+            else:
+                min_date = datetime.datetime.now() - datetime.timedelta(minutes=30)
+            events = events.filter(pgh_created_at__gt=min_date)
         # convert to list so we can edit/add some values
         events = list(events[:n])
         for ev in events:
@@ -40,7 +50,10 @@ class Changelog(PermissionRequired, TemplateView):
                 .removesuffix("ProxyEvent")
                 .removeprefix("pretalx_auditlog.")
             )
-
+            if ev.short_model == "Submission":
+                ev.extra = ev.pgh_data["title"]
+            elif ev.short_model == "Track":
+                ev.extra = ev.pgh_data["name"]
             if ev.pgh_context is not None:
                 try:
                     user = User.objects.get(pk=ev.pgh_context["user"])
@@ -66,4 +79,20 @@ class Modellog(PermissionRequired, TemplateView):
         events = Events.objects.filter(
             pgh_model=f"pretalx_auditlog.{model}", pgh_obj_id=id
         ).order_by("-pgh_created_at")
+        # convert to list so we can edit/add some values
+        events = list(events)
+        for ev in events:
+            ev.short_model = (
+                str(ev.pgh_model)
+                .removesuffix("ProxyEvent")
+                .removeprefix("pretalx_auditlog.")
+            )
+
+            if ev.pgh_context is not None:
+                try:
+                    user = User.objects.get(pk=ev.pgh_context["user"])
+                    ev.user = user
+                except (User.DoesNotExist, KeyError):
+                    pass
+
         return {"events": events}
