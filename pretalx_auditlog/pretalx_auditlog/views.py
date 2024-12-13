@@ -75,7 +75,7 @@ class Changelog(PermissionRequired, TemplateView):
         if max_date:
             events = events.filter(pgh_created_at__lt=max_date)
         if model and model != "All":
-            events = events.filter(pgh_model=f"pretalx_auditlog.{model}")
+            events = events.across(f"pretalx_auditlog.{model}")
         else:
             # a min_date is set for query performance
             if max_date:
