@@ -384,7 +384,7 @@ from pretalx.schedule.models import TalkSlot
     pghistory.InsertEvent(),
     pghistory.UpdateEvent(),
     pghistory.DeleteEvent(),
-    exclude=[],
+    exclude=["is_visible"],
 )
 class TalkSlotProxy(TalkSlot):
     class Meta:

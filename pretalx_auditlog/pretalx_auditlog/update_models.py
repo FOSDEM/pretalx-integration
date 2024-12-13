@@ -5,6 +5,10 @@
 
 import inspect
 
+import django
+
+django.setup()
+
 import pretalx.common.models as common_models
 import pretalx.event.models as event_models
 import pretalx.mail.models as mail_models
@@ -31,9 +35,11 @@ exclude_fields = {
     "Review": ["updated"],
     "Answer": ["updated"],
     "Track": ["updated"],
+    "TalkSlot": ["is_visible"],
 }
 
 exclude_models = ["PretalxModel", "ActivityLog"]  # abstract classes or not useful
+
 
 print("import pghistory")
 
