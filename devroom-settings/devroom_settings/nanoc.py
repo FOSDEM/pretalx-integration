@@ -12,7 +12,7 @@ import yaml
 from django.db.models import DurationField, ExpressionWrapper, F, Prefetch, Q
 from django.forms.models import model_to_dict
 from django.utils.functional import cached_property
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 from pretalx.person.models import SpeakerProfile
 from pretalx.schedule.exporters import ScheduleData
 from pretalx.schedule.models import Room, TalkSlot
@@ -358,7 +358,7 @@ class NanocExporter(ScheduleData):
                                 "url": talk.submission.urls.feedback.full(),
                             }
                         ]
-
+                    valid_talk_image = bool(talk.submission.image)
                     if self.dest_dir and talk.submission.image:
                         orig_path = Path(talk.submission.image.path)
                         (self.dest_dir / f"events/logo/").mkdir(
@@ -366,14 +366,20 @@ class NanocExporter(ScheduleData):
                         )
                         image_dest = f"events/logo/{talk.frab_slug}{orig_path.suffix}"
                         logo_identifier = f"/schedule/event/{talk.frab_slug}/logo/"
-                        logo_mime = self.write_image(
-                            orig_path,
-                            image_dest,
-                            logo_identifier,
-                            200,
-                            200,
-                            event_slug=talk.frab_slug,
-                        )
+                        try:
+                            logo_mime = self.write_image(
+                                orig_path,
+                                image_dest,
+                                logo_identifier,
+                                200,
+                                200,
+                                event_slug=talk.frab_slug,
+                            )
+                        except UnidentifiedImageError:
+                            print(
+                                f"Warning, incorrect image found: {talk.sumission.image}"
+                            )
+                            valid_talk_image = False
 
                     attachments = []
                     for resource in talk.submission.resources.exclude(resource=""):
@@ -451,7 +457,7 @@ class NanocExporter(ScheduleData):
                         "links": links,
                         "feedback_url": talk.submission.urls.feedback.full(),
                     }
-                    if self.dest_dir and talk.submission.image:
+                    if self.dest_dir and valid_talk_image:
                         talks[talk.frab_slug]["logo"] = {
                             "identifier": logo_identifier,
                             "mime": logo_mime,
@@ -505,35 +511,40 @@ class NanocExporter(ScheduleData):
                 for talk in room["talks"]:
                     for speaker in talk.submission.speakers.all():
                         if speaker_slug(speaker) not in speakers_dict:
-                            if self.dest_dir and speaker.avatar:
-                                orig_path = Path(speaker.avatar.path)
-                                # store thumbnail
+                            valid_avatar = bool(speaker.avatar)
+                            try:
+                                if self.dest_dir and speaker.avatar:
+                                    orig_path = Path(speaker.avatar.path)
+                                    # store thumbnail
 
-                                thumb_dest = f"speaker/thumbnails/{speaker_slug(speaker)}{orig_path.suffix}"
+                                    thumb_dest = f"speaker/thumbnails/{speaker_slug(speaker)}{orig_path.suffix}"
 
-                                thumb_identifier = f"/schedule/speaker/{speaker_slug(speaker)}/thumbnail/"
-                                thumb_mime = self.write_image(
-                                    orig_path,
-                                    thumb_dest,
-                                    thumb_identifier,
-                                    32,
-                                    32,
-                                    speaker_slug=speaker_slug(speaker),
+                                    thumb_identifier = f"/schedule/speaker/{speaker_slug(speaker)}/thumbnail/"
+                                    thumb_mime = self.write_image(
+                                        orig_path,
+                                        thumb_dest,
+                                        thumb_identifier,
+                                        32,
+                                        32,
+                                        speaker_slug=speaker_slug(speaker),
+                                    )
+
+                                    photo_dest = f"speaker/photos/{speaker_slug(speaker)}{orig_path.suffix}"
+
+                                    photo_identifier = f"/schedule/speaker/{speaker_slug(speaker)}/photo/"
+                                    photo_mime = self.write_image(
+                                        orig_path,
+                                        photo_dest,
+                                        photo_identifier,
+                                        220,
+                                        180,
+                                        speaker_slug=speaker_slug(speaker),
+                                    )
+                            except UnidentifiedImageError:
+                                print(
+                                    f"Warning, incorrect image found: {speaker.avatar.path}"
                                 )
-
-                                photo_dest = f"speaker/photos/{speaker_slug(speaker)}{orig_path.suffix}"
-
-                                photo_identifier = (
-                                    f"/schedule/speaker/{speaker_slug(speaker)}/photo/"
-                                )
-                                photo_mime = self.write_image(
-                                    orig_path,
-                                    photo_dest,
-                                    photo_identifier,
-                                    220,
-                                    180,
-                                    speaker_slug=speaker_slug(speaker),
-                                )
+                                valid_avatar = False
 
                             try:
                                 biography = speaker.profiles.get(
@@ -561,7 +572,7 @@ class NanocExporter(ScheduleData):
                                 "events": [talk.frab_slug]
                                 # "events_by_day:": events_by_day
                             }
-                            if self.dest_dir and speaker.avatar:
+                            if self.dest_dir and valid_avatar:
                                 speakers_dict[speaker_slug(speaker)]["thumbnail"] = {
                                     "identifier": thumb_identifier,
                                     "mime": thumb_mime,
