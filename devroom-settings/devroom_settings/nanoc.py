@@ -377,7 +377,7 @@ class NanocExporter(ScheduleData):
                             )
                         except UnidentifiedImageError:
                             print(
-                                f"Warning, incorrect image found: {talk.sumission.image}"
+                                f"Warning, incorrect image found: {talk.submission.image}"
                             )
                             valid_talk_image = False
 
