@@ -445,31 +445,3 @@ class ScheduleCheckView(EventPermissionRequired, TemplateView):
                 talk_warnings_type[warning["type"]].append(warning)
         all_warnings["talk_warnings_type"] = dict(talk_warnings_type)
         return self.request.event.wip_schedule.warnings
-
-    @context
-    def changes(self):
-        return self.request.event.wip_schedule.changes
-
-    @context
-    def notifications(self):
-        return len(self.request.event.wip_schedule.generate_notifications(save=False))
-
-    @context
-    def suggested_version(self):
-        return guess_schedule_version(self.request.event)
-
-    def form_invalid(self, form):
-        messages.error(
-            self.request, _("You have to provide a new, unique schedule version!")
-        )
-        return redirect(self.request.event.orga_urls.release_schedule)
-
-    def form_valid(self, form):
-        self.request.event.release_schedule(
-            form.cleaned_data["version"],
-            user=self.request.user,
-            notify_speakers=form.cleaned_data["notify_speakers"],
-            comment=form.cleaned_data["comment"],
-        )
-        messages.success(self.request, _("Nice, your schedule has been released!"))
-        return redirect(self.request.event.orga_urls.schedule)
