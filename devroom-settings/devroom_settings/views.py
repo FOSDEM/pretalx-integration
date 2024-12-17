@@ -1,3 +1,4 @@
+import collections
 import json
 import logging
 from pathlib import Path
@@ -11,12 +12,14 @@ from django.http import FileResponse, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
-from django.views.generic import CreateView, ListView, View
+from django.views.generic import CreateView, ListView, TemplateView, View
+from django_context_decorator import context
 from django_scopes import scope, scopes_disabled
 from pretalx.common.views.mixins import EventPermissionRequired
 from pretalx.event.forms import TeamInviteForm
 from pretalx.event.models import TeamInvite
 from pretalx.schedule.models import Room, TalkSlot
+from pretalx.schedule.utils import guess_schedule_version
 from pretalx.submission.models import Resource, Submission, SubmitterAccessCode, Track
 
 from devroom_settings.forms import (
@@ -423,3 +426,50 @@ class FeedbackCreateView(CreateView):
         # Set the submission before saving the form
         form.instance.submission = self.submission
         return super().form_valid(form)
+
+
+class ScheduleCheckView(EventPermissionRequired, TemplateView):
+    permission_required = "orga.release_schedule"
+    template_name = "check.html"
+
+    @context
+    def warnings(self):
+        all_warnings = self.request.event.wip_schedule.warnings
+        # restructure talk warnings by type
+        talk_warnings = all_warnings["talk_warnings"]
+        talk_warnings_type = collections.defaultdict(list)
+        for talk_warning in talk_warnings:
+            warnings = talk_warning["warnings"]
+            for warning in warnings:
+                warning["talk_orig"] = talk_warning["talk"]
+                talk_warnings_type[warning["type"]].append(warning)
+        all_warnings["talk_warnings_type"] = dict(talk_warnings_type)
+        return self.request.event.wip_schedule.warnings
+
+    @context
+    def changes(self):
+        return self.request.event.wip_schedule.changes
+
+    @context
+    def notifications(self):
+        return len(self.request.event.wip_schedule.generate_notifications(save=False))
+
+    @context
+    def suggested_version(self):
+        return guess_schedule_version(self.request.event)
+
+    def form_invalid(self, form):
+        messages.error(
+            self.request, _("You have to provide a new, unique schedule version!")
+        )
+        return redirect(self.request.event.orga_urls.release_schedule)
+
+    def form_valid(self, form):
+        self.request.event.release_schedule(
+            form.cleaned_data["version"],
+            user=self.request.user,
+            notify_speakers=form.cleaned_data["notify_speakers"],
+            comment=form.cleaned_data["comment"],
+        )
+        messages.success(self.request, _("Nice, your schedule has been released!"))
+        return redirect(self.request.event.orga_urls.schedule)
