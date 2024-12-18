@@ -1,0 +1,30 @@
+{% extends "orga/schedule/base.html" %}
+{% load compress %}
+{% load i18n %}
+{% load static %}
+
+{% block schedule_content %}
+    <h2>{% translate "Check current schedule schedule" %}</h2>
+    <div class="alert alert-warning"><span></span><span>
+        {% blocktranslate  trimmed %}
+            There are still warnings about the current schedule. Please review them carefully!
+        {% endblocktranslate %}
+    </span></div>
+
+        {% if warnings.talk_warnings_type %}
+            <h4>{% translate "Warnings" %}</h4>
+
+                {% for warning_type, warnings in warnings.talk_warnings_type.items %}
+                <h5>{{warning_type}}</h5>
+                <ul>
+                    {% for warning in warnings %}
+                        <li><a href="{{ warning.url }}">{{ quotation_open }}{{ warning.talk_orig.submission.title }}{{ quotation_close }}</a>: {{ warning.message }} <a href="{{ warning.talk.orga_urls.base}}">({{ warning.talk.title}})</a></li>
+                    {% endfor %}
+                </ul>
+                {% endfor %}
+
+
+        {% endif %}
+
+
+{% endblock %}

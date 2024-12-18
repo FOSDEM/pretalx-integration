@@ -40,9 +40,14 @@ urlpatterns = [
         name="fosdem_feedback",
     ),
     # overwrite the default feedback
-    # re_path(
-    #     rf"^(?P<event>{SLUG_REGEX})/talk/(?P<submission_code>[A-Z0-9]+)/feedback/$",
-    #     views.FeedbackCreateView.as_view(),
-    #     name="feedback",
-    # ),
+    re_path(
+        rf"^(?P<event>{SLUG_REGEX})/talk/(?P<submission_code>[A-Z0-9]+)/feedback/$",
+        views.FeedbackCreateView.as_view(),
+        name="feedback",
+    ),
+    re_path(
+        rf"^orga/event/(?P<event>{SLUG_REGEX})/p/check/$",
+        views.ScheduleCheckView.as_view(),
+        name="fosdem_schedule_check",
+    ),
 ]
