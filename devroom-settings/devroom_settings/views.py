@@ -189,6 +189,7 @@ class MatrixExport(EventPermissionRequired, View):
                     "slug": slot.submission.track.tracksettings.slug,
                     "email": slot.submission.track.tracksettings.mail,
                     "name": str(slot.submission.track.name),
+                    "online_qa": slot.submission.track.tracksettings.online_qa,
                 },
             }
             talks.append(talk)
@@ -214,6 +215,7 @@ class MatrixExport(EventPermissionRequired, View):
                     "slug": t.tracksettings.slug,
                     "name": str(t.name),
                     "email": t.tracksettings.mail,
+                    "online_qa": t.tracksettings.online_qa,
                     "type": t.tracksettings.get_track_type_display(),
                     "managers": persons,
                 }
