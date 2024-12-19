@@ -152,6 +152,13 @@ class MatrixExport(EventPermissionRequired, View):
         ).prefetch_related("submission__track__tracksettings__manager_team__members")
 
         for slot in schedule.all():
+            if slot.submission.track.tracksettings.track_type not in [
+                "MT",
+                "K",
+                "LT",
+                "D",
+            ]:
+                continue
             persons = []
             for s in slot.submission.speakers.all():
                 person_data = {
@@ -194,9 +201,13 @@ class MatrixExport(EventPermissionRequired, View):
             }
             talks.append(talk)
 
-        track_objects = self.request.event.tracks.select_related(
-            "tracksettings"
-        ).prefetch_related("tracksettings__manager_team__members")
+        track_objects = (
+            self.request.event.tracks.filter(
+                tracksettings__track_type__in=["MT", "K", "LT", "D"]
+            )
+            .select_related("tracksettings")
+            .prefetch_related("tracksettings__manager_team__members")
+        )
         tracks = []
         for t in track_objects:
             persons = []
