@@ -437,7 +437,10 @@ class NanocExporter(ScheduleData):
                         "conference_day_id": talk.start.weekday(),
                         "speakers": [
                             speaker_slug(speaker)
-                            for speaker in talk.submission.speakers.all()
+                            for speaker in talk.submission.speakers.filter(
+                                models.Q(fosdem_speaker__isnull=True)
+                                | models.Q(fosdem_speaker__hide_schedule=False)
+                            )
                         ],
                         "track": track.tracksettings.slug,
                         "track_name": str(track.name),
@@ -510,6 +513,11 @@ class NanocExporter(ScheduleData):
             for room in day["rooms"]:
                 for talk in room["talks"]:
                     for speaker in talk.submission.speakers.all():
+                        if (
+                            speaker.fosdem_user is not None
+                            and speaker.fosdem_user.on_website is False
+                        ):
+                            continue
                         if speaker_slug(speaker) not in speakers_dict:
                             valid_avatar = bool(speaker.avatar)
                             try:
