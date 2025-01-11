@@ -40,7 +40,7 @@ class Command(BaseCommand):
                     print("Ignoring warnings and releasing anyway")
 
             if (
-                event.current_schedule is null
+                event.current_schedule is None
                 or event.wip_schedule.changes["count"] > 0
             ):
                 # Set the timezone to Europe/Brussels

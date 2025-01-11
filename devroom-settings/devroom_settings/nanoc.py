@@ -438,13 +438,10 @@ class NanocExporter(ScheduleData):
                         "speakers": [
                             speaker_slug(speaker)
                             for speaker in talk.submission.speakers.filter(
-<<<<<<< HEAD
                                 Q(fosdemuser__isnull=True)
                                 | Q(fosdemuser__hide_schedule=False)
-=======
                                 Q(fosdem_speaker__isnull=True)
                                 | Q(fosdem_speaker__hide_schedule=False)
->>>>>>> fd4b442dbfc85293f2d7bf483c2ee16a15efcab9
                             )
                         ],
                         "track": track.tracksettings.slug,
