@@ -31,8 +31,22 @@ class FringeActivity(models.Model):
         help_text="Any registration restrictions (e.g. By a specified date, By invitation only, None etc.)",
     )
     contact = models.EmailField(help_text="Public contact email")
-    online = models.BooleanField(
-        default=False, help_text="Publish to the FOSDEM website"
+
+    UNHANDLED = "unhandled"
+    TRUE = "true"
+    FALSE = "false"
+
+    ONLINE_CHOICES = [
+        (UNHANDLED, "Unhandled"),
+        (TRUE, "True"),
+        (FALSE, "False"),
+    ]
+
+    online = models.CharField(
+        max_length=10,
+        choices=ONLINE_CHOICES,
+        default=UNHANDLED,
+        help_text="Publish to the FOSDEM website",
     )
     submitter = models.ForeignKey(to=User, on_delete=models.CASCADE)
     sort_order = models.IntegerField(null=True, blank=True)
