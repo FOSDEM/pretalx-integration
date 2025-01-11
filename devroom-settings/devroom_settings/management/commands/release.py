@@ -18,12 +18,19 @@ class Command(BaseCommand):
             action="store_true",
             help="Ignore warnings and release anyway",
         )
+        parser.add_argument(
+            "--no-mail",
+            action="store_true",
+            help="Skip sending mails",
+        )
 
     def handle(self, *args, **kwargs):
         event_slug = kwargs["event"]
         event = Event.objects.get(slug=event_slug)
+        notify = not kwargs["no_mail"]
         with scope(event=event):
             warnings = event.wip_schedule.warnings
+
             if bool(warnings["talk_warnings"]):
                 print("there are talk warnings")
                 print(warnings["talk_warnings"])
@@ -32,13 +39,16 @@ class Command(BaseCommand):
                 else:
                     print("Ignoring warnings and releasing anyway")
 
-            if event.wip_schedule.changes["count"] > 0:
+            if (
+                event.current_schedule is null
+                or event.wip_schedule.changes["count"] > 0
+            ):
                 # Set the timezone to Europe/Brussels
                 brussels_timezone = pytz.timezone("Europe/Brussels")
                 # Get the current time in Brussels timezone
                 current_time = datetime.now(brussels_timezone)
                 # Format the current time to ISO 8601 with minute precision
                 current_time = current_time.strftime("%Y-%m-%d %H:%M")
-                event.wip_schedule.freeze(name=current_time, notify_speakers=True)
+                event.wip_schedule.freeze(name=current_time, notify_speakers=notify)
             else:
                 print("no changes - no release")
