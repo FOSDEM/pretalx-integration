@@ -13,7 +13,12 @@ class FringeActivityForm(forms.ModelForm):
         self.event = event
         self.user = user
         self.admin = admin
+
         super().__init__(*args, **kwargs)
+        if self.admin:
+            self.fields["online"].required = True
+        else:
+            self.fields["online"].required = False
 
     def save(self, commit=True):
         instance = super().save(commit=False)
