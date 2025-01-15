@@ -515,7 +515,7 @@ class NanocExporter(ScheduleData):
                     for speaker in talk.submission.speakers.all():
                         if (
                             hasattr(speaker, "fosdemuser")
-                            and speaker.fosdemuser.on_website is False
+                            and speaker.fosdemuser.hide_schedule
                         ):
                             continue
                         if speaker_slug(speaker) not in speakers_dict:
