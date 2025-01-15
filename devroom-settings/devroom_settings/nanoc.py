@@ -9,7 +9,7 @@ import magic
 import markdown
 import pytz
 import yaml
-from django.db.models import DurationField, ExpressionWrapper, F, Prefetch, Q
+from django.db.models import Count, DurationField, ExpressionWrapper, F, Prefetch, Q
 from django.forms.models import model_to_dict
 from django.utils.functional import cached_property
 from PIL import Image, UnidentifiedImageError
@@ -192,14 +192,26 @@ class NanocExporter(ScheduleData):
 
         """
         schedule = self.schedule
-        visible = Q(roomsettings__visible=True) | Q(roomsettings=None)
-        rooms = Room.objects.filter(visible).prefetch_related(
-            Prefetch(
-                "talks",
-                queryset=TalkSlot.objects.filter(
-                    schedule=schedule, is_visible=True, submission__isnull=False
-                ).select_related("submission"),
-                to_attr="talks_current",
+        rooms = (
+            Room.objects.annotate(
+                talk_count=Count(
+                    "talks",
+                    filter=Q(
+                        talks__schedule=schedule,
+                        talks__is_visible=True,
+                        talks__submission__isnull=False,
+                    ),
+                )
+            )
+            .filter(talk_count__gt=0)
+            .prefetch_related(
+                Prefetch(
+                    "talks",
+                    queryset=TalkSlot.objects.filter(
+                        schedule=schedule, is_visible=True, submission__isnull=False
+                    ).select_related("submission"),
+                    to_attr="talks_current",
+                )
             )
         )
 
