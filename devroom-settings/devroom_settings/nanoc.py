@@ -142,7 +142,7 @@ class NanocExporter(ScheduleData):
             if src.name.endswith(".svg"):
                 if cache_dest.is_file():
                     cache_dest.unlink()
-                os.link(src, cache_dest)
+                shutil.copy2(src, cache_dest)
                 os.chmod(cache_dest, 0o664)
             else:
                 thumb = Image.open(src)
