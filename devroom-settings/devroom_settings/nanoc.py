@@ -9,6 +9,7 @@ import magic
 import markdown
 import pytz
 import yaml
+from django.conf import settings
 from django.db.models import Count, DurationField, ExpressionWrapper, F, Prefetch, Q
 from django.forms.models import model_to_dict
 from django.utils.functional import cached_property
@@ -117,10 +118,11 @@ class NanocExporter(ScheduleData):
     icon = "fa-microchip"
     group = "submission"
 
-    def __init__(self, event, schedule=None, dest_dir=None):
+    def __init__(self, event, schedule=None, dest_dir=None, fake_image=False):
         update_end_time(event)
         super().__init__(event, schedule=schedule)
         self.dest_dir = dest_dir
+        self.fake_image = fake_image
         if dest_dir:
             shutil.rmtree(dest_dir, ignore_errors=True)
 
@@ -130,9 +132,12 @@ class NanocExporter(ScheduleData):
     def write_image(
         self, src, dest, identifier, width, height, event_slug=None, speaker_slug=None
     ):
+        if self.fake_image:
+            src = Path(settings.MEDIA_ROOT) / "pixel.png"
+
         mime = magic.from_file(src, mime=True)
 
-        # (re)create cached thumbnail if needed
+        # (re)create cached thumbnail if needed"
         cache_dest = self.cache_dir / dest
         if not (
             cache_dest.is_file() and cache_dest.stat().st_mtime >= src.stat().st_mtime
@@ -394,9 +399,14 @@ class NanocExporter(ScheduleData):
                             valid_talk_image = False
 
                     attachments = []
+
                     for resource in talk.submission.resources.exclude(resource=""):
                         src = Path(resource.resource.path)
                         dest_name = sanitize_filename(src)
+
+                        if self.fake_image:
+                            src = Path(settings.MEDIA_ROOT) / "pixel.png"
+
                         destination = Path(
                             f"events/attachments/{talk.frab_slug}/slides/{str(talk.pk)}/{dest_name}"
                         )
@@ -407,7 +417,9 @@ class NanocExporter(ScheduleData):
                             "filename": Path(resource.resource.name).name,
                             "identifier": "/" + str(destination.with_suffix("")) + "/",
                             "type": "slides",  # TODO - or not -influences link+icon
-                            "size": resource.resource.size,
+                            "size": resource.resource.size
+                            if not self.fake_image
+                            else 0,
                             "id": resource.pk,
                             "event_id": talk.pk,
                             "event_slug": talk.frab_slug,

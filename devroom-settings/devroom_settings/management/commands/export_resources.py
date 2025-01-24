@@ -17,11 +17,18 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("event", help="Event slug")
         parser.add_argument("destination_dir", help="Destination dir")
+        parser.add_argument(
+            "--fake-image",
+            action="store_true",
+            default=False,
+            help="Use fake images/resources instead of actual files (default: False). Useful if you only have database access and want to test.",
+        )
 
     def handle(self, *args, **kwargs):
         event_slug = kwargs["event"]
         event = Event.objects.get(slug=event_slug)
         dest_dir = Path(kwargs["destination_dir"])
+        fake_image = kwargs["fake_image"]
 
         with scope(event=event):
             schedule = event.wip_schedule
@@ -38,7 +45,7 @@ class Command(BaseCommand):
             schedule.talks.exclude(filter).update(is_visible=False)
 
             nanoc_exporter = NanocExporter(
-                event=event, schedule=schedule, dest_dir=dest_dir
+                event=event, schedule=schedule, dest_dir=dest_dir, fake_image=fake_image
             )
             _, _, yaml_content = nanoc_exporter.render()
 
