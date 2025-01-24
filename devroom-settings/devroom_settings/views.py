@@ -147,6 +147,8 @@ class MatrixExport(EventPermissionRequired, View):
     def get(self, request, **kwargs):
         talks = []
 
+        track_room = {}
+
         schedule = self.request.event.wip_schedule.scheduled_talks.prefetch_related(
             "submission__speakers"
         ).prefetch_related("submission__track__tracksettings__manager_team__members")
@@ -159,6 +161,7 @@ class MatrixExport(EventPermissionRequired, View):
                 "D",
             ]:
                 continue
+
             persons = []
             for s in slot.submission.speakers.all():
                 person_data = {
@@ -200,6 +203,7 @@ class MatrixExport(EventPermissionRequired, View):
                 },
             }
             talks.append(talk)
+            track_room[slot.submission.track.tracksettings.slug] = str(slot.room.name)
 
         track_objects = (
             self.request.event.tracks.filter(
@@ -208,6 +212,7 @@ class MatrixExport(EventPermissionRequired, View):
             .select_related("tracksettings")
             .prefetch_related("tracksettings__manager_team__members")
         )
+        print(track_room)
         tracks = []
         for t in track_objects:
             persons = []
@@ -227,6 +232,7 @@ class MatrixExport(EventPermissionRequired, View):
                     "name": str(t.name),
                     "email": t.tracksettings.mail,
                     "online_qa": t.tracksettings.online_qa,
+                    "room": track_room.get(t.tracksettings.slug),
                     "type": t.tracksettings.get_track_type_display(),
                     "managers": persons,
                 }
