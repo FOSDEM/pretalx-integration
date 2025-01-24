@@ -82,12 +82,11 @@ def speaker_slug(user):
     return b
 
 
-def chat_link(room, app=False):
-    chat_room_name = re.sub(r"[()\s]+", "_", str(room.description).lower())
+def chat_link(track_slug, app=False):
     if app:
-        link = f"https://matrix.to/#/#2025-{chat_room_name}:fosdem.org?web-instance[element.io]=chat.fosdem.org"
+        link = f"https://matrix.to/#/#2025-{track_slug}:fosdem.org?web-instance[element.io]=chat.fosdem.org"
     else:
-        link = f"https://chat.fosdem.org/#/room/#2025-{chat_room_name}:fosdem.org"
+        link = f"https://chat.fosdem.org/#/room/#2025-{track_slug}:fosdem.org"
     return link
 
 
@@ -258,7 +257,6 @@ class NanocExporter(ScheduleData):
                 "size": room.capacity,
                 "rank": room.position if room.position is not None else room.pk,
                 "slug": str(room.name).lower(),
-                "chat_link": chat_link(room),
                 "live_video_link": f"https://live.fosdem.org/watch/{str(room.name)}",
                 "title": str(room.description),
                 "events": [talk.frab_slug for talk in room.talks_current],
@@ -361,10 +359,13 @@ class NanocExporter(ScheduleData):
                     ]
                     if matrix_links:
                         links += [
-                            {"title": "Chat room(web)", "url": chat_link(talk.room)},
+                            {
+                                "title": "Chat room(web)",
+                                "url": chat_link(track.tracksettings.slug),
+                            },
                             {
                                 "title": "Chat room(app)",
-                                "url": chat_link(talk.room, app=True),
+                                "url": chat_link(track.tracksettings.slug, app=True),
                             },
                         ]
 
@@ -472,7 +473,7 @@ class NanocExporter(ScheduleData):
                         "type": track.tracksettings.get_track_type_display(),
                         "live_video_link": "https://live.fosdem.org/watch/"
                         + str(talk.room.name),
-                        "chat_link": chat_link(talk.room),
+                        "chat_link": chat_link(track.tracksettings.slug),
                         "room": str(talk.room.name).lower(),
                         "room_name": str(talk.room.description),
                         "room_rank": talk.room.position
