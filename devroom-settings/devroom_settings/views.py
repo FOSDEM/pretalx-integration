@@ -374,7 +374,7 @@ class VideoInstructionsView(EventPermissionRequired, View):
 
         file_path = (
             Path(settings.MEDIA_ROOT)
-            / f"fosdem-2024/video_instructions/{day}-{room}.pdf"
+            / f"{self.request.event.slug}/video_instructions/{day}-{room}.pdf"
         )
         if not file_path.exists():
             return HttpResponse("File not found", status=404)
