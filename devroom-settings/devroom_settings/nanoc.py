@@ -357,7 +357,10 @@ class NanocExporter(ScheduleData):
                             link__isnull=False
                         )
                     ]
-                    if matrix_links:
+                    if matrix_links and talk.track.tracksettings.track_type not in [
+                        "B",
+                        "J",
+                    ]:
                         links += [
                             {
                                 "title": "Chat room(web)",
@@ -471,9 +474,6 @@ class NanocExporter(ScheduleData):
                         "track_name": str(track.name),
                         "track_full_name": str(track.name),
                         "type": track.tracksettings.get_track_type_display(),
-                        "live_video_link": "https://live.fosdem.org/watch/"
-                        + str(talk.room.name),
-                        "chat_link": chat_link(track.tracksettings.slug),
                         "room": str(talk.room.name).lower(),
                         "room_name": str(talk.room.description),
                         "room_rank": talk.room.position
@@ -485,6 +485,12 @@ class NanocExporter(ScheduleData):
                         "links": links,
                         "feedback_url": talk.submission.urls.feedback.full(),
                     }
+                    if track.tracksettings.track_type not in ["J", "B"]:
+                        talks[talk.frab_slug] |= {
+                            "live_video_link": "https://live.fosdem.org/watch/"
+                            + str(talk.room.name),
+                            "chat_link": chat_link(track.tracksettings.slug),
+                        }
                     if self.dest_dir and valid_talk_image:
                         talks[talk.frab_slug]["logo"] = {
                             "identifier": logo_identifier,
