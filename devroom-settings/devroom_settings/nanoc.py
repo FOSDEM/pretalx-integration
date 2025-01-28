@@ -83,9 +83,8 @@ def speaker_slug(user):
 
 
 def chat_link(track_slug, app=False):
-    chat_slug = track_slug
-    if chat_slug.startswith("main"):
-        chat_slug = "main"
+    if track_slug == "main_track_janson":
+        pass
     if app:
         link = f"https://matrix.to/#/#2025-{track_slug}:fosdem.org?web-instance[element.io]=chat.fosdem.org"
     else:
