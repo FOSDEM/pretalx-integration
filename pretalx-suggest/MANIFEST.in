@@ -1,0 +1,6 @@
+recursive-include pretalx_suggest/static *
+recursive-include pretalx_suggest/templates *
+exclude pretalx_suggest/locale/django.pot
+recursive-include pretalx_suggest/locale *
+recursive-include pretalx_suggest *.py
+include Makefile

@@ -1,0 +1,38 @@
+[project]
+name = "pretalx-suggest"
+dynamic = ["version"]
+description = "Submit suggest events on pretalx"
+readme = "README.rst"
+license = {text = "Apache Software License"}
+keywords = ["pretalx"]
+authors = [
+  {name = "Johan Van de Wauw", email = "johanvdw@fosdem.org"},
+]
+maintainers = [
+  {name = "Johan Van de Wauw", email = "johanvdw@fosdem.org"},
+]
+
+dependencies = []
+
+[project.urls]
+homepage = "https://github.com/johanvdw/pretalx-suggest"
+repository = "https://github.com/johanvdw/pretalx-suggest.git"
+
+[project.entry-points."pretalx.plugin"]
+pretalx_suggest = "pretalx_suggest:PretalxPluginMeta"
+
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools"]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.dynamic]
+version = {attr = "pretalx_suggest.__version__"}
+
+[tool.setuptools.packages.find]
+include = ["pretalx*"]
+
+[tool.check-manifest]
+ignore = [".*"]

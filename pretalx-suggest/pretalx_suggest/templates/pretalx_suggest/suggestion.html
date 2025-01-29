@@ -1,0 +1,30 @@
+{% extends "cfp/event/base.html" %}
+{% load compress %}
+{% load i18n %}
+{% load static %}
+{% block title %}
+    Submit suggest event
+{% endblock title %}
+{% block cfp_header %}
+    {% include "cfp/includes/forms_header.html" %}
+{% endblock cfp_header %}
+{% block content %}
+    <h2>Suggest Main Track Speakers</h2>
+    <p>
+        Do you know of someone who would give a great talk in the main track at FOSDEM? Did you see a splendid talk in another conference or devroom? An interesting project which many people would be interested in hearing more about?
+    </p>
+    <form method="post" action="">
+        {% csrf_token %}
+        {% include "common/forms/errors.html" with form=profile_form %}
+        {{ form.name.as_field_group }}
+        {{ form.why.as_field_group }}
+        {{ form.speaker_connection.as_field_group }}
+        {{ form.contact.as_field_group }}
+        {{ form.other.as_field_group }}
+        <div class="col-md-3 flip ml-auto d-flex flex-column">
+            <button type="submit"
+                    name="form"
+                    class="btn btn-right btn-success font-weight-bold">Propose speaker!</button>
+        </div>
+    </form>
+{% endblock content %}

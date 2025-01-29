@@ -1,0 +1,20 @@
+{% extends "orga/base.html" %}
+{% load copyable %}
+{% load i18n %}
+{% load static %}
+
+{% block content %}
+
+<h2>Main track suggestions</h2>
+<div class="table-responsive">
+<table class="table table-sm table-hover table-flip">
+    <thead><tr><th>name</th><th>why</th><th>connection</th><th>contact</th><th>other</th><th>submitter</th></tr></thead>
+    <tbody>
+    {% for s in suggestions %}
+    <tr><td>{{ s.name }}</td><td>{{s.why}}</td><td>{{ s.connection }}</td><td>{{ s.contact }}</td><td>{{ s.other }}</td><td><a href="mailto:{{ s.submitter.email }}">{{ s.submitter }}</a></td></tr>
+    {% endfor %}
+</tbody>
+</table>
+</div>
+
+{% endblock %}
