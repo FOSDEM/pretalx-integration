@@ -74,12 +74,13 @@ class SuggestCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         logger.debug("Form is valid: %s", form.cleaned_data)
         form.instance.user = self.request.user
-        logger.debug(form.instance)
         super().form_valid(form)
         form.save()
         self.sendmail(form)
         return render(
-            self.request, "pretalx_suggest/thanks.html", {"event": self.request.event}
+            self.request,
+            "pretalx_suggest/thanks.html",
+            {"event": self.request.event, "suggestion": form.instance},
         )
 
     def get_login_url(self):
@@ -98,21 +99,18 @@ class SuggestCreateView(LoginRequiredMixin, CreateView):
         return context
 
     def sendmail(self, form):
-        message = """
-            A new suggest submission was made
-
-            Name: {name}
-
-            Why: {why}
-
-            speaker_connection: {speaker_connection}
-
-            Contact: {contact}
-
-            Other: {other}
-
-            Submitter: {submitter}
-            """.format(
+        message = (
+            """A new suggest submission was made
+<ul>
+<li>Name: {name}</li>
+<li>Why: {why}</li>
+<li>speaker_connection: {speaker_connection}</li>
+<li>Contact: {contact}</li>
+<li>Other: {other}</li>
+<li>Submitter: {submitter}</li>
+</ul>
+"""
+        ).format(
             name=form.cleaned_data.get("name"),
             why=form.cleaned_data.get("why"),
             contact=form.cleaned_data.get("contact"),
@@ -123,7 +121,7 @@ class SuggestCreateView(LoginRequiredMixin, CreateView):
         name = form.cleaned_data.get("name")
         mail = QueuedMail.objects.create(
             subject=f"new main track suggestion: {name}",
-            text=message,
+            text=str(message),
             to=f"program@fosdem.org, {self.request.user.email}",
         )
         mail.send()
