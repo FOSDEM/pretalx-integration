@@ -13,7 +13,7 @@ class TalkSuggestion(models.Model):
     )
 
     speaker_connection = models.TextField(
-        help_text="What is your connection to the speaker (if any)"
+        help_text="What is your connection to the speaker (if any). Would you like to help us contact this person?"
     )
     contact = models.EmailField(
         help_text="Email address of the speaker (if you have this)",
@@ -22,7 +22,7 @@ class TalkSuggestion(models.Model):
     )
     other = models.TextField(
         verbose_name="Other contact information",
-        help_text="other relevant information to contact the speaker",
+        help_text="Other relevant information to contact the speaker.",
     )
 
     internal_notes = models.TextField(help_text="Internal notes for FOSDEM staff")
