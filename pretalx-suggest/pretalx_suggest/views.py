@@ -2,10 +2,10 @@ import logging
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.shortcuts import get_object_or_404, render
-from django.urls import reverse_lazy
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse, reverse_lazy
 from django.utils.translation import gettext_lazy as _
-from django.views.generic import CreateView, ListView
+from django.views.generic import CreateView, ListView, View
 from django.views.generic.edit import UpdateView
 from pretalx.common.views.mixins import PermissionRequired
 from pretalx.mail.models import QueuedMail
@@ -75,10 +75,12 @@ class SuggestCreateView(LoginRequiredMixin, CreateView):
         logger.debug("Form is valid: %s", form.cleaned_data)
         form.instance.user = self.request.user
         logger.debug(form.instance)
-        response = super().form_valid(form)
+        super().form_valid(form)
         form.save()
         self.sendmail(form)
-        return response
+        return render(
+            self.request, "pretalx_suggest/thanks.html", {"event": self.request.event}
+        )
 
     def get_login_url(self):
         login = f"/{self.request.event.slug}/login"
