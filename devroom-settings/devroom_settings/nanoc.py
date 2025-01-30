@@ -359,7 +359,7 @@ class NanocExporter(ScheduleData):
                             link__isnull=False
                         )
                     ]
-                    if matrix_links and talk.track.tracksettings.track_type not in [
+                    if matrix_links and track.tracksettings.track_type not in [
                         "B",
                         "J",
                     ]:
