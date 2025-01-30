@@ -346,7 +346,7 @@ class NanocExporter(ScheduleData):
         return tracks_dict
 
     @cached_property
-    def talks(self, matrix_links=False, feedback_links=False):
+    def talks(self, matrix_links=True, feedback_links=True):
         talks = {}
         for day in self.data:
             for room in day["rooms"]:
