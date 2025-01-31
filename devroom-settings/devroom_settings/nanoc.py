@@ -342,6 +342,7 @@ class NanocExporter(ScheduleData):
                 "end_time": end_time,
                 "start_time_index": start_time_index,
                 "end_time_index": end_time_index,
+                "chat_link": chat_link(track.tracksettings.slug),
             }
         return tracks_dict
 
