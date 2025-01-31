@@ -100,29 +100,31 @@ class FringeCreateView(LoginRequiredMixin, CreateView):
         return context
 
     def sendmail(self, form):
-        message = """
-            A new fringe submission was made
+        message = (
+            """
+A new fringe submission was made
 
-            Name: {name}
+Name: {name}
 
-            Location: {location}
+Location: {location}
 
-            Description: {description}
+Description: {description}
 
-            Why: {why}
+Why: {why}
 
-            URL: {url}
+URL: {url}
 
-            Starts: {start}
+Starts: {start}
 
-            Ends: {ends}
+Ends: {ends}
 
-            Cost: {cost}
+Cost: {cost}
 
-            Registration: {registration}
+Registration: {registration}
 
-            Contact: {contact}
-            """.format(
+Contact: {contact}
+"""
+        ).format(
             name=form.cleaned_data.get("name"),
             location=form.cleaned_data.get("location"),
             description=form.cleaned_data.get("description"),
@@ -138,7 +140,7 @@ class FringeCreateView(LoginRequiredMixin, CreateView):
         mail = QueuedMail.objects.create(
             event=self.request.event,
             subject=f"new fringe submission: {name}",
-            text=message,
+            text=str(message),
             to=f"fringe@fosdem.org, {form.cleaned_data.get('contact')}",
         )
         mail.send()
