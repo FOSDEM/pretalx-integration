@@ -63,7 +63,7 @@ class TrackSettings(models.Model):
                     self.manager_team.save()
                 # mail should be stable from now on
                 # self.mail = f"{self.slug}-devroom-manager@fosdem.org"
-        if self.cfp_url and self.cfp_url != "":
+        if self.cfp_url and self.cfp_url != "" and str(self.track.description) == "":
             self.track.description = f"Make sure you read the track CfP details at {self.cfp_url}"
             self.track.save()
 
