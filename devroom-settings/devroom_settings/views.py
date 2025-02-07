@@ -310,13 +310,13 @@ class VideoSubmissionView(EventPermissionRequired, View):
         # note you can send an empty array to remove previous values
         links_to_remove = submission.resources.filter(
             description__startswith=VIDEO_RECORDING_STRING
-        ).exclude(link__in=[i.link for i in data])
+        ).exclude(link__in=[i["link"] for i in data])
 
-        nr_deleted = links_to_remove.delete()
+        nr_deleted, _ = links_to_remove.delete()
         nr_saved = 0
         # and add the new ones
         for record in data:
-            resource, _ = Resource.objects.get_or_create(link=record["link"])
+            resource, _ = Resource.objects.get_or_create(link=record["link"], submission=submission)
             if resource.description != record["description"]:
                 resource.description = record["description"]
                 resource.save()
