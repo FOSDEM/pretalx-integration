@@ -294,10 +294,10 @@ class VideoSubmissionView(EventPermissionRequired, View):
                         },
                         status=404,
                     )
-                if not record["link"].startswith("https://media.fosdem.org"):
+                if not record["link"].startswith("https://video.fosdem.org"):
                     return JsonResponse(
                         {
-                            "error": f"Invalid link, must be https://media.fosdem.org/..."
+                            "error": f"Invalid link, must be https://video.fosdem.org/..."
                         },
                         status=404,
                     )
