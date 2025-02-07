@@ -32,7 +32,7 @@ from devroom_settings.models import FosdemFeedback, RoomSettings, TrackSettings
 
 class DevroomReport(EventPermissionRequired, ListView):
     permission_required = "orga.change_submissions"
-    template_name = "devroom_settings/devroom-manager-report.html"
+    template_name = "devroom_settings/devroom-manager-names.html"
     context_object_name = "tracks"
 
     def get_queryset(self):
@@ -286,7 +286,6 @@ class VideoSubmissionView(EventPermissionRequired, View):
 
         try:
             data = json.loads(request.body)
-            resources = []
             for record in data:
                 if not record["description"].startswith(VIDEO_RECORDING_STRING):
                     return JsonResponse(
@@ -295,32 +294,36 @@ class VideoSubmissionView(EventPermissionRequired, View):
                         },
                         status=404,
                     )
-                resource = Resource(
-                    submission=submission,
-                    link=record["link"],
-                    description=record["description"],
-                )
-                resources.append(resource)
+                if not record["link"].startswith("https://media.fosdem.org"):
+                    return JsonResponse(
+                        {
+                            "error": f"Invalid link, must be https://media.fosdem.org/..."
+                        },
+                        status=404,
+                    )
+
         except:
             logging.exception("invalid data posted to videolink")
             return JsonResponse({"error": "Invalid data"}, status=400)
 
         # if we end up here we assume everything is valid and we remove the existing records
         # note you can send an empty array to remove previous values
-
-        existing_links = submission.resources.filter(
+        links_to_remove = submission.resources.filter(
             description__startswith=VIDEO_RECORDING_STRING
-        )
-        count_existing = existing_links.count()
-        existing_links.delete()
+        ).exclude(link__in=[i.link for i in data])
 
+        nr_deleted = links_to_remove.delete()
+        nr_saved = 0
         # and add the new ones
-        Resource.objects.bulk_create(resources)
-        status = 201 if len(resources) > 0 else 200
+        for record in data:
+            resource, _ = Resource.objects.get_or_create(link=record["link"])
+            if resource.description != record["description"]:
+                resource.description = record["description"]
+                resource.save()
+                nr_saved += 1
+        status = 201 if nr_saved + nr_deleted > 0 else 200
         return JsonResponse(
-            {
-                "message": f"{len(resources)} links created successfully, {count_existing} removed"
-            },
+            {"message": f"{nr_saved} links created successfully, {nr_deleted} removed"},
             status=status,
         )
 
@@ -402,7 +405,6 @@ class FeedbackCreateView(CreateView):
 
         talk = self.submission
         if talk and request.user in talk.speakers.all():
-            print("*************")
             return render(
                 self.request,
                 "devroom_settings/feedback_result.html",
