@@ -1,0 +1,38 @@
+{% extends "orga/base.html" %}
+
+{% block content %}
+    <h1>Feedback List</h1>
+    <table>
+        <thead>
+            <tr>
+		<td>#</th>
+                <th>Submission</th>
+                <th>Personal Knowledge</th>
+                <th>Content Importance</th>
+                <th>Content Quality</th>
+                <th>Presentation Quality</th>
+                <th>Feedback</th>
+                <th>Timestamp</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for feedback in feedback_list %}
+                <tr>
+		    <td>{{ forloop.counter }}</td>
+                    <td>{{ feedback.submission.title }}</td>
+                    <td>{{ feedback.get_personal_knowledge_display }}</td>
+                    <td>{{ feedback.get_content_importance_display }}</td>
+                    <td>{{ feedback.get_content_quality_display }}</td>
+                    <td>{{ feedback.get_presentation_quality_display }}</td>
+                    <td>{{ feedback.feedback }}</td>
+                    <td>{{ feedback.timestamp }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="7">No feedback available.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
+

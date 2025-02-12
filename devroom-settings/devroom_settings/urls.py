@@ -45,6 +45,12 @@ urlpatterns = [
         views.FeedbackCreateView.as_view(),
         name="feedback",
     ),
+    # feedback list
+    re_path(
+        rf"^orga/event/(?P<event>{SLUG_REGEX})/p/feedback/$",
+        views.FeedbackListView.as_view(),
+        name="feedback_list",
+    ),
     re_path(
         rf"^orga/event/(?P<event>{SLUG_REGEX})/p/check/$",
         views.ScheduleCheckView.as_view(),
