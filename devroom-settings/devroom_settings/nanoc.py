@@ -355,7 +355,11 @@ class NanocExporter(ScheduleData):
                     track = talk.submission.track
                     day_string = talk.start.strftime("%A")
                     links = [
-                        {"title": resource.description, "url": resource.link}
+                        {
+                            "title": resource.description,
+                            "url": resource.link,
+                            "created": resource.created.replace(microsecond=0),
+                        }
                         for resource in talk.submission.resources.filter(
                             link__isnull=False
                         )
