@@ -466,3 +466,24 @@ class ScheduleCheckView(EventPermissionRequired, TemplateView):
                 talk_warnings_type[warning["type"]].append(warning)
         all_warnings["talk_warnings_type"] = dict(talk_warnings_type)
         return self.request.event.wip_schedule.warnings
+
+
+class FeedbackListView(EventPermissionRequired, ListView):
+    permission_required = "orga.change_submissions"
+    model = FosdemFeedback
+    template_name = "feedback_list.html"
+    context_object_name = "feedback_list"
+    ordering = ["-timestamp"]  # Show latest feedback first
+
+    def get_queryset(self):
+        teams = self.request.user.teams.all()
+        tracks = Track.objects.filter(
+            tracksettings__manager_team__in=teams, event=self.request.event
+        )
+
+        objects = FosdemFeedback.objects.filter(submission__track__in=tracks)
+        if self.request.user.is_administrator:
+            objects = FosdemFeedback.objects.filter(
+                submission__event=self.request.event
+            )
+        return objects.order_by("timestamp")
