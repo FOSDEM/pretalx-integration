@@ -316,7 +316,7 @@ class VideoSubmissionView(EventPermissionRequired, View):
         nr_saved = 0
         # and add the new ones
         for record in data:
-            resource, _ = Resource.objects.get_or_create(link=record["link"], submission=submission)
+            resource, _ = Resource.objects.filter(description__startswith=VIDEO_RECORDING_STRING).get_or_create(link=record["link"], submission=submission)
             if resource.description != record["description"]:
                 resource.description = record["description"]
                 resource.save()
