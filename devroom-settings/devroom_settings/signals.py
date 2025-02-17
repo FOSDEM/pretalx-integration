@@ -103,6 +103,17 @@ def navbar_info(sender, request, **kwargs):
                     "active": url.namespace == "plugins:devroom_settings"
                     and url.url_name == "devroom-report",
                 },
+                {
+                    "label": "Devroom-feedback",
+                    "url": reverse(
+                        "plugins:devroom_settings:feedback_list",
+                        kwargs={
+                            "event": request.event.slug,
+                        },
+                    ),
+                    "active": url.namespace == "plugins:devroom_settings"
+                    and url.url_name == "feedback_list",
+                },
             ],
         }
     ]
