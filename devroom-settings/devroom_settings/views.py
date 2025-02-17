@@ -32,7 +32,7 @@ from devroom_settings.models import FosdemFeedback, RoomSettings, TrackSettings
 
 class DevroomReport(EventPermissionRequired, ListView):
     permission_required = "orga.change_submissions"
-    template_name = "devroom_settings/devroom-manager-names.html"
+    template_name = "devroom_settings/devroom-manager-report.html"
     context_object_name = "tracks"
 
     def get_queryset(self):
