@@ -274,8 +274,10 @@ class NanocExporter(ScheduleData):
 
     @cached_property
     def tracks(self):
-        tracks = Track.objects.filter(event=self.event).prefetch_related(
-            "tracksettings"
+        tracks = (
+            Track.objects.filter(event=self.event)
+            .exclude(tracksettings__track_type="LLT")
+            .prefetch_related("tracksettings")
         )
         tracks_dict = {}
         for track in tracks:

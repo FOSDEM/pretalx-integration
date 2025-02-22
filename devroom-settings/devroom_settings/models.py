@@ -12,6 +12,7 @@ class TrackSettings(models.Model):
         MAIN_TRACK = "MT", "maintrack"
         KEYNOTE = "K", "keynote"
         LIGHTNING_TALK = "LT", "lightningtalk"
+        LIGHTNING_LIGHTNING_TALK = "LLT", "lightninglightningtalk"
         DEVROOM = "D", "devroom"
         BOF_ROOM = "B", "bof"
         JUNIOR = "J", "junior"
@@ -50,7 +51,7 @@ class TrackSettings(models.Model):
             old_instance = TrackSettings.objects.get(pk=self.pk)
             event = old_instance.track.event
             year = str(event.name)[-4:]
-            if old_instance.slug != self.slug and self.track_type=="devroom":
+            if old_instance.slug != self.slug and self.track_type == "devroom":
                 # Trigger action when the slug changes
                 if self.review_team:
                     self.review_team.name = f"review-{self.slug}-{year}"
