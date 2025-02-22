@@ -8,7 +8,7 @@ from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.db.models import CharField, F, Value
 from django.db.models.functions import Cast
-from django.http import FileResponse, JsonResponse
+from django.http import FileResponse, Http404, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
