@@ -316,7 +316,9 @@ class VideoSubmissionView(EventPermissionRequired, View):
         nr_saved = 0
         # and add the new ones
         for record in data:
-            resource, _ = Resource.objects.filter(description__startswith=VIDEO_RECORDING_STRING).get_or_create(link=record["link"], submission=submission)
+            resource, _ = Resource.objects.filter(
+                description__startswith=VIDEO_RECORDING_STRING
+            ).get_or_create(link=record["link"], submission=submission)
             if resource.description != record["description"]:
                 resource.description = record["description"]
                 resource.save()
@@ -438,7 +440,7 @@ class FeedbackCreateView(CreateView):
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        if not self.submission.slot and self.submission.slot.start:
+        if not self.submission.slot or not self.submission.slot.start:
             raise Http404("Submission not found or not scheduled/open for feedback")
         kwargs["instance"] = FosdemFeedback(submission=self.submission)
         return kwargs
