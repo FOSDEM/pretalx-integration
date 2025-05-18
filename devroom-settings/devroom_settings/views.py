@@ -31,7 +31,7 @@ from devroom_settings.models import FosdemFeedback, RoomSettings, TrackSettings
 
 
 class DevroomReport(EventPermissionRequired, ListView):
-    permission_required = "orga.change_submissions"
+    permission_required = "event.update_event"
     template_name = "devroom_settings/devroom-manager-report.html"
     context_object_name = "tracks"
 
@@ -47,7 +47,7 @@ class DevroomReport(EventPermissionRequired, ListView):
 
 
 class DevroomDashboard(EventPermissionRequired, ListView):
-    permission_required = "orga.change_submissions"
+    permission_required = "submission.orga_update_submission"
     template_name = "devroom_settings/devroom-dashboard.html"
     context_object_name = "trackssettings"
 
@@ -141,7 +141,7 @@ class DevroomDashboard(EventPermissionRequired, ListView):
 
 
 class MatrixExport(EventPermissionRequired, View):
-    permission_required = "orga.change_submissions"
+    permission_required = "submission.orga_update_submission"
     model = Submission
 
     def get(self, request, **kwargs):
@@ -268,7 +268,7 @@ class VideoSubmissionListView(View):
 
 @method_decorator(csrf_exempt, name="dispatch")
 class VideoSubmissionView(EventPermissionRequired, View):
-    permission_required = "orga.change_submissions"
+    permission_required = "submission.orga_update_submission"
 
     def post(self, request, submission_id, **kwargs):
         """Add or overwrite video links
@@ -361,7 +361,7 @@ def get_track_room_days(tracks):
 
 
 class VideoInstructionsView(EventPermissionRequired, View):
-    permission_required = "orga.change_submissions"
+    permission_required = "submission.orga_update_submission"
 
     def get(self, request, room, day, **kwargs):
         teams = self.request.user.teams.all()
@@ -450,7 +450,7 @@ class FeedbackCreateView(CreateView):
 
 
 class ScheduleCheckView(EventPermissionRequired, TemplateView):
-    permission_required = "orga.release_schedule"
+    permission_required = "schedule.release_schedule"
     template_name = "check.html"
 
     @context
@@ -469,7 +469,7 @@ class ScheduleCheckView(EventPermissionRequired, TemplateView):
 
 
 class FeedbackListView(EventPermissionRequired, ListView):
-    permission_required = "orga.change_submissions"
+    permission_required = "submission.orga_update_submission"
     model = FosdemFeedback
     template_name = "feedback_list.html"
     context_object_name = "feedback_list"

@@ -8,7 +8,7 @@ from . import models  # NOQA
 
 @receiver(nav_event, dispatch_uid="event_audit_log")
 def navbar_info_event(sender, request, **kwargs):
-    if not request.user.has_perm("person.is_administrator", None):
+    if not request.user.has_perm("person.administrator_user", None):
         return []
     return [
         {
@@ -25,7 +25,7 @@ def navbar_info_event(sender, request, **kwargs):
 
 @receiver(nav_global, dispatch_uid="audit_log")
 def navbar_info(sender, request, **kwargs):
-    if not request.user.has_perm("person.is_administrator", None):
+    if not request.user.has_perm("person.administrator_user", None):
         return []
     return [
         {
