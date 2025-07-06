@@ -1,6 +1,7 @@
 import csv
 
 from django.core.management.base import BaseCommand
+from django.db.models import Q
 from django_scopes import scope
 from pretalx.event.models import Event
 from pretalx.schedule.models import Room
@@ -28,7 +29,11 @@ class Command(BaseCommand):
                 password = row["password"]
 
                 with scope(event=event):
-                    room = Room.objects.get(name=room_name, event=event)
+                    room = (
+                        Room.objects.filter(event=event)
+                        .filter(Q(name=room_name) | Q(name__icontains=room_name))
+                        .first()
+                    )
 
                 room_settings, _ = RoomSettings.objects.get_or_create(room=room)
                 room_settings.control_password = password
