@@ -18,10 +18,16 @@ import pretalx.submission.models as submission_models
 from django.db import models
 
 template = """
-@pghistory.track(pghistory.InsertEvent(), pghistory.UpdateEvent(), pghistory.DeleteEvent(), exclude={1})
+@pghistory.track(
+    pghistory.InsertEvent(),
+    pghistory.UpdateEvent(),
+    pghistory.DeleteEvent(),
+    exclude={1},
+    )
 class {0}Proxy({0}):
     class Meta:
-        proxy=True
+        proxy = True
+
 """
 
 
