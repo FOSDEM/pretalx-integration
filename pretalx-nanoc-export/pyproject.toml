@@ -1,0 +1,38 @@
+[project]
+name = "pretalx-nanoc-export"
+dynamic = ["version"]
+description = "pretalx plugin for nanoc-export"
+readme = "README.rst"
+license = {text = "Apache Software License"}
+keywords = ["pretalx"]
+authors = [
+  {name = "Johan Van de Wauw", email = "johanvdw@fosdem.org"},
+]
+maintainers = [
+  {name = "Johan Van de Wauw", email = "johanvdw@fosdem.org"},
+]
+
+dependencies = []
+
+[project.urls]
+homepage = "https://github.com/fosdem/pretalx-integration/pretalx-nanoc-export"
+repository = "https://github.com/fosdem/pretalx-integration/pretalx-nanoc-export.git"
+
+[project.entry-points."pretalx.plugin"]
+pretalx_nanoc_export = "pretalx_nanoc_export:PretalxPluginMeta"
+
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools"]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.dynamic]
+version = {attr = "pretalx_nanoc_export.__version__"}
+
+[tool.setuptools.packages.find]
+include = ["pretalx*"]
+
+[tool.check-manifest]
+ignore = [".*"]

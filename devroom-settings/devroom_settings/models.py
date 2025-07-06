@@ -138,21 +138,3 @@ class FosdemFeedback(models.Model):
 
     class Meta:
         db_table = "fosdem_feedback"
-
-
-class FosdemUser(models.Model):
-    """Add extra info to users which are coupled to a talk
-
-    For now used to add users which should be informed
-    about talk changes but not be on the FOSDEM website
-    """
-
-    user = models.OneToOneField(to=User, on_delete=models.CASCADE)
-    hide_schedule = models.BooleanField(
-        "Hide on schedule",
-        help_text="Hide user from the published schedule",
-        default=False,
-    )
-
-    class Meta:
-        db_table = "fosdem_user"
