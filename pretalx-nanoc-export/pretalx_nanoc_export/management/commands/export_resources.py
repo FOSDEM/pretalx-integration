@@ -7,6 +7,7 @@ from django_scopes import scope
 from PIL import Image
 from pretalx.event.models import Event
 from pretalx.submission.models import SubmissionStates
+
 from pretalx_nanoc_export.nanoc import NanocExporter
 
 
@@ -37,7 +38,6 @@ class Command(BaseCommand):
                 models.Q(submission__state=SubmissionStates.CONFIRMED)
                 | models.Q(submission__isnull=True),
                 start__isnull=False,
-                submission__on_website=True,
             )
             schedule.talks.all().update(is_visible=False)
             schedule.talks.filter(filter).update(is_visible=True)
