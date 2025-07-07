@@ -8,7 +8,7 @@ class Migration(migrations.Migration):
     dependencies = [
         ("devroom_settings", "0011_alter_roomsettings_control_password_and_more"),
         ("schedule", "0017_created_updated_everywhere"),
-        ("submission", "0078_submission_on_website"),
+        ("submission", "0077_answeroption_position"),
     ]
 
     operations = [
