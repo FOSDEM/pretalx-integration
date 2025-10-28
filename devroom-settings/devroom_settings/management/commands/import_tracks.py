@@ -41,7 +41,7 @@ class Command(BaseCommand):
             existing_tracks = list(Track.objects.all().values_list("name", flat=True))
         existing_tracks = [str(track) for track in existing_tracks]
 
-        organiser, _ = Organiser.objects.get(name=f"FOSDEM")
+        organiser = Organiser.objects.get(slug="fosdem")
         for i, submission in enumerate(accepted_devrooms):
             # for future: fetch answers from submission
             # for CfP
