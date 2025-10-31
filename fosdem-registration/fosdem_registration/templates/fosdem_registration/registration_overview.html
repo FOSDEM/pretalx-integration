@@ -1,0 +1,25 @@
+<h1>FOSDEM Session Registrations</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>Track</th>
+      <th>Submission</th>
+      <th>Registrations</th>
+      <th>Max allowed</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for submission in submissions %}
+      <tr>
+        <td>{{ submission.track.name }}</td>
+        <td>{{ submission.title }}</td>
+        <td>{{ submission.nr_registrations }}</td>
+        <td>{{ submission.max_number }}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="4">No submissions with registration limits found.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+

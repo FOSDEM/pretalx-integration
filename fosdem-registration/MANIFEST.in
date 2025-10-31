@@ -1,0 +1,6 @@
+recursive-include fosdem_registration/static *
+recursive-include fosdem_registration/templates *
+exclude fosdem_registration/locale/django.pot
+recursive-include fosdem_registration/locale *
+recursive-include fosdem_registration *.py
+include Makefile
