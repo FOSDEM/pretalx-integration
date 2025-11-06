@@ -64,6 +64,7 @@ class Command(BaseCommand):
 
             tracksetting.slug = slugify(track.name)[0:63]
             tracksetting.mail = f"{tracksetting.slug}-devroom-manager@fosdem.org"
+            tracksetting.proposal = submission
             print(f"adding {track.name}")
 
             # create manager team
