@@ -44,6 +44,12 @@ class TrackSettings(models.Model):
     manager_team = models.ForeignKey(
         Team, on_delete=models.SET_NULL, null=True, related_name="manager_track"
     )
+    proposal = models.ForeignKey(
+        Submission,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="devroom_proposal",
+    )
 
     def save(self, *args, **kwargs):
         if self.pk:
