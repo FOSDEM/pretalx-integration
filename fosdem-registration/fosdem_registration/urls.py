@@ -7,6 +7,6 @@ urlpatterns = [
     re_path(
         rf"^orga/event/(?P<event>{SLUG_REGEX})/p/fosdem_registration/$",
         registration_overview,
-        name="settings",
+        name="fosdem_registration",
     ),
 ]
