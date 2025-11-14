@@ -2,8 +2,6 @@ from django.dispatch import receiver
 from django.urls import reverse
 from pretalx.orga.signals import nav_event
 
-print("***** reading fringe signals")
-
 
 @receiver(nav_event, dispatch_uid="fringe_toolbar")
 def pretalx_fringe_list(sender, request, **kwargs):
