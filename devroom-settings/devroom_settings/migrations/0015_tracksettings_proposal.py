@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
     dependencies = [
         ("devroom_settings", "0014_delete_fosdemuser"),
-        ("submission", "0078_submission_on_website"),
+        ("submission", "0077_answeroption_position"),
     ]
 
     operations = [

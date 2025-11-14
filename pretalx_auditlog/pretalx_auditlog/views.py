@@ -59,7 +59,7 @@ def get_foreign_key_mapping():
 
 
 class Changelog(PermissionRequired, TemplateView):
-    permission_required = "person.is_administrator"
+    permission_required = "person.administrator_user"
     template_name = "pretalx_auditlog/log.html"
 
     def get_context_data(self, **kwargs):
@@ -110,7 +110,7 @@ class Changelog(PermissionRequired, TemplateView):
 class Modellog(PermissionRequired, TemplateView):
     """Show the history of a specific model"""
 
-    permission_required = "person.is_administrator"
+    permission_required = "person.administrator_user"
     template_name = "pretalx_auditlog/model-log.html"
 
     def get_context_data(self, **kwargs):
