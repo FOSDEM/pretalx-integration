@@ -32,7 +32,7 @@ include-package-data = true
 version = {attr = "fosdem_registration.__version__"}
 
 [tool.setuptools.packages.find]
-include = ["pretalx*"]
+include = ["fosdem*"]
 
 [tool.check-manifest]
 ignore = [".*"]

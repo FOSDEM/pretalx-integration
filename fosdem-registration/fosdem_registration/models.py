@@ -6,16 +6,11 @@ from django.db import models
 class FosdemRegistrationTrack(models.Model):
     track = models.OneToOneField(to="submission.Track", on_delete=models.CASCADE)
     # answer that contains max number of participants
-    max_number_answer = models.ForeignKey(
-        to="submission.Answer", on_delete=models.CASCADE
+    max_number_question = models.ForeignKey(
+        to="submission.Question", on_delete=models.CASCADE
     )
     # teams that can access registrations
     teams = models.ManyToManyField(to="event.Team")
-
-    @property
-    def max_number(self):
-        """Extracts the integer max from the related Answer."""
-        return int(self.max_number_answer.response)
 
 
 class FosdemRegistration(models.Model):
