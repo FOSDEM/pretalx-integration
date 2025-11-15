@@ -4,6 +4,7 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 from django.utils.text import slugify
 from django_scopes import scope, scopes_disabled
+from i18nfield.strings import LazyI18nString
 from pretalx.event.models import Event, Organiser, Team
 from pretalx.submission.models import Track
 
@@ -38,38 +39,51 @@ class Command(BaseCommand):
         dest_event = Event.objects.get(slug=dest)
         year = dest[-4:]
         with scope(event=dest_event):
-            existing_tracks = list(Track.objects.all().values_list("name", flat=True))
-        existing_tracks = [str(track) for track in existing_tracks]
+            nr_existing_tracks = Track.objects.all().count()
+            existing_proposal_ids = list(
+                Track.objects.filter(tracksettings__proposal__isnull=False).values_list(
+                    "tracksettings__proposal", flat=True
+                )
+            )
+        print(existing_proposal_ids)
 
         organiser = Organiser.objects.get(slug="fosdem")
         for i, submission in enumerate(accepted_devrooms):
             # for future: fetch answers from submission
             # for CfP
-            # with scope(event=source_event):
-            #    answers = submission.answers.filter()
-
-            if submission.title in existing_tracks:
+            with scope(event=source_event):
+                slug_answers = submission.answers.filter(
+                    question__question__contains="slug"
+                )
+            if submission.id in existing_proposal_ids:
                 continue
             if not boolean_input(f"Import {submission.title}"):
                 continue
-            track = Track(name=submission.title, event=dest_event)
+            track = Track(
+                name=LazyI18nString({dest_event.locale: submission.title}),
+                event=dest_event,
+            )
             track.color = (
                 "#6F42C1"  # not used, but otherwise it will ask when you open the page
             )
-            track.position = i + len(existing_tracks)
+            track.position = i + nr_existing_tracks
             track.save()
 
             tracksetting = TrackSettings(track=track)
             tracksetting.track_type = TrackSettings.TrackType.DEVROOM
 
-            tracksetting.slug = slugify(track.name)[0:63]
-            tracksetting.mail = f"{tracksetting.slug}-devroom-manager@fosdem.org"
+            if len(slug_answers) == 1:
+                slug = slugify(slug_answers[0].answer)
+            else:
+                slug = slugify(track.name)[0:63]
+            tracksetting.slug = slug
+            tracksetting.mail = f"{slug}-devroom-manager@fosdem.org"
             tracksetting.proposal = submission
-            print(f"adding {track.name}")
+            print(f"adding {track.name} ({slug})")
 
             # create manager team
-            manager_team_name = f"managers-{tracksetting.slug}-{year}"
-            review_team_name = f"review-{tracksetting.slug}-{year}"
+            manager_team_name = f"managers-{slug}-{year}"
+            review_team_name = f"review-{slug}-{year}"
 
             manager_team = Team(
                 name=manager_team_name,
