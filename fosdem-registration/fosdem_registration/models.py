@@ -32,7 +32,10 @@ class FosdemRegistration(models.Model):
         reg_track = FosdemRegistrationTrack.objects.get(track=track)
 
         current_count = FosdemRegistration.objects.filter(session__track=track).count()
-        if current_count >= reg_track.max_number:
+        max_number = int(
+            self.session.answers.get(question=reg_track.max_number_question).answer
+        )
+        if current_count >= max_number:
             raise ValidationError(
                 f"Registration limit ({reg_track.max_number}) reached for {track}."
             )
