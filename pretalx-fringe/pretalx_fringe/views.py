@@ -67,7 +67,6 @@ class FringeCreateView(LoginRequiredMixin, CreateView):
     model = FringeActivity
     form_class = FringeActivityForm
     template_name = "activity.html"
-    success_url = "https://fosdem.org/2025/fringe/"
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -98,6 +97,11 @@ class FringeCreateView(LoginRequiredMixin, CreateView):
         context["event"] = self.request.event
         context["admin"] = False
         return context
+
+    def get_success_url(self):
+        event = self.request.event
+        year = event.slug[-4:]
+        return f"https://fosdem.org/{year}/fringe"
 
     def sendmail(self, form):
         message = (
