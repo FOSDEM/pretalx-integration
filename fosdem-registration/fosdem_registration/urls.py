@@ -3,7 +3,7 @@ import logging
 from django.urls import re_path
 from pretalx.event.models.event import SLUG_REGEX
 
-from .views import RegisterPersonView, RegistrationOverview
+from .views import GuardianWithRegistrationsCreateView, RegistrationOverview
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ urlpatterns = [
     ),
     re_path(
         rf"^(?P<event>{SLUG_REGEX})/p/register/(?P<submission_code>[A-Z0-9]+)/$",
-        RegisterPersonView.as_view(),
+        GuardianWithRegistrationsCreateView.as_view(),
         name="register_person",
     ),
 ]

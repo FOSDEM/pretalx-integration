@@ -1,10 +1,18 @@
 from django.db.models import Count, F, IntegerField, OuterRef, Subquery
-from django.views.generic import ListView
+from django.shortcuts import redirect, render
+from django.urls import reverse_lazy
+from django.views.generic import CreateView, ListView
+from django.views.generic.edit import FormView
 from pretalx.common.views.mixins import PermissionRequired
 from pretalx.submission.models import Submission
 from pretalx.submission.models.question import Answer
 
-from fosdem_registration.models import FosdemRegistration, FosdemRegistrationTrack
+from .forms import (
+    FosdemRegistrationForm,
+    FosdemRegistrationGuardianForm,
+    RegistrationFormSet,
+)
+from .models import FosdemRegistration, FosdemRegistrationGuardian
 
 
 class RegistrationOverview(PermissionRequired, ListView):
@@ -24,7 +32,9 @@ class RegistrationOverview(PermissionRequired, ListView):
             :1
         ]  # only one answer expected
         submissions = (
-            Submission.objects.filter(track__fosdemregistrationtrack__isnull=False)
+            Submission.objects.filter(
+                track__fosdemregistrationtrack__isnull=False, state="confirmed"
+            )
             .annotate(
                 nr_registrations=Count("fosdemregistration"),
                 max_number=Subquery(max_participants_subquery),
@@ -35,42 +45,59 @@ class RegistrationOverview(PermissionRequired, ListView):
         return submissions
 
 
-from django.urls import reverse_lazy
-from django.views.generic.edit import FormView
-
-from .forms import FosdemRegistrationForm
-from .models import FosdemRegistration
-
-
-class RegisterPersonView(FormView):
+class GuardianWithRegistrationsCreateView(CreateView):
+    model = FosdemRegistrationGuardian
+    form_class = FosdemRegistrationGuardianForm
     template_name = "fosdem_registration/register.html"
-    form_class = FosdemRegistrationForm
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs["session"] = Submission.objects.get(code=self.kwargs["submission_code"])
-        return kwargs
-
-    def get_success_url(self):
-        # Redirect back to the same form with a flag
-        return (
-            reverse(
-                "register_person",
-                kwargs={"submission_code": self.kwargs["submission_code"]},
-            )
-            + "?added=1"
-        )
-
-    def form_valid(self, form):
-        registration = form.save(commit=False)
-        registration.session = Submission.objects.get(
-            code=self.kwargs["submission_code"]
-        )
-        registration.registering_person = self.request.user
-        registration.save()
-        return HttpResponseRedirect(self.get_success_url())
+    success_url = reverse_lazy("registration_success")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["added"] = self.request.GET.get("added") == "1"
+
+        submission = Submission.objects.get(
+            code=self.kwargs["submission_code"],
+            track__fosdemregistrationtrack__isnull=False,
+            state="confirmed",
+        )
+        if self.request.POST:
+            context["formset"] = RegistrationFormSet(self.request.POST)
+        else:
+            # start with empty formset
+            context["formset"] = RegistrationFormSet(
+                queryset=FosdemRegistration.objects.none()
+            )
+
+        context["submission"] = submission
         return context
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        formset = context["formset"]
+
+        print(context)
+
+        formset = RegistrationFormSet(
+            self.request.POST,
+            queryset=FosdemRegistration.objects.none(),
+        )
+        for subform in formset.forms:
+            subform.instance.session = context["submission"]
+
+        if formset.is_valid():
+            # Save the guardian first
+            guardian = form.save()
+
+            # Save children and link to guardian
+            registrations = formset.save(commit=False)
+            for reg in registrations:
+                reg.session = context["submission"]
+                reg.registering_person = guardian
+                reg.save()
+
+            # if saved succesful - show success message
+            context["correct_submitted"] = True
+            context["guardian_submitted"] = guardian
+            context["registrations_submitted"] = registrations
+
+        # If formset invalid, re-render page with errors
+        return render(self.request, self.template_name, context)

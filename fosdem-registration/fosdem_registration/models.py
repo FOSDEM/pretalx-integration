@@ -13,14 +13,27 @@ class FosdemRegistrationTrack(models.Model):
     teams = models.ManyToManyField(to="event.Team")
 
 
+class FosdemRegistrationGuardian(models.Model):
+    name = models.CharField(max_length=200, help_text="Name of parent or guardian")
+    email = models.EmailField(
+        help_text="Email address of parent or guardian. Registration confirmation will be sent here"
+    )
+    contact_number = models.CharField(
+        max_length=20, help_text="Emergency phone number of parent or guardian"
+    )
+
+
 class FosdemRegistration(models.Model):
     session = models.ForeignKey(to="submission.submission", on_delete=models.CASCADE)
-    registering_person = models.ForeignKey(to="person.User", on_delete=models.CASCADE)
-    nickname = models.CharField()
+    registering_person = models.ForeignKey(
+        to=FosdemRegistrationGuardian, on_delete=models.CASCADE
+    )
+    nickname = models.CharField(help_text="child name or nickname")
     age = models.IntegerField(
         validators=[MinValueValidator(0), MaxValueValidator(120)],
         help_text="age in years of kid on the day of the session",
     )
+    special_needs = models.TextField(blank=True)
 
     def clean(self):
         """Prevent creating a registration if the track is full."""
