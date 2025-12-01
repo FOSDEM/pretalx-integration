@@ -19,7 +19,7 @@
     {% for submission in submissions %}
       <tr>
         <td>{{ submission.track.name }}</td>
-        <td>{{ submission.title }}</td>
+	<td><a href="{{ submission.code }}/">{{ submission.title }}</a></td>
         <td>{{ submission.nr_registrations }}</td>
         <td>{{ submission.max_number }}</td>
       </tr>

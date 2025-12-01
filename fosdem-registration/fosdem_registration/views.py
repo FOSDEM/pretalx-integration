@@ -4,6 +4,7 @@ from django.urls import reverse_lazy
 from django.views.generic import CreateView, ListView
 from django.views.generic.edit import FormView
 from pretalx.common.views.mixins import PermissionRequired
+from pretalx.event.models import Event
 from pretalx.submission.models import Submission
 from pretalx.submission.models.question import Answer
 
@@ -43,6 +44,34 @@ class RegistrationOverview(PermissionRequired, ListView):
             .order_by("track__name", "title")
         )
         return submissions
+
+
+class RegistrationDetail(PermissionRequired, ListView):
+    permission_required = "orga.fringe_edit"
+    model = FosdemRegistration
+    template_name = "fosdem_registration/session.html"
+
+    def get_queryset(self):
+        submission = Submission.objects.get(
+            code=self.kwargs["submission_code"],
+            track__fosdemregistrationtrack__isnull=False,
+            state="confirmed",
+        )
+        return submission.fosdemregistration_set.all()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        event = Event.objects.get(slug=self.kwargs["event"])
+        submission = Submission.objects.get(
+            code=self.kwargs["submission_code"],
+            track__fosdemregistrationtrack__isnull=False,
+            state="confirmed",
+            event=event,
+        )
+
+        context["submission"] = submission
+        context["schedule"] = submission.slots.filter(schedule=event.current_schedule)
+        return context
 
 
 class GuardianWithRegistrationsCreateView(CreateView):

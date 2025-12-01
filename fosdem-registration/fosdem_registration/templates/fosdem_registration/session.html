@@ -1,0 +1,43 @@
+{% extends "orga/base.html" %}
+{% load copyable %}
+{% load i18n %}
+{% load static %}
+
+{% block content %}
+<h2>Registrations for {{ submission.title }}</h2>
+{% if schedule %}
+    {% for slot in schedule %}
+        <p>Scheduled: {{ slot.start|date:"D, d M Y H:i" }} – {{ slot.end|date:"H:i" }} in {{ slot.room.name }}</p>
+    {% endfor %}
+{% else %}
+    <p>Not yet scheduled.</p>
+{% endif %}
+<table>
+    <thead>
+        <tr>
+            <th>Nickname</th>
+            <th>Age</th>
+            <th>Parent/Guardian</th>
+            <th>Mail</th>
+	    <th>phone</th>
+            <th>Special Needs</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for reg in object_list %}
+            <tr>
+                <td>{{ reg.nickname }}</td>
+                <td>{{ reg.age }}</td>
+                <td>{{ reg.registering_person.name }}</td>
+                <td>{{ reg.registering_person.email }}</td>
+                <td>{{ reg.registering_person.contact_number }}</td>
+                <td>{{ reg.special_needs|default:"-" }}</td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="4">No registrations yet.</td>
+            </tr>
+        {% endfor %}	
+    </tbody>
+</table>
+{% endblock %}
