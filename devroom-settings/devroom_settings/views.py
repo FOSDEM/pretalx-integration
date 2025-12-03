@@ -31,7 +31,7 @@ from devroom_settings.models import FosdemFeedback, RoomSettings, TrackSettings
 
 
 class DevroomReport(EventPermissionRequired, ListView):
-    permission_required = "event.update_event"
+    permission_required = "submission.orga_update_submission"
     template_name = "devroom_settings/devroom-manager-report.html"
     context_object_name = "tracks"
 
