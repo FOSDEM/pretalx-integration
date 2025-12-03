@@ -1,0 +1,11 @@
+Hello {{ guardian.name }},
+
+We have succesfully received the registration for
+
+{% for participant in registrations_submitted %}
+* {{ participant.nickname }} ({{ participant.age }})
+{% endfor %}
+
+for the session {{ submission.title }} which is scheduled at
+
+See you in Brussels!

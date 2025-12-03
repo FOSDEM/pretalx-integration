@@ -16,11 +16,11 @@ def fosdem_registration_overview(sender, request, **kwargs):
     return [
         {
             "label": "Junior registration",
+            "icon": "child",
             "url": reverse(
                 "plugins:fosdem_registration:registration_overview",
                 kwargs={"event": request.event.slug},
             ),
-            "active": request.resolver_match.url_name
-            == "plugins:fosdem_registration:registration_overview",
+            "active": request.resolver_match.url_name == "registration_overview",
         }
     ]

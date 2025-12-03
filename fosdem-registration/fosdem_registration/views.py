@@ -1,10 +1,12 @@
 from django.db.models import Count, F, IntegerField, OuterRef, Subquery
 from django.shortcuts import redirect, render
+from django.template.loader import render_to_string
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, ListView
 from django.views.generic.edit import FormView
 from pretalx.common.views.mixins import PermissionRequired
 from pretalx.event.models import Event
+from pretalx.mail.models import QueuedMail
 from pretalx.submission.models import Submission
 from pretalx.submission.models.question import Answer
 
@@ -32,9 +34,12 @@ class RegistrationOverview(PermissionRequired, ListView):
         ).values("answer")[
             :1
         ]  # only one answer expected
+        event = Event.objects.get(slug=self.kwargs["event"])
         submissions = (
             Submission.objects.filter(
-                track__fosdemregistrationtrack__isnull=False, state="confirmed"
+                track__fosdemregistrationtrack__isnull=False,
+                state="confirmed",
+                event=event,
             )
             .annotate(
                 nr_registrations=Count("fosdemregistration"),
@@ -83,10 +88,12 @@ class GuardianWithRegistrationsCreateView(CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
+        event = Event.objects.get(slug=self.kwargs["event"])
         submission = Submission.objects.get(
             code=self.kwargs["submission_code"],
             track__fosdemregistrationtrack__isnull=False,
             state="confirmed",
+            event=event,
         )
         if self.request.POST:
             context["formset"] = RegistrationFormSet(self.request.POST)
@@ -123,10 +130,21 @@ class GuardianWithRegistrationsCreateView(CreateView):
                 reg.registering_person = guardian
                 reg.save()
 
-            # if saved succesful - show success message
+            submission = registrations[0].session
+
             context["correct_submitted"] = True
             context["guardian_submitted"] = guardian
             context["registrations_submitted"] = registrations
+            context["submission"] = submission
+
+            mail_text = render_to_string("fosdem_registration/mail.txt", context)
+            mail = QueuedMail.objects.create(
+                event=self.request.event,
+                to=guardian.email,
+                subject=f"FOSDEM registration for {context['submission'].title}",
+                text=mail_text,
+            )
+            mail.send()
 
         # If formset invalid, re-render page with errors
         return render(self.request, self.template_name, context)
