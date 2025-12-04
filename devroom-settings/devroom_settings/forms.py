@@ -35,7 +35,7 @@ class DevroomTrackSettingsForm(forms.ModelForm):
 
     class Meta:
         model = TrackSettings
-        fields = ("online_qa", "cfp_url")
+        fields = ("online_qa", "cfp_url", "on_website")
 
 
 class DevroomTrackForm(forms.ModelForm):

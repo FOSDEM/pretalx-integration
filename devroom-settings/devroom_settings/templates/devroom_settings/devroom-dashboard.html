@@ -143,6 +143,8 @@
                                 </div>
                     </li>{% endfor %}
                 </ul>
+            <p>You can enable/disable publishing this track on the FOSDEM website. </p>
+	    {{ form.on_website.as_field_group }}
             <button type="submit" class="btn btn-block btn-success font-weight-bold">
                 {% translate "Submit changes" %}
             </button>
