@@ -17,6 +17,7 @@ class TrackSettings(models.Model):
         BOF_ROOM = "B", "bof"
         JUNIOR = "J", "junior"
         CERTIFICATION = "C", "certification"
+        WORKSHOP = "W", "workshop"
         OTHER = "O", "other"
 
     track = models.OneToOneField(to=Track, on_delete=models.CASCADE)
