@@ -51,6 +51,11 @@ class TrackSettings(models.Model):
         null=True,
         related_name="devroom_proposal",
     )
+    on_website = models.BooleanField(
+        "On website",
+        help_text="should the schedule of this track already appear on the website",
+        default=True,
+    )
 
     def save(self, *args, **kwargs):
         if self.pk:
