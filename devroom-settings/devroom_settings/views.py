@@ -46,96 +46,105 @@ class DevroomReport(EventPermissionRequired, ListView):
         return tracks
 
 
-class DevroomDashboard(EventPermissionRequired, ListView):
+class DevroomTeam(EventPermissionRequired, TemplateView):
     permission_required = "submission.orga_update_submission"
-    template_name = "devroom_settings/devroom-dashboard.html"
-    context_object_name = "trackssettings"
+    template_name = "devroom_settings/team.html"
+    model = TrackSettings
 
     def get_queryset(self):
         teams = self.request.user.teams.all()
-        tracksettings = (
-            TrackSettings.objects.filter(
-                manager_team__in=teams, track__event=self.request.event
+        track_slug = self.kwargs["track_slug"]
+        return get_object_or_404(
+            TrackSettings.objects.select_related(
+                "track", "review_team"
+            ).prefetch_related(
+                "review_team__members", "manager_team", "manager_team__members"
+            ),
+            manager_team__in=teams,
+            track__event=self.request.event,
+            slug=track_slug,
+        )
+
+    def post(self, request, *args, **kwargs):
+        tracksettings = self.get_queryset()
+        tracksettings.track
+
+        invite_form = TeamInviteForm(self.request.POST, prefix=f"invite")
+        if invite_form.is_valid():
+            invite = TeamInvite.objects.create(
+                team=tracksettings.review_team,
+                email=invite_form.cleaned_data["email"].lower().strip(),
             )
-            .select_related("track")
-            .select_related("review_team")
-            .prefetch_related("review_team__members")
-            .prefetch_related("manager_team")
-            .prefetch_related("manager_team__members")
-        ).order_by("track__position")
-        return tracksettings
+            invite.send()
+
+        return self.get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        forms = [
-            DevroomTrackSettingsForm(prefix=track.slug, instance=track)
-            for track in context["trackssettings"]
-        ]
-        devroom_forms = [
-            DevroomTrackForm(prefix=f"ds_{track.slug}", instance=track.track)
-            for track in context["trackssettings"]
-        ]
-        invite_forms = [
-            TeamInviteForm(prefix=f"invite_{track.slug}")
-            for track in context["trackssettings"]
-        ]
+        tracksettings = self.get_queryset()
+        track = tracksettings.track
+        context["track"] = track
+        context["tracksettings"] = tracksettings
+        context["invite_form"] = TeamInviteForm(prefix=f"invite")
+        return context
 
-        access_codes = [
-            SubmitterAccessCode.objects.filter(track=track.track).values_list(
-                "code", flat=True
-            )
-            for track in context["trackssettings"]
-        ]
 
-        day_room_pw = []
-        for track in context["trackssettings"]:
-            track_day_room_pw = []
-            for day, room in get_track_room_days([track.track]):
-                try:
-                    password = RoomSettings.objects.get(
-                        room__name__contains=room, room__event=self.request.event
-                    ).control_password
-                except RoomSettings.DoesNotExist:
-                    password = ""
-                track_day_room_pw.append((day, room, password))
-                print(password)
-            day_room_pw.append(track_day_room_pw)
+class DevroomDashboard(EventPermissionRequired, TemplateView):
+    permission_required = "submission.orga_update_submission"
+    template_name = "devroom_settings/devroom-dashboard.html"
+    model = TrackSettings
 
-        context["track_forms"] = zip(
-            context["trackssettings"],
-            forms,
-            invite_forms,
-            devroom_forms,
-            access_codes,
-            day_room_pw,
+    def get_queryset(self):
+        teams = self.request.user.teams.all()
+        track_slug = self.kwargs["track_slug"]
+        return get_object_or_404(
+            TrackSettings.objects.select_related(
+                "track", "review_team"
+            ).prefetch_related(
+                "review_team__members", "manager_team", "manager_team__members"
+            ),
+            manager_team__in=teams,
+            track__event=self.request.event,
+            slug=track_slug,
         )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        tracksettings = self.get_queryset()
+        track = tracksettings.track
+        context["track"] = track
+        context["tracksettings"] = tracksettings
+        context["track_settings_form"] = DevroomTrackSettingsForm(
+            instance=tracksettings
+        )
+        context["track_form"] = DevroomTrackForm(prefix=f"track", instance=track)
+
+        # Access codes
+        context["access_codes"] = SubmitterAccessCode.objects.filter(
+            track=track
+        ).values_list("code", flat=True)
 
         return context
 
     def post(self, request, *args, **kwargs):
         tracksettings = self.get_queryset()
-        for track in tracksettings:
-            form = DevroomTrackSettingsForm(
-                self.request.POST, prefix=track.slug, instance=track
-            )
-            if form.is_valid() and form.has_changed():
-                form.save()
+        track = tracksettings.track
 
-            form = DevroomTrackForm(
-                self.request.POST, prefix=f"ds_{track.slug}", instance=track.track
-            )
-            if form.is_valid() and form.has_changed():
-                form.save()
+        form = DevroomTrackSettingsForm(self.request.POST, instance=tracksettings)
+        if form.is_valid() and form.has_changed():
+            form.save()
 
-            invite_form = TeamInviteForm(
-                self.request.POST, prefix=f"invite_{track.slug}"
+        form = DevroomTrackForm(self.request.POST, prefix=f"track", instance=track)
+        if form.is_valid() and form.has_changed():
+            form.save()
+
+        invite_form = TeamInviteForm(self.request.POST, prefix=f"invite")
+        if invite_form.is_valid():
+            invite = TeamInvite.objects.create(
+                team=track.review_team,
+                email=invite_form.cleaned_data["email"].lower().strip(),
             )
-            if invite_form.is_valid():
-                invite = TeamInvite.objects.create(
-                    team=track.review_team,
-                    email=invite_form.cleaned_data["email"].lower().strip(),
-                )
-                invite.send()
+            invite.send()
 
         return self.get(request, *args, **kwargs)
 

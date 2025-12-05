@@ -32,7 +32,10 @@ class TrackSettings(models.Model):
         default="",
     )
     cfp_url = models.CharField(
-        max_length=254, help_text="URL added to the CfP page", blank=True, default=""
+        max_length=254,
+        help_text="URL added to the CfP page on the FOSDEM homepage",
+        blank=True,
+        default="",
     )
     online_qa = models.BooleanField(
         "Online Q&A",

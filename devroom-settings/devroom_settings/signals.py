@@ -1,3 +1,5 @@
+import logging
+
 from django.dispatch import receiver
 from django.template.loader import get_template
 from django.urls import resolve, reverse
@@ -10,35 +12,8 @@ from pretalx.orga.signals import nav_event
 from .forms import TrackSettingsForm
 from .models import TrackSettings
 
-
-@receiver(html_below_track, dispatch_uid="devroom_settings")
-def render_form_fragment(sender, track, **kwargs):
-    try:
-        settings = track.tracksettings
-    except TrackSettings.DoesNotExist:
-        settings = TrackSettings(track=track)
-    except AttributeError:
-        settings = TrackSettings()
-
-    form = TrackSettingsForm(instance=settings)
-    template = get_template("devroom_settings/form_fragment.html")
-    html = template.render({"context": form})
-
-    return html
-
-
-@receiver(on_save_track, dispatch_uid="devroom_settings_save")
-def check_and_save(sender, track, request, **kwargs):
-    """Checks and saves extra track settings"""
-
-    try:
-        settings = track.tracksettings
-    except TrackSettings.DoesNotExist:
-        settings = TrackSettings(track=track)
-
-    form = TrackSettingsForm(request.POST, track=track, instance=settings)
-    if form.is_valid():
-        form.save()
+logger = logging.getLogger(__name__)
+logger.setLevel("DEBUG")
 
 
 def track_email(event, track):
@@ -78,45 +53,71 @@ def navbar_info(sender, request, **kwargs):
     if not request.user.has_perm("event.orga_access_event", request.event):
         return []
     url = resolve(request.path_info)
-    return [
-        {
-            "label": "Devrooms",
-            "icon": "user-plus",
-            "children": [
-                {
-                    "label": "Devroom-dashboard",
-                    "url": reverse(
-                        "plugins:devroom_settings:devroom-dashboard",
-                        kwargs={"event": request.event.slug},
-                    ),
-                    "active": url.namespace == "plugins:devroom_settings"
-                    and url.url_name == "devroom-dashboard",
-                },
-                {
-                    "label": "Devroom-report",
-                    "url": reverse(
-                        "plugins:devroom_settings:devroom-report",
-                        kwargs={
-                            "event": request.event.slug,
-                        },
-                    ),
-                    "active": url.namespace == "plugins:devroom_settings"
-                    and url.url_name == "devroom-report",
-                },
-                {
-                    "label": "Devroom-feedback",
-                    "url": reverse(
-                        "plugins:devroom_settings:feedback_list",
-                        kwargs={
-                            "event": request.event.slug,
-                        },
-                    ),
-                    "active": url.namespace == "plugins:devroom_settings"
-                    and url.url_name == "feedback_list",
-                },
-            ],
+    teams = request.user.teams.all()
+    track_slugs = TrackSettings.objects.filter(
+        manager_team__in=teams, track__event=request.event
+    ).values_list("slug", flat=True)
+    print(track_slugs)
+
+    def make_devroom_link(slug, url_name, label):
+        return {
+            "label": label,
+            "url": reverse(
+                f"plugins:devroom_settings:{url_name}",
+                kwargs={"event": request.event.slug, "track_slug": slug},
+            ),
+            "active": (
+                url.namespace == "plugins:devroom_settings"
+                and url.url_name == url_name
+                and slug == request.resolver_match.kwargs.get("track_slug")
+            ),
         }
-    ]
+
+    try:
+        sublinks = [
+            make_devroom_link(slug, "devroom-dashboard", f"{slug} settings")
+            for slug in track_slugs
+        ] + [
+            make_devroom_link(slug, "devroom-team", f"{slug} team")
+            for slug in track_slugs
+        ]
+
+        links = [
+            {
+                "label": "Devrooms",
+                "icon": "user-plus",
+                "active": True,
+                "children": [
+                    {
+                        "label": "Overview",
+                        "url": reverse(
+                            "plugins:devroom_settings:devroom-report",
+                            kwargs={
+                                "event": request.event.slug,
+                            },
+                        ),
+                        "active": url.namespace == "plugins:devroom_settings"
+                        and url.url_name == "devroom-report",
+                    },
+                ],
+            },
+            {
+                "label": "Feedback",
+                "icon": "envelope",
+                "url": reverse(
+                    "plugins:devroom_settings:feedback_list",
+                    kwargs={
+                        "event": request.event.slug,
+                    },
+                ),
+                "active": url.namespace == "plugins:devroom_settings"
+                and url.url_name == "feedback_list",
+            },
+        ]
+        links[0]["children"] += sublinks
+    except Exception:
+        logger.exception("navbar info")
+    return links
 
 
 # @receiver(register_data_exporters, dispatch_uid="nanoc_export")

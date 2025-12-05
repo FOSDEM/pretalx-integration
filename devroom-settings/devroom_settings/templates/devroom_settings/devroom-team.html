@@ -1,0 +1,40 @@
+{% extends "orga/base.html" %}
+
+{% block content %}
+
+<h2>Devroom manager report</h2>
+    <div class="alert alert-info">
+        This page lists all tracks at FOSDEM with their respective responsibles.
+    </div>
+    <div class="table-responsive">
+        <table class="table table-sm table-hover table-flip">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Mail</th>
+                    <th>Members</th>
+                    <th>Invites</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for track in tracks %}
+                    <tr>
+                        <td>{{ track.name }}</td>
+                        <td>{{ track.tracksettings.mail }}
+                        </td>
+			<td>{% for member in track.tracksettings.manager_team.members.all %}
+				{{ member.name }}{% if not forloop.last %}, {% endif %}
+			    {% endfor %}
+                        </td>
+			<td>{% for member in track.tracksettings.manager_team.invites.all %}
+				{{ member.name }}{% if not forloop.last %}, {% endif %}
+			    {% endfor %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+{% endblock %}
