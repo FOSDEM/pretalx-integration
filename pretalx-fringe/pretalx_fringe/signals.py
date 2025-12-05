@@ -8,7 +8,6 @@ def pretalx_fringe_list(sender, request, **kwargs):
     if not request.user.has_perm("orga.fringe_edit", request.event):
         return []
 
-    print("should show fringe")
     return [
         {
             "label": "Fringe",

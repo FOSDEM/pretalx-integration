@@ -57,7 +57,6 @@ def navbar_info(sender, request, **kwargs):
     track_slugs = TrackSettings.objects.filter(
         manager_team__in=teams, track__event=request.event
     ).values_list("slug", flat=True)
-    print(track_slugs)
 
     def make_devroom_link(slug, url_name, label):
         return {
