@@ -1,4 +1,6 @@
 from django import forms
+from django.forms import ModelForm
+from pretalx.common.forms.fields import ColorField
 from pretalx.common.forms.mixins import I18nHelpText, ReadOnlyFlag
 from pretalx.event.models import TeamInvite
 from pretalx.submission.models import Track
@@ -6,8 +8,17 @@ from pretalx.submission.models import Track
 from .models import TrackSettings
 
 
+class TrackForm(ModelForm):
+    name = forms.CharField(label="Name")
+    description = forms.CharField(label="Description", widget=forms.Textarea)
+    color = ColorField(label="Color")
+
+    class Meta:
+        model = Track
+        fields = ["name", "description", "color"]
+
+
 class TrackSettingsForm(forms.ModelForm):
-    # mail=forms.EmailField(disabled=True) # should not be changed, but disabling causes issues
     def __init__(self, *args, track=None, **kwargs):
         self.track = track
         super().__init__(*args, **kwargs)

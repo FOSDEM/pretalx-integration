@@ -1,0 +1,24 @@
+{% extends "orga/generic/_form.html" %}
+
+{% load copyable %}
+{% load static %}
+{% load compress %}
+{% load html_signal %}
+{% block scripts %}
+    {% compress js %}
+        <script defer src="{% static "vendored/vanilla-picker/vanilla-picker.min.js" %}"></script>
+        <script defer src="{% static "orga/js/colorpicker.js" %}"></script>
+    {% endcompress %}
+{% endblock scripts %}
+
+{% block content %}
+<h1>{{ track.name }} settings</h1>
+<form method="post">
+{% csrf_token %}
+    {{ track_form.non_field_errors }}
+    {{ tracksettings_form.non_field_errors }}
+{{ track_form }}
+{{ tracksettings_form }}
+    <button type="submit" class="btn btn-primary">Save</button>
+</form>
+{% endblock %}

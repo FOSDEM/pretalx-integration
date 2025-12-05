@@ -9,7 +9,7 @@ from django.core.exceptions import PermissionDenied
 from django.db.models import CharField, F, Value
 from django.db.models.functions import Cast
 from django.http import FileResponse, Http404, JsonResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import CreateView, ListView, TemplateView, View
@@ -26,8 +26,48 @@ from devroom_settings.forms import (
     DevroomTrackForm,
     DevroomTrackSettingsForm,
     FosdemFeedbackForm,
+    TrackForm,
+    TrackSettingsForm,
 )
 from devroom_settings.models import FosdemFeedback, RoomSettings, TrackSettings
+
+
+class TrackSettings(EventPermissionRequired, TemplateView):
+    permission_required = "event.update_event"
+    template_name = "devroom_settings/tracksettings.html"
+
+    def get(self, request, *args, **kwargs):
+        track = Track.objects.get(pk=kwargs["track_id"])
+        tracksettings = track.tracksettings
+
+        context = {
+            "track": track,
+            "tracksettings": tracksettings,
+            "track_form": TrackForm(instance=track),
+            "tracksettings_form": TrackSettingsForm(instance=tracksettings),
+        }
+        return self.render_to_response(context)
+
+    def post(self, request, *args, **kwargs):
+        track = Track.objects.get(pk=kwargs["track_id"])
+        tracksettings = track.tracksettings
+
+        track_form = TrackForm(request.POST, instance=track)
+        tracksettings_form = TrackSettingsForm(request.POST, instance=tracksettings)
+
+        if track_form.is_valid() and tracksettings_form.is_valid():
+            track_form.save()
+            tracksettings_form.track = track
+            tracksettings_form.save()
+            return redirect(request.path)
+
+        context = {
+            "track": track,
+            "tracksettings": tracksettings,
+            "track_form": track_form,
+            "tracksettings_form": tracksettings_form,
+        }
+        return self.render_to_response(context)
 
 
 class DevroomReport(EventPermissionRequired, ListView):
