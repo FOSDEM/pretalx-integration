@@ -30,12 +30,14 @@ class TrackSettingsForm(forms.ModelForm):
 
 
 class DevroomTrackSettingsForm(forms.ModelForm):
+    """Changes that devroom managers can make themselves"""
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     class Meta:
         model = TrackSettings
-        fields = ("online_qa", "cfp_url")
+        fields = ("online_qa", "cfp_url", "on_website")
 
 
 class DevroomTrackForm(forms.ModelForm):

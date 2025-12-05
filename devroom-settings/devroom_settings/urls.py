@@ -10,9 +10,14 @@ urlpatterns = [
         name="devroom-report",
     ),
     re_path(
-        rf"^orga/event/(?P<event>{SLUG_REGEX})/p/devroom-dashboard/$",
+        rf"^orga/event/(?P<event>{SLUG_REGEX})/p/devroom-dashboard/(?P<track_slug>[a-z0-9-_]+)$",
         views.DevroomDashboard.as_view(),
         name="devroom-dashboard",
+    ),
+    re_path(
+        rf"^orga/event/(?P<event>{SLUG_REGEX})/p/devroom-team/(?P<track_slug>[a-z0-9-_]+)$",
+        views.DevroomTeam.as_view(),
+        name="devroom-team",
     ),
     re_path(
         rf"^orga/event/(?P<event>{SLUG_REGEX})/p/video-instructions/(?P<room>[a-zA-Z0-9.-]+)/(?P<day>[0-9]+)/$",

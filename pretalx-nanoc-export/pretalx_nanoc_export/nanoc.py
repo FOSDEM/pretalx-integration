@@ -206,6 +206,7 @@ class NanocExporter(ScheduleData):
                         talks__schedule=schedule,
                         talks__is_visible=True,
                         talks__submission__isnull=False,
+                        talks__submission__track__tracksettings__on_website=True,
                     ),
                 )
             )
@@ -214,7 +215,10 @@ class NanocExporter(ScheduleData):
                 Prefetch(
                     "talks",
                     queryset=TalkSlot.objects.filter(
-                        schedule=schedule, is_visible=True, submission__isnull=False
+                        schedule=schedule,
+                        is_visible=True,
+                        submission__isnull=False,
+                        submission__track__tracksettings__on_website=True,
                     ).select_related("submission"),
                     to_attr="talks_current",
                 )
@@ -288,6 +292,7 @@ class NanocExporter(ScheduleData):
                 schedule=self.schedule,
                 is_visible=True,
                 room__isnull=False,
+                submission__track__tracksettings__on_website=True,
             )
             start_time = {}
             end_time = {}

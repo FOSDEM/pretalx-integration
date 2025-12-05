@@ -1,0 +1,124 @@
+
+{% extends "orga/base.html" %}
+{% load copyable %}
+{% load i18n %}
+{% load static %}
+
+
+{% block scripts %}
+    <script defer src="{% static "common/js/copy.js" %}"></script>
+{% endblock %}
+
+{% block content %}
+
+        <h2>{{ track.name }}</h2>
+
+<h3>Devroom managers</h3>
+        <p>This are the devroom mangers for your track. Note that you can not add devroom managers yourself. Mail to devrooms@fosdem.org for that.</p>
+
+        <table class="table table-sm table-hover table-flip">
+            <thead>
+                <tr>
+                    <th>{% translate "Name" %}</th>
+                    <th>{% translate "Email" %}</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+        {% for user in  tracksettings.manager_team.members.all %}
+            <tr>
+                <td>{{ user.name }}</td>
+                <td>{{  user.email }}</td>
+            </tr>
+        {% endfor %}
+        {% for invite in  tracksettings.manager_team.invites.all %}
+            <tr>
+                <td><i>pending Invitation</i></td>
+                <td>{{  invite.email }}</td>
+            </tr>
+        {% endfor %}
+                        </tbody>
+        </table>
+
+
+                    <h3>
+                Review team members
+            </h3>
+            <p>
+        This section allow setting reviewers for your track. Reviewers can review and vote proposals but have no access to the full admin interface. They will also only see submissions for your track (or any other track for which they are reviewer).
+    </p>
+                <form method="post">
+    {% csrf_token %}
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover table-flip">
+                        <thead>
+                            <tr>
+                                <th>{% translate "Name" %}</th>
+                                <th>{% translate "Email" %}</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for member in tracksettings.review_team.members.all %}
+                                <tr>
+                                    <td>{{ member.get_display_name }}</td>
+                                    <td><a href="mailto:{{ member.email }}">{{ member.email }}</a></td>
+                                    <td class="flip text-right">
+                                    {% comment %}
+                                        <a
+                                            href="{% if request.event %}{{ request.event.orga_urls.team_settings }}{% else %}{{ request.organiser.orga_urls.teams }}{% endif %}{{ track.review_team.id }}/reset/{{ member.id }}"
+                                            class="btn btn-sm btn-warning"
+                                        >
+                                            {% translate "Reset password" %}
+                                        </a>
+                                        <a
+                                            href="{% if request.event %}{{ request.event.orga_urls.team_settings }}{% else %}{{ request.organiser.orga_urls.teams }}{% endif %}{{ track.review_team.id }}/delete/{{ member.id }}"
+                                            class="btn btn-sm btn-danger" title="{% translate "Remove team member" %}"
+                                        >
+                                            <i class="fa fa-trash"></i>
+                                        </a>
+                                    {% endcomment %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            {% for member in tracksettings.review_team.invites.all %}
+                                <tr>
+                                    <td>
+                                        <em>({% translate "pending Invitation" %})</em>
+                                    </td>
+                                    <td>
+                                        {{ member.email }}
+                                        <a href="{{ member.urls.invitation }}">
+                                            <i class="fa fa-link"></i>
+                                        </a>
+                                    </td>
+                                    <td class="flip text-right">
+                                        {%  comment %} TODO: taken from the teams page - extra endpoints must be added to allow resend/trash invites
+                                         <a
+                                            href="{% if request.event %}{{ request.event.orga_urls.team_settings }}{% else %}{{ request.organiser.orga_urls.teams }}{% endif %}{{ member.id }}/resend"
+                                            class="btn btn-sm btn-outline-warning"
+                                        >
+                                            {% translate "Resend invite" %}
+                                        </a>
+                                        <a
+                                            href="{% if request.event %}{{ request.event.orga_urls.team_settings }}{% else %}{{ request.organiser.orga_urls.teams }}{% endif %}{{ member.id }}/uninvite"
+                                            class="btn btn-sm btn-danger"
+                                        >
+                                            <i class="fa fa-trash"></i>
+                                        </a>
+                                     {% endcomment %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            <tr>
+                                <td><strong>{% translate "Add member" %}</strong></td>
+				<td>{% csrf_token %}{{ invite_form.email }}</td>
+                                <td class="flip text-right">
+                                    <button type="submit" name="form" value="invite" class="btn btn-success btn-sm"><i class="fa fa-check"></i></button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+        </form>
+	{% endblock %}

@@ -10,131 +10,27 @@
 
 {% block content %}
 
-    {% for track, form, invite_form, devroom_form, access_codes, day_room_pw in track_forms %}
-        <h2>{{  track.track.name }}</h2>
-
-<h3>Devroom managers</h3>
-        <p>This are the devroom mangers for your track. Note that you can not add devroom managers yourself. Mail to devrooms@fosdem.org for that.</p>
-
-        <table class="table table-sm table-hover table-flip">
-            <thead>
-                <tr>
-                    <th>{% translate "Name" %}</th>
-                    <th>{% translate "Email" %}</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-        {% for user in  track.manager_team.members.all %}
-            <tr>
-                <td>{{ user.name }}</td>
-                <td>{{  user.email }}</td>
-            </tr>
-        {% endfor %}
-        {% for invite in  track.manager_team.invites.all %}
-            <tr>
-                <td><i>pending Invitation</i></td>
-                <td>{{  invite.email }}</td>
-            </tr>
-        {% endfor %}
-                        </tbody>
-        </table>
-
-
-                    <h3>
-                Review team members
-            </h3>
-            <p>
-        This section allow setting reviewers for your track. Reviewers can review and vote proposals but have no access to the full admin interface. They will also only see submissions for your track (or any other track for which they are reviewer).
-    </p>
-                <form method="post">
+        <h2>{{ track.name }} Track settings</h2>
+<form method="post">
     {% csrf_token %}
-                <div class="table-responsive">
-                    <table class="table table-sm table-hover table-flip">
-                        <thead>
-                            <tr>
-                                <th>{% translate "Name" %}</th>
-                                <th>{% translate "Email" %}</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for member in track.review_team.members.all %}
-                                <tr>
-                                    <td>{{ member.get_display_name }}</td>
-                                    <td><a href="mailto:{{ member.email }}">{{ member.email }}</a></td>
-                                    <td class="flip text-right">
-                                    {% comment %}
-                                        <a
-                                            href="{% if request.event %}{{ request.event.orga_urls.team_settings }}{% else %}{{ request.organiser.orga_urls.teams }}{% endif %}{{ track.review_team.id }}/reset/{{ member.id }}"
-                                            class="btn btn-sm btn-warning"
-                                        >
-                                            {% translate "Reset password" %}
-                                        </a>
-                                        <a
-                                            href="{% if request.event %}{{ request.event.orga_urls.team_settings }}{% else %}{{ request.organiser.orga_urls.teams }}{% endif %}{{ track.review_team.id }}/delete/{{ member.id }}"
-                                            class="btn btn-sm btn-danger" title="{% translate "Remove team member" %}"
-                                        >
-                                            <i class="fa fa-trash"></i>
-                                        </a>
-                                    {% endcomment %}
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                            {% for member in track.review_team.invites.all %}
-                                <tr>
-                                    <td>
-                                        <em>({% translate "pending Invitation" %})</em>
-                                    </td>
-                                    <td>
-                                        {{ member.email }}
-                                        <a href="{{ member.urls.invitation }}">
-                                            <i class="fa fa-link"></i>
-                                        </a>
-                                    </td>
-                                    <td class="flip text-right">
-                                        {%  comment %} TODO: taken from the teams page - extra endpoints must be added to allow resend/trash invites
-                                         <a
-                                            href="{% if request.event %}{{ request.event.orga_urls.team_settings }}{% else %}{{ request.organiser.orga_urls.teams }}{% endif %}{{ member.id }}/resend"
-                                            class="btn btn-sm btn-outline-warning"
-                                        >
-                                            {% translate "Resend invite" %}
-                                        </a>
-                                        <a
-                                            href="{% if request.event %}{{ request.event.orga_urls.team_settings }}{% else %}{{ request.organiser.orga_urls.teams }}{% endif %}{{ member.id }}/uninvite"
-                                            class="btn btn-sm btn-danger"
-                                        >
-                                            <i class="fa fa-trash"></i>
-                                        </a>
-                                     {% endcomment %}
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                            <tr>
-                                <td><strong>{% translate "Add member" %}</strong></td>
-				<td>{% csrf_token %}{{ invite_form.email }}</td>
-                                <td class="flip text-right">
-                                    <button type="submit" name="form" value="invite" class="btn btn-success btn-sm"><i class="fa fa-check"></i></button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-        </form>
-	<br />
-        <form method="post">
-    {% csrf_token %}
-        <h3>Devroom settings</h3>
-        <p>
-            This section allows setting options for the "{{track.track.name}}" devroom. New options may be added before the conference
-        </p>
-
-        <h4>Before the event</h4>
-        <p>Set the Call for papers URL which is used in the FOSDEM website.</p>
-	{{ form.cfp_url.as_field_group }}
-        <h4>Submission</h4>
-            <p>You can close submissions by requiring an access code. </p>
-	    {{ devroom_form.requires_access_code.as_field_group }}
+	<div class="form-group row">
+	    <div class="col-md-3"></div>
+	    <div class="col-md-9">
+		<h3>Opening Submissions</h3>
+	    </div>
+	</div>   
+	{{ track_settings_form.cfp_url.as_field_group }}
+	<div class="form-group row">
+	    <div class="col-md-3"></div>
+	    <div class="col-md-9">
+		<h3> Closing Submissions</h3>
+		If you want to close submissions, enable the option "requires access code". Access codes that can be used after closing are mentioned below this option.
+	    </div>
+	</div>   
+	{{ track_form.requires_access_code.as_field_group }}
+	<div class="form-group row">
+	<div class="col-md-3"></div>
+	<div class="col-md-9">
             <p> Access code(s) for your track:</p>
                 <ul>{% for ac in access_codes %}
                     <li>
@@ -143,26 +39,18 @@
                                 </div>
                     </li>{% endfor %}
                 </ul>
-            <button type="submit" class="btn btn-block btn-success font-weight-bold">
-                {% translate "Submit changes" %}
-            </button>
-
-        <h4>During the event</h4>
-        <p>Instructions for video monitoring can be found in the document below. Direct links to your video interfaces are also included.
-            Feel free to share these links/documents with trusted volunteers. Also use the link to set the room full api.
-        <ul>
-            {% for day, room, password in day_room_pw %}
-                <li>{{room}}(day {{day}}): <ul>
-                    <li>direct link to control interface <a href="https://{{ day }}-{{ room }}:{{ password }}@control.video.fosdem.org/">https://{{ day }}-{{ room }}:{{ password }}@control.video.fosdem.org/</a></li>
-				    <li><a href="../video-instructions/{{room}}/{{day}}/">Video instructions (pdf)</a>
-                </ul></li>
-                </li>
-            {% endfor %}
-        </ul>
-
+	</div>
+	</div>
+	<div class="form-group row">
+	    <div class="col-md-3"></div>
+	    <div class="col-md-9">
+		<h3>Publishing the schedule</h3>
+		After you have created your first schedule and you are happy about it, set "on website" to make sure the schedule on the website is updated.
+	    </div>
+	</div>   
+	    {{ track_settings_form.on_website.as_field_group }}
+    {% include "orga/includes/submit_row.html" %}
 
 </form>
-        <hr />
-    {% endfor %}
 
 {% endblock %}

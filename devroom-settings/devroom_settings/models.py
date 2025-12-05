@@ -17,6 +17,7 @@ class TrackSettings(models.Model):
         BOF_ROOM = "B", "bof"
         JUNIOR = "J", "junior"
         CERTIFICATION = "C", "certification"
+        WORKSHOP = "W", "workshop"
         OTHER = "O", "other"
 
     track = models.OneToOneField(to=Track, on_delete=models.CASCADE)
@@ -31,7 +32,10 @@ class TrackSettings(models.Model):
         default="",
     )
     cfp_url = models.CharField(
-        max_length=254, help_text="URL added to the CfP page", blank=True, default=""
+        max_length=254,
+        help_text="URL added to the CfP page on the FOSDEM homepage",
+        blank=True,
+        default="",
     )
     online_qa = models.BooleanField(
         "Online Q&A",
@@ -49,6 +53,11 @@ class TrackSettings(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         related_name="devroom_proposal",
+    )
+    on_website = models.BooleanField(
+        "On website",
+        help_text="should the schedule of this track already appear on the website",
+        default=True,
     )
 
     def save(self, *args, **kwargs):
