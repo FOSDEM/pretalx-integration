@@ -37,6 +37,7 @@ class TrackSettingsForm(forms.ModelForm):
             "cfp_url",
             "manager_team",
             "review_team",
+            "on_website",
         )
 
 
