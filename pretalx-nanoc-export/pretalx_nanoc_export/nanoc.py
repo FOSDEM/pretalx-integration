@@ -102,7 +102,10 @@ def update_end_time(event):
     the website logic
     """
     talk_slots_to_update = TalkSlot.objects.filter(
-        start__isnull=False, end__isnull=True, submission__isnull=False
+        start__isnull=False,
+        end__isnull=True,
+        submission__isnull=False,
+        submission__track__tracksettings__on_website=True,
     )
 
     for talk_slot in talk_slots_to_update:
