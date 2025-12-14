@@ -3,6 +3,7 @@ import os
 import re
 import shutil
 from collections import defaultdict
+from functools import lru_cache
 from pathlib import Path
 
 import magic
@@ -13,7 +14,9 @@ from django.conf import settings
 from django.db.models import Count, DurationField, ExpressionWrapper, F, Prefetch, Q
 from django.forms.models import model_to_dict
 from django.utils.functional import cached_property
+from django_scopes import scope
 from PIL import Image, UnidentifiedImageError
+from pretalx.event.models import Event
 from pretalx.person.models import SpeakerProfile
 from pretalx.schedule.exporters import ScheduleData
 from pretalx.schedule.models import Room, TalkSlot
@@ -50,27 +53,9 @@ from yaml.representer import Representer
 yaml.add_representer(defaultdict, Representer.represent_dict)
 
 
-def sanitize_filename(filename):
-    """Sanitize filename the same way nanoc would do it"""
-    b = Path(filename).stem
-    suffix = Path(filename).suffix
+def sanitize(b):
+    b = unidecode(b.lower())
 
-    # Transliterate non-ASCII characters
-    b = unidecode(b)
-
-    b = re.sub(r"\/+", "", b)
-    b = re.sub(r"\s+", "_", b)
-    b = re.sub(r'["\']+', "", b)
-    b = re.sub(r"[^0-9A-Za-z\-]", "_", b)
-    b = re.sub(r"_+", "_", b)
-    b = re.sub(r"^_", "", b)
-    b = re.sub(r"_$", "", b)
-
-    return b + suffix
-
-
-def speaker_slug(user):
-    b = unidecode(user.name).lower()
     b = re.sub(r"\/+", "", b)
     b = re.sub(r"\s+", "_", b)
     b = re.sub(r'["\']+', "", b)
@@ -80,6 +65,21 @@ def speaker_slug(user):
     b = re.sub(r"_$", "", b)
 
     return b
+
+
+def sanitize_filename(filename):
+    """Sanitize filename the same way nanoc would do it"""
+    b = Path(filename).stem
+    suffix = Path(filename).suffix
+
+    # Transliterate non-ASCII characters
+    b = sanitize(b)
+
+    return b + suffix
+
+
+def speaker_slug(user):
+    return sanitize(user.name)
 
 
 def chat_link(track_slug, app=False):
@@ -112,6 +112,32 @@ def update_end_time(event):
         duration_minutes = talk_slot.submission.duration
         talk_slot.end = talk_slot.start + datetime.timedelta(minutes=duration_minutes)
         talk_slot.save()
+
+
+@lru_cache(maxsize=None)
+def submission_slug_question(event_id):
+    event = Event.objects.get(pk=event_id)
+    with scope(event=event):
+        q = event.questions.get(question__icontains="talk slug")
+    return q
+
+
+def fosdem_slug(self):
+    try:
+        q = submission_slug_question(self.event.pk)
+        orig_slug = self.submission.answers.get(question=q).answer
+    except:
+        orig_slug = self.submission.title
+
+    slug = sanitize(orig_slug)
+    slug = slug[:80]
+    # code is attached, so we are sure this is unique
+    # return self.submission.code + '-' + slug
+    # or we are bold and assume no duplicate slugs occur
+    return slug
+
+
+TalkSlot.fosdem_slug = property(fosdem_slug)
 
 
 class NanocExporter(ScheduleData):
@@ -243,7 +269,7 @@ class NanocExporter(ScheduleData):
             end_time_index[room_slug] = {}
             for talk in room.talks_current:
                 day = talk.start.strftime("%A").lower()
-                events_by_day[room.pk][day].append(talk.frab_slug)
+                events_by_day[room.pk][day].append(talk.fosdem_slug)
                 if day in start_time[room_slug]:
                     start_time[room_slug][day] = min(
                         talk.start.astimezone(tz).time(), start_time[room_slug][day]
@@ -268,7 +294,7 @@ class NanocExporter(ScheduleData):
                 "slug": str(room.name).lower(),
                 "live_video_link": f"https://live.fosdem.org/watch/{str(room.name)}",
                 "title": str(room.description),
-                "events": [talk.frab_slug for talk in room.talks_current],
+                "events": [talk.fosdem_slug for talk in room.talks_current],
                 "events_by_day": events_by_day[room.pk],
                 "start_time": start_time[str(room.name).lower()],
                 "end_time": end_time[str(room.name).lower()],
@@ -301,17 +327,17 @@ class NanocExporter(ScheduleData):
             end_time = {}
             start_time_index = {}
             end_time_index = {}
-            track_talks = [slot.frab_slug for slot in talk_slots]
+            track_talks = [slot.fosdem_slug for slot in talk_slots]
             track_rooms = []
             events_per_room_per_day = {day: defaultdict(list) for day in self.days}
 
             for slot in talk_slots:
                 room = str(slot.room.name).lower()
                 day = slot.start.strftime("%A").lower()
-                track_talks_day[day].append(slot.frab_slug)
+                track_talks_day[day].append(slot.fosdem_slug)
                 if room not in track_rooms:
                     track_rooms.append(room)
-                events_per_room_per_day[day][room].append(slot.frab_slug)
+                events_per_room_per_day[day][room].append(slot.fosdem_slug)
 
                 if day in start_time:
                     start_time[day] = min(
@@ -402,8 +428,8 @@ class NanocExporter(ScheduleData):
                         (self.dest_dir / f"events/logo/").mkdir(
                             parents=True, exist_ok=True
                         )
-                        image_dest = f"events/logo/{talk.frab_slug}{orig_path.suffix}"
-                        logo_identifier = f"/schedule/event/{talk.frab_slug}/logo/"
+                        image_dest = f"events/logo/{talk.fosdem_slug}{orig_path.suffix}"
+                        logo_identifier = f"/schedule/event/{talk.fosdem_slug}/logo/"
                         try:
                             logo_mime = self.write_image(
                                 orig_path,
@@ -411,7 +437,7 @@ class NanocExporter(ScheduleData):
                                 logo_identifier,
                                 200,
                                 200,
-                                event_slug=talk.frab_slug,
+                                event_slug=talk.fosdem_slug,
                             )
                         except UnidentifiedImageError:
                             print(
@@ -429,7 +455,7 @@ class NanocExporter(ScheduleData):
                             src = Path(settings.MEDIA_ROOT) / "pixel.png"
 
                         destination = Path(
-                            f"events/attachments/{talk.frab_slug}/slides/{str(talk.pk)}/{dest_name}"
+                            f"events/attachments/{talk.fosdem_slug}/slides/{str(talk.pk)}/{dest_name}"
                         )
 
                         attachment = {
@@ -443,7 +469,7 @@ class NanocExporter(ScheduleData):
                             else 0,
                             "id": resource.pk,
                             "event_id": talk.pk,
-                            "event_slug": talk.frab_slug,
+                            "event_slug": talk.fosdem_slug,
                         }
                         attachments.append(attachment)
                         if self.dest_dir:
@@ -457,13 +483,13 @@ class NanocExporter(ScheduleData):
                             ) as metadatafile:
                                 metadatafile.write(yaml.safe_dump(attachment))
 
-                    talks[talk.frab_slug] = {
+                    talks[talk.fosdem_slug] = {
                         "event_id": talk.submission.pk,
                         "guid": str(talk.uuid),
                         "conference_track_id": track.pk,
                         "title": talk.submission.title,
                         "subtitle": "",  # this does not exist in pretalx
-                        "slug": talk.frab_slug,
+                        "slug": talk.fosdem_slug,
                         "abstract": markdown.markdown(talk.submission.abstract)
                         if talk.submission.abstract
                         else "",
@@ -503,13 +529,13 @@ class NanocExporter(ScheduleData):
                         "feedback_url": talk.submission.urls.feedback.full(),
                     }
                     if track.tracksettings.track_type not in ["J", "B"]:
-                        talks[talk.frab_slug] |= {
+                        talks[talk.fosdem_slug] |= {
                             "live_video_link": "https://live.fosdem.org/watch/"
                             + str(talk.room.name),
                             "chat_link": chat_link(track.tracksettings.slug),
                         }
                     if self.dest_dir and valid_talk_image:
-                        talks[talk.frab_slug]["logo"] = {
+                        talks[talk.fosdem_slug]["logo"] = {
                             "identifier": logo_identifier,
                             "mime": logo_mime,
                         }
@@ -625,7 +651,7 @@ class NanocExporter(ScheduleData):
                                 "description": "",  # Lets not make things more confusing
                                 "conference_person_id": speaker.pk,  # not equal to person_id in penta
                                 "links": [],
-                                "events": [talk.frab_slug]
+                                "events": [talk.fosdem_slug]
                                 # "events_by_day:": events_by_day
                             }
                             if self.dest_dir and valid_avatar:
@@ -639,7 +665,7 @@ class NanocExporter(ScheduleData):
                                 }
                         else:
                             speakers_dict[speaker_slug(speaker)]["events"].append(
-                                talk.frab_slug
+                                talk.fosdem_slug
                             )
 
         return speakers_dict
