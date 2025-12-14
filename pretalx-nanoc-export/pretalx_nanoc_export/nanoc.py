@@ -82,16 +82,6 @@ def speaker_slug(user):
     return sanitize(user.name)
 
 
-def chat_link(track_slug, app=False):
-    if track_slug == "main_track_janson":
-        track_slug = "main"
-    if app:
-        link = f"https://matrix.to/#/#2025-{track_slug}:fosdem.org?web-instance[element.io]=chat.fosdem.org"
-    else:
-        link = f"https://chat.fosdem.org/#/room/#2025-{track_slug}:fosdem.org"
-    return link
-
-
 def time_to_index(timevalue):
     return int((timevalue.hour * 60 + timevalue.minute) // 5)
 
@@ -153,6 +143,7 @@ class NanocExporter(ScheduleData):
         super().__init__(event, schedule=schedule)
         self.dest_dir = dest_dir
         self.fake_image = fake_image
+        self.year = event.slug[-4:]
         if dest_dir:
             shutil.rmtree(dest_dir, ignore_errors=True)
 
@@ -204,6 +195,15 @@ class NanocExporter(ScheduleData):
         os.link(cache_dest, dest_full)
         dest_full.with_suffix(".yaml").write_text(yaml.safe_dump(meta_thumb))
         return mime
+
+    def chat_link(self, track_slug, app=False):
+        if app:
+            link = f"https://matrix.to/#/#{self.year}-{track_slug}:fosdem.org?web-instance[element.io]=chat.fosdem.org"
+        else:
+            link = (
+                f"https://chat.fosdem.org/#/room/#{self.year}-{track_slug}:fosdem.org"
+            )
+        return link
 
     @cached_property
     def rooms(self):
@@ -378,7 +378,7 @@ class NanocExporter(ScheduleData):
                 "end_time": end_time,
                 "start_time_index": start_time_index,
                 "end_time_index": end_time_index,
-                "chat_link": chat_link(track.tracksettings.slug),
+                "chat_link": self.chat_link(track.tracksettings.slug),
             }
         return tracks_dict
 
@@ -407,11 +407,13 @@ class NanocExporter(ScheduleData):
                         links += [
                             {
                                 "title": "Chat room(web)",
-                                "url": chat_link(track.tracksettings.slug),
+                                "url": self.chat_link(track.tracksettings.slug),
                             },
                             {
                                 "title": "Chat room(app)",
-                                "url": chat_link(track.tracksettings.slug, app=True),
+                                "url": self.chat_link(
+                                    track.tracksettings.slug, app=True
+                                ),
                             },
                         ]
 
@@ -532,7 +534,7 @@ class NanocExporter(ScheduleData):
                         talks[talk.fosdem_slug] |= {
                             "live_video_link": "https://live.fosdem.org/watch/"
                             + str(talk.room.name),
-                            "chat_link": chat_link(track.tracksettings.slug),
+                            "chat_link": self.chat_link(track.tracksettings.slug),
                         }
                     if self.dest_dir and valid_talk_image:
                         talks[talk.fosdem_slug]["logo"] = {
@@ -713,7 +715,7 @@ class NanocExporter(ScheduleData):
             "homepage": "https://fosdem.org/",
             "abstract_length": "",
             "description_length": "",
-            "export_base_url": "https://fosdem.org/2025/schedule",
+            "export_base_url": f"https://fosdem.org/{self.year}/schedule",
             "schedule_html_include": "",
             "schedule_version": self.schedule.version
             if self.schedule.version
