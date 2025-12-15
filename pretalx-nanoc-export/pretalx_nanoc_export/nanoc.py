@@ -441,7 +441,7 @@ class NanocExporter(ScheduleData):
                                 200,
                                 event_slug=talk.fosdem_slug,
                             )
-                        except UnidentifiedImageError:
+                        except (UnidentifiedImageError, Image.DecompressionBombError):
                             print(
                                 f"Warning, incorrect image found: {talk.submission.image}"
                             )
