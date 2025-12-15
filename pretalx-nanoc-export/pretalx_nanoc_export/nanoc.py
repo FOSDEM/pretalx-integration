@@ -624,7 +624,7 @@ class NanocExporter(ScheduleData):
                                         180,
                                         speaker_slug=speaker_slug(speaker),
                                     )
-                            except UnidentifiedImageError:
+                            except (UnidentifiedImageError, Image.DecompressionBombError):
                                 print(
                                     f"Warning, incorrect image found: {speaker.avatar.path}"
                                 )
