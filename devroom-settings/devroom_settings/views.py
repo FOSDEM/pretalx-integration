@@ -33,7 +33,7 @@ from devroom_settings.forms import (
 from devroom_settings.models import FosdemFeedback, RoomSettings, TrackSettings
 
 
-class TrackSettings(EventPermissionRequired, TemplateView):
+class TrackSettingsView(EventPermissionRequired, TemplateView):
     permission_required = "event.update_event"
     template_name = "devroom_settings/tracksettings.html"
 

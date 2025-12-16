@@ -21,13 +21,13 @@ urlpatterns = [
     ),
     re_path(
         rf"^orga/event/(?P<event>{SLUG_REGEX})/p/track/(?P<track_id>[0-9]+)$",
-        views.TrackSettings.as_view(),
+        views.TrackSettingsView.as_view(),
         name="tracksettings",
     ),
     # overwrite default path of pretalx
     re_path(
         rf"^orga/event/(?P<event>{SLUG_REGEX})/cfp/tracks/(?P<track_id>[0-9]+)$",
-        views.TrackSettings.as_view(),
+        views.TrackSettingsView.as_view(),
         name="tracksettings",
     ),
     re_path(
