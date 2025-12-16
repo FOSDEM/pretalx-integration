@@ -6,7 +6,7 @@ from pathlib import Path
 import pytz
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
-from django.db.models import CharField, F, Value
+from django.db.models import CharField, F, Prefetch, Value
 from django.db.models.functions import Cast
 from django.http import FileResponse, Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -18,6 +18,7 @@ from django_scopes import scope, scopes_disabled
 from pretalx.common.views.mixins import EventPermissionRequired
 from pretalx.event.forms import TeamInviteForm
 from pretalx.event.models import TeamInvite
+from pretalx.person.models import SpeakerProfile
 from pretalx.schedule.models import Room, TalkSlot
 from pretalx.schedule.utils import guess_schedule_version
 from pretalx.submission.models import Resource, Submission, SubmitterAccessCode, Track
@@ -189,6 +190,13 @@ class DevroomDashboard(EventPermissionRequired, TemplateView):
         return self.get(request, *args, **kwargs)
 
 
+def event_matrix_ids(event):
+    with scope(event=event):
+        q = event.questions.get(question__icontains="matrix_id")
+    answers = q.answers.all()
+    return {answer.person.pk: answer.answer for answer in answers}
+
+
 class MatrixExport(EventPermissionRequired, View):
     permission_required = "submission.orga_update_submission"
     model = Submission
@@ -202,6 +210,7 @@ class MatrixExport(EventPermissionRequired, View):
             "submission__speakers"
         ).prefetch_related("submission__track__tracksettings__manager_team__members")
 
+        matrix_ids = event_matrix_ids(self.request.event)
         for slot in schedule.all():
             if slot.submission.track.tracksettings.track_type not in [
                 "MT",
@@ -218,7 +227,7 @@ class MatrixExport(EventPermissionRequired, View):
                     "event_role": "speaker",
                     "name": s.name,
                     "email": s.email,
-                    "matrix_id": s.matrix_id,
+                    "matrix_id": matrix_ids.get(s.pk),
                 }
                 persons.append(person_data)
             for s in slot.submission.track.tracksettings.manager_team.members.all():
@@ -227,7 +236,7 @@ class MatrixExport(EventPermissionRequired, View):
                     "event_role": "coordinator",
                     "name": s.name,
                     "email": s.email,
-                    "matrix_id": s.matrix_id,
+                    "matrix_id": matrix_ids.get(s.pk),
                 }
                 persons.append(person_data)
 
@@ -271,7 +280,7 @@ class MatrixExport(EventPermissionRequired, View):
                     "event_role": "coordinator",
                     "name": p.name,
                     "email": p.email,
-                    "matrix_id": p.matrix_id,
+                    "matrix_id": matrix_ids.get(p.pk),
                 }
                 persons.append(person_data)
             tracks.append(
