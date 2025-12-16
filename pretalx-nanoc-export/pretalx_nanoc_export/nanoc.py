@@ -478,7 +478,7 @@ class NanocExporter(ScheduleData):
                             (self.dest_dir / destination.parent).mkdir(
                                 parents=True, exist_ok=True
                             )
-                            os.link(src, self.dest_dir / destination)
+                            shutil.copy2(src, self.dest_dir / destination)
                             os.chmod(self.dest_dir / destination, 0o664)
                             with open(
                                 self.dest_dir / destination.with_suffix(".yaml"), "w"
@@ -624,7 +624,10 @@ class NanocExporter(ScheduleData):
                                         180,
                                         speaker_slug=speaker_slug(speaker),
                                     )
-                            except (UnidentifiedImageError, Image.DecompressionBombError):
+                            except (
+                                UnidentifiedImageError,
+                                Image.DecompressionBombError,
+                            ):
                                 print(
                                     f"Warning, incorrect image found: {speaker.avatar.path}"
                                 )
