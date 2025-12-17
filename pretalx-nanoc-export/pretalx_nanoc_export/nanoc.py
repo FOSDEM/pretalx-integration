@@ -496,6 +496,7 @@ class NanocExporter(ScheduleData):
                         if talk.submission.abstract
                         else "",
                         "description": "",  # no longer used
+                        "featured": talk.submission.is_featured,
                         "start_time": talk.start.astimezone(tz).time(),
                         "end_time": talk.end.astimezone(tz).time(),
                         "start_datetime": talk.start,
