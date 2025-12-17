@@ -197,11 +197,24 @@ def event_matrix_ids(event):
     return {answer.person.pk: answer.answer for answer in answers}
 
 
-class MatrixExport(EventPermissionRequired, View):
-    permission_required = "submission.orga_update_submission"
+from pretalx.common.auth import UserTokenAuthentication
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
+
+
+class MatrixExport(APIView):
     model = Submission
+    authentication_classes = [UserTokenAuthentication]
+    permission_classes = [
+        IsAuthenticated,
+    ]
 
     def get(self, request, **kwargs):
+        if not request.user.has_perm(
+            "submission.orga_update_submission", request.event
+        ):
+            raise PermissionDenied()
+
         talks = []
 
         track_room = {}
