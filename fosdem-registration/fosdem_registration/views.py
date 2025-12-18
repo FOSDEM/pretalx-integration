@@ -1,12 +1,13 @@
+from django.core.mail import EmailMessage
 from django.db.models import Count, F, IntegerField, OuterRef, Subquery
+from django.http import Http404
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, ListView
 from django.views.generic.edit import FormView
-from pretalx.common.views.mixins import PermissionRequired
+from pretalx.common.views.mixins import EventPermissionRequired
 from pretalx.event.models import Event
-from pretalx.mail.models import QueuedMail
 from pretalx.submission.models import Submission
 from pretalx.submission.models.question import Answer
 
@@ -18,8 +19,8 @@ from .forms import (
 from .models import FosdemRegistration, FosdemRegistrationGuardian
 
 
-class RegistrationOverview(PermissionRequired, ListView):
-    permission_required = "orga.fringe_edit"
+class RegistrationOverview(EventPermissionRequired, ListView):
+    permission_required = "orga.view_fosdem_registrations"
     model = Submission
 
     template_name = "fosdem_registration/registration_overview.html"
@@ -51,8 +52,8 @@ class RegistrationOverview(PermissionRequired, ListView):
         return submissions
 
 
-class RegistrationDetail(PermissionRequired, ListView):
-    permission_required = "orga.fringe_edit"
+class RegistrationDetail(EventPermissionRequired, ListView):
+    permission_required = "orga.view_fosdem_registrations"
     model = FosdemRegistration
     template_name = "fosdem_registration/session.html"
 
@@ -75,7 +76,7 @@ class RegistrationDetail(PermissionRequired, ListView):
         )
 
         context["submission"] = submission
-        context["schedule"] = submission.slots.filter(schedule=event.current_schedule)
+        context["schedule"] = submission.slots.get(schedule=event.current_schedule)
         return context
 
 
@@ -89,28 +90,44 @@ class GuardianWithRegistrationsCreateView(CreateView):
         context = super().get_context_data(**kwargs)
 
         event = Event.objects.get(slug=self.kwargs["event"])
-        submission = Submission.objects.get(
+
+        max_participants_subquery = Answer.objects.filter(
+            submission=OuterRef("pk"),  # link to the submission
+            question=F(
+                "submission__track__fosdemregistrationtrack__max_number_question"
+            ),
+        ).values("answer")[
+            :1
+        ]  # only one answer expected
+
+        submissions = Submission.objects.filter(
             code=self.kwargs["submission_code"],
             track__fosdemregistrationtrack__isnull=False,
             state="confirmed",
             event=event,
+        ).annotate(
+            nr_registrations=Count("fosdemregistration"),
+            max_number=Subquery(max_participants_subquery),
         )
+        if len(submissions) != 1:
+            raise Http404("Submission not found")
+        submission = submissions.first()
+
         if self.request.POST:
             context["formset"] = RegistrationFormSet(self.request.POST)
         else:
-            # start with empty formset
             context["formset"] = RegistrationFormSet(
                 queryset=FosdemRegistration.objects.none()
             )
 
         context["submission"] = submission
+        context["talkslot"] = submission.slots.get(schedule=event.current_schedule)
+
         return context
 
     def form_valid(self, form):
         context = self.get_context_data()
         formset = context["formset"]
-
-        print(context)
 
         formset = RegistrationFormSet(
             self.request.POST,
@@ -138,11 +155,11 @@ class GuardianWithRegistrationsCreateView(CreateView):
             context["submission"] = submission
 
             mail_text = render_to_string("fosdem_registration/mail.txt", context)
-            mail = QueuedMail.objects.create(
-                event=self.request.event,
-                to=guardian.email,
-                subject=f"FOSDEM registration for {context['submission'].title}",
-                text=mail_text,
+            mail = EmailMessage(
+                to=[guardian.email],
+                from_email="FOSDEM Junior<junior-organisers@fosdem.org>",
+                subject=f"FOSDEM JUNIOR registration {context['submission'].title}",
+                body=mail_text,
             )
             mail.send()
 

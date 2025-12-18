@@ -33,7 +33,7 @@ class FosdemRegistration(models.Model):
         validators=[MinValueValidator(0), MaxValueValidator(120)],
         help_text="age in years of kid on the day of the session",
     )
-    special_needs = models.TextField(blank=True)
+    special_needs = models.CharField(blank=True)
 
     def clean(self):
         """Prevent creating a registration if the track is full."""

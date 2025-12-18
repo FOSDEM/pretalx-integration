@@ -2,6 +2,7 @@ from devroom_settings.models import TrackSettings
 from django.core.management.base import BaseCommand, CommandError
 from django_scopes import scope
 from pretalx.event.models import Event
+from pretalx.event.models.organiser import Team
 from pretalx.submission.models import Question
 
 from fosdem_registration.models import FosdemRegistrationTrack
@@ -27,7 +28,13 @@ class Command(BaseCommand):
             question = Question.objects.get(
                 question__icontains="max number of participants", event=event
             )
-            FosdemRegistrationTrack.objects.create(
-                track=tracksettings.track,
-                max_number_question=question,
+            year = event.slug[-4:]
+            teams = Team.objects.filter(name=f"managers-junior-{year}")
+            if len(teams) == 0:
+                print("no team found")
+                exit(1)
+
+            frt = FosdemRegistrationTrack.objects.create(
+                track=tracksettings.track, max_number_question=question
             )
+            frt.teams.set(teams)

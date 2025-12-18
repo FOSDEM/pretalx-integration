@@ -2,6 +2,7 @@
 {% load compress %}
 {% load i18n %}
 {% load static %}
+{% load rich_text %}
 {% block title %}Register for junior session{% endblock title %}
 {% block cfp_header %}
     {% include "cfp/includes/forms_header.html" %}
@@ -22,17 +23,24 @@
 {% else %}
 
 <script src="{% static "common/js/formTools.js" %}" defer></script>
+
+<h2>Registration for "{{submission.title}}"</h2>
 <p>
-    <h2>Registration for "{{submission.title}}"</h2>
-    
-    <p>
-        {{ submission.abstract}}
-    </p>
+<ul>
+    <li>Speaker(s): {{ submission.speakers.all|join:", " }}</li>
+    <li>Number of participants (registered/max): {{ submission.nr_registrations }}/{{ submission.max_number }}</li>
+    <li>{{ talkslot.room }}; {{ talkslot.start }}; {{ talkslot.end }}</li>
+</ul>
+</p>
+
+<p>
+    {{ submission.abstract | rich_text}}
+</p>
 
 
 <h3>Registration info</h3>
 
-<p>bla bla </p>
+<p>privacy statement</p>
 
 <form method="post">
     {% csrf_token %}
