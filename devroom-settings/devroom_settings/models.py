@@ -43,10 +43,18 @@ class TrackSettings(models.Model):
         default=False,
     )
     review_team = models.ForeignKey(
-        Team, on_delete=models.SET_NULL, null=True, related_name="review_track"
+        Team,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="review_track",
+        blank=True,
     )
     manager_team = models.ForeignKey(
-        Team, on_delete=models.SET_NULL, null=True, related_name="manager_track"
+        Team,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="manager_track",
+        blank=True,
     )
     proposal = models.ForeignKey(
         Submission,

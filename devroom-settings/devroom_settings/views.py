@@ -6,10 +6,10 @@ from pathlib import Path
 import pytz
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
-from django.db.models import CharField, F, Value
+from django.db.models import CharField, F, Prefetch, Value
 from django.db.models.functions import Cast
 from django.http import FileResponse, Http404, JsonResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import CreateView, ListView, TemplateView, View
@@ -18,6 +18,7 @@ from django_scopes import scope, scopes_disabled
 from pretalx.common.views.mixins import EventPermissionRequired
 from pretalx.event.forms import TeamInviteForm
 from pretalx.event.models import TeamInvite
+from pretalx.person.models import SpeakerProfile
 from pretalx.schedule.models import Room, TalkSlot
 from pretalx.schedule.utils import guess_schedule_version
 from pretalx.submission.models import Resource, Submission, SubmitterAccessCode, Track
@@ -26,8 +27,48 @@ from devroom_settings.forms import (
     DevroomTrackForm,
     DevroomTrackSettingsForm,
     FosdemFeedbackForm,
+    TrackForm,
+    TrackSettingsForm,
 )
 from devroom_settings.models import FosdemFeedback, RoomSettings, TrackSettings
+
+
+class TrackSettingsView(EventPermissionRequired, TemplateView):
+    permission_required = "event.update_event"
+    template_name = "devroom_settings/tracksettings.html"
+
+    def get(self, request, *args, **kwargs):
+        track = Track.objects.get(pk=kwargs["track_id"])
+        tracksettings = track.tracksettings
+
+        context = {
+            "track": track,
+            "tracksettings": tracksettings,
+            "track_form": TrackForm(instance=track),
+            "tracksettings_form": TrackSettingsForm(instance=tracksettings),
+        }
+        return self.render_to_response(context)
+
+    def post(self, request, *args, **kwargs):
+        track = Track.objects.get(pk=kwargs["track_id"])
+        tracksettings = track.tracksettings
+
+        track_form = TrackForm(request.POST, instance=track)
+        tracksettings_form = TrackSettingsForm(request.POST, instance=tracksettings)
+
+        if track_form.is_valid() and tracksettings_form.is_valid():
+            track_form.save()
+            tracksettings_form.track = track
+            tracksettings_form.save()
+            return redirect(request.path)
+
+        context = {
+            "track": track,
+            "tracksettings": tracksettings,
+            "track_form": track_form,
+            "tracksettings_form": tracksettings_form,
+        }
+        return self.render_to_response(context)
 
 
 class DevroomReport(EventPermissionRequired, ListView):
@@ -149,11 +190,31 @@ class DevroomDashboard(EventPermissionRequired, TemplateView):
         return self.get(request, *args, **kwargs)
 
 
-class MatrixExport(EventPermissionRequired, View):
-    permission_required = "submission.orga_update_submission"
+def event_matrix_ids(event):
+    with scope(event=event):
+        q = event.questions.get(question__icontains="matrix_id")
+    answers = q.answers.all()
+    return {answer.person.pk: answer.answer for answer in answers}
+
+
+from pretalx.common.auth import UserTokenAuthentication
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
+
+
+class MatrixExport(APIView):
     model = Submission
+    authentication_classes = [UserTokenAuthentication]
+    permission_classes = [
+        IsAuthenticated,
+    ]
 
     def get(self, request, **kwargs):
+        if not request.user.has_perm(
+            "submission.orga_update_submission", request.event
+        ):
+            raise PermissionDenied()
+
         talks = []
 
         track_room = {}
@@ -162,6 +223,7 @@ class MatrixExport(EventPermissionRequired, View):
             "submission__speakers"
         ).prefetch_related("submission__track__tracksettings__manager_team__members")
 
+        matrix_ids = event_matrix_ids(self.request.event)
         for slot in schedule.all():
             if slot.submission.track.tracksettings.track_type not in [
                 "MT",
@@ -178,7 +240,7 @@ class MatrixExport(EventPermissionRequired, View):
                     "event_role": "speaker",
                     "name": s.name,
                     "email": s.email,
-                    "matrix_id": s.matrix_id,
+                    "matrix_id": matrix_ids.get(s.pk),
                 }
                 persons.append(person_data)
             for s in slot.submission.track.tracksettings.manager_team.members.all():
@@ -187,7 +249,7 @@ class MatrixExport(EventPermissionRequired, View):
                     "event_role": "coordinator",
                     "name": s.name,
                     "email": s.email,
-                    "matrix_id": s.matrix_id,
+                    "matrix_id": matrix_ids.get(s.pk),
                 }
                 persons.append(person_data)
 
@@ -231,7 +293,7 @@ class MatrixExport(EventPermissionRequired, View):
                     "event_role": "coordinator",
                     "name": p.name,
                     "email": p.email,
-                    "matrix_id": p.matrix_id,
+                    "matrix_id": matrix_ids.get(p.pk),
                 }
                 persons.append(person_data)
             tracks.append(
