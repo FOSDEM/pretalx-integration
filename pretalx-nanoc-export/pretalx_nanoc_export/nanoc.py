@@ -122,9 +122,7 @@ def fosdem_slug(self):
     slug = sanitize(orig_slug)
     slug = slug[:80]
     # code is attached, so we are sure this is unique
-    # return self.submission.code + '-' + slug
-    # or we are bold and assume no duplicate slugs occur
-    return slug
+    return self.submission.code + "-" + slug
 
 
 TalkSlot.fosdem_slug = property(fosdem_slug)
