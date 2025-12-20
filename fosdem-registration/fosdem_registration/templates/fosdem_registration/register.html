@@ -16,7 +16,7 @@
   <ul>
     <li>Title: {{ submission.title }}</li>
     <li>Speakers: {{ submission.speakers.all|join:", " }}</li>
-    <li>{{ talkslot.room }}; {{ talkslot.start }}; {{ talkslot.end }}</li>
+    <li>room: {{ talkslot.room }}; time: {{ talkslot.start |date:"Y-m-d H:i" }}-{{ talkslot.end |date:"H:i" }}</li>
   </ul>
   <h4>Parent/Guardian</h4>
   <ul>
@@ -45,7 +45,7 @@
 <ul>
     <li>Speaker(s): {{ submission.speakers.all|join:", " }}</li>
     <li>Number of participants (registered/max): {{ submission.nr_registrations }}/{{ submission.max_number }}</li>
-    <li>{{ talkslot.room }}; {{ talkslot.start }}; {{ talkslot.end }}</li>
+    <li>{{ talkslot.room }}; {{ talkslot.start |date:"Y-m-d H:i" }}-{{ talkslot.end |date:"H:i" }}</li>
 </ul>
 </p>
 
@@ -68,6 +68,8 @@ We are as concerned as you are with sharing private data, especially for childre
   <li>Your data is stored on servers in Europe. We take appropriate technical and organizational measures to protect it from unauthorized access or disclosure.</li>
   <li>You can withdraw your registration or remove your data by mailing to junior-administrator@fosdem.org</li>
 </ul>
+
+By proceeding with the registration, you consent to the processing of your personal data as described above.
 
 </p>
 

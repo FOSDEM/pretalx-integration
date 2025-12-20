@@ -4,7 +4,7 @@ We have registered the following data
 Session:
 - Title: {{ submission.title }}
 - Speakers: {{ submission.speakers.all|join:", " }}
-- {{ talkslot.room }}; {{ talkslot.start }}; {{ talkslot.end }}
+- room {{ talkslot.room }}; {{ talkslot.start |date:"Y-m-d H:i" }}-{{ talkslot.end |date:"H:i" }}
 
 Parent/Guardian:
 - Name: {{ guardian_submitted.name }}

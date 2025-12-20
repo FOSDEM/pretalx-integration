@@ -5,11 +5,14 @@
 
 {% block content %}
 <h2>Registrations for {{ submission.title }}</h2>
+<ul>
 {% if schedule %}
-        <p>Scheduled: {{ talkslot.start|date:"D, d M Y H:i" }} – {{ talkslot.end|date:"H:i" }} in {{ talkslot.room.name }}</p>
+        <li>Scheduled: {{ talkslot.start|date:"D, d M Y H:i" }} – {{ talkslot.end|date:"H:i" }} in {{ talkslot.room.name }}</li>
 {% else %}
-    <p>Not yet scheduled.</p>
+    <li>Not yet scheduled.</li>
 {% endif %}
+<li>public link: <a href="{% url 'register_person' submission.code %}">{% url 'register_person' submission.code %}</a> </li>
+</ul>
 <table>
     <thead>
         <tr>
