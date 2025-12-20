@@ -10,8 +10,21 @@
 {% block content %}
 
 {% if correct_submitted %}
-  <h2>Thank you, {{ guardian_submitted.name }}!</h2>
-  <p>We have registered the following participants:</p>
+  <h2>Thank you!</h2>
+  <p>We have registered the following data</p>
+  <h4>Session</h4>
+  <ul>
+    <li>Title: {{ submission.title }}</li>
+    <li>Speakers: {{ submission.speakers.all|join:", " }}</li>
+    <li>{{ talkslot.room }}; {{ talkslot.start }}; {{ talkslot.end }}</li>
+  </ul>
+  <h4>Parent/Guardian</h4>
+  <ul>
+     <li>name: {{ guardian_submitted.name }}</li>
+     <li>email: {{ guardian_submitted.email }}</li>
+     <li>phone: {{ guardian_submitted.contact_number }}</li>
+  </ul>
+  <h4>participants</h4>
   <ul>
     {% for participant in registrations_submitted %}
       <li>{{ participant.nickname }} — Age: {{ participant.age }}
@@ -19,6 +32,9 @@
       </li>
     {% endfor %}
   </ul>
+  <p>
+  Continue to the <a href="https://fosdem.org/2026/schedule/track/junior/">FOSDEM Junior schedule</a>.
+  </p>
 
 {% else %}
 
@@ -39,8 +55,21 @@
 
 
 <h3>Registration info</h3>
+<h4>Privacy statement</h4>
+<p>
 
-<p>privacy statement</p>
+We are as concerned as you are with sharing private data, especially for children.
+
+<ul>
+  <li>This data will only be used for coordinating the FOSDEM Junior track at FOSDEM. We will not sell, rent, or share your data with third parties.</li>
+  <li>It will only be made available to the organisers of the track.</li>
+  <li>We will remove the data from our systems no later than 14 days after the event.</li>
+  <li>We allow giving nicknames so no actual names of children are shared.</li>
+  <li>Your data is stored on servers in Europe. We take appropriate technical and organizational measures to protect it from unauthorized access or disclosure.</li>
+  <li>You can withdraw your registration or remove your data by mailing to junior-administrator@fosdem.org</li>
+</ul>
+
+</p>
 
 <form method="post">
     {% csrf_token %}

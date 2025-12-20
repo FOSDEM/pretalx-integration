@@ -6,9 +6,7 @@
 {% block content %}
 <h2>Registrations for {{ submission.title }}</h2>
 {% if schedule %}
-    {% for slot in schedule %}
-        <p>Scheduled: {{ slot.start|date:"D, d M Y H:i" }} – {{ slot.end|date:"H:i" }} in {{ slot.room.name }}</p>
-    {% endfor %}
+        <p>Scheduled: {{ talkslot.start|date:"D, d M Y H:i" }} – {{ talkslot.end|date:"H:i" }} in {{ talkslot.room.name }}</p>
 {% else %}
     <p>Not yet scheduled.</p>
 {% endif %}

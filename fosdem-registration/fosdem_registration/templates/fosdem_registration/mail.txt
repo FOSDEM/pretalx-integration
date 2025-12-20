@@ -1,11 +1,21 @@
 Hello {{ guardian.name }},
+We have registered the following data
 
-We have succesfully received the registration for
+Session:
+- Title: {{ submission.title }}
+- Speakers: {{ submission.speakers.all|join:", " }}
+- {{ talkslot.room }}; {{ talkslot.start }}; {{ talkslot.end }}
 
+Parent/Guardian:
+- Name: {{ guardian_submitted.name }}
+- Email: {{ guardian_submitted.email }}
+- Phone: {{ guardian_submitted.contact_number }}
+
+Participants:
 {% for participant in registrations_submitted %}
-* {{ participant.nickname }} ({{ participant.age }})
+- {{ participant.nickname }} — Age: {{ participant.age }}{% if participant.special_needs %} - Special needs: {{ participant.special_needs }}{% endif %}
 {% endfor %}
 
-for the session {{ submission.title }} which is scheduled at
+If there are any more issues, contact junior-organisers@fosdem.org
 
 See you in Brussels!
