@@ -75,6 +75,8 @@ class RegistrationDetail(EventPermissionRequired, ListView):
             event=event,
         )
 
+        talkslot = submission.slots.get(schedule=event.current_schedule)
+        context["talkslot"] = talkslot
         context["submission"] = submission
         context["schedule"] = submission.slots.get(schedule=event.current_schedule)
         return context

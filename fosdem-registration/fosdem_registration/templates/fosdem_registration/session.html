@@ -11,7 +11,7 @@
 {% else %}
     <li>Not yet scheduled.</li>
 {% endif %}
-<li>public link: <a href="{% url 'register_person' submission.code %}">{% url 'register_person' submission.code %}</a> </li>
+<li>public link: <a href="{% url 'plugins:fosdem_registration:register_person' submission_code=submission.code event=request.event.slug  %}">{% url 'plugins:fosdem_registration:register_person' submission_code=submission.code  event=request.event.slug %}</a> </li>
 </ul>
 <table>
     <thead>
