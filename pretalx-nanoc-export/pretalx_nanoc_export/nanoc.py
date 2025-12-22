@@ -13,6 +13,7 @@ import yaml
 from django.conf import settings
 from django.db.models import Count, DurationField, ExpressionWrapper, F, Prefetch, Q
 from django.forms.models import model_to_dict
+from django.urls import reverse
 from django.utils.functional import cached_property
 from django_scopes import scope
 from PIL import Image, UnidentifiedImageError
@@ -482,6 +483,18 @@ class NanocExporter(ScheduleData):
                                 self.dest_dir / destination.with_suffix(".yaml"), "w"
                             ) as metadatafile:
                                 metadatafile.write(yaml.safe_dump(attachment))
+                    try:
+                        track.fosdemregistrationtrack
+                    except:
+                        registration_link = None
+                    else:
+                        registration_link = settings.SITE_URL.rstrip("/") + reverse(
+                            "plugins:fosdem_registration:register_person",
+                            kwargs={
+                                "event": self.event.slug,
+                                "submission_code": talk.submission.code,
+                            },
+                        )
 
                     talks[talk.fosdem_slug] = {
                         "event_id": talk.submission.pk,
@@ -528,6 +541,7 @@ class NanocExporter(ScheduleData):
                         "attachments": attachments,
                         "links": links,
                         "feedback_url": talk.submission.urls.feedback.full(),
+                        "registration_link": registration_link,
                     }
                     if track.tracksettings.track_type not in ["J", "B"]:
                         talks[talk.fosdem_slug] |= {
