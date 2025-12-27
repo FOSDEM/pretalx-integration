@@ -109,7 +109,10 @@ class RoomSettings(models.Model):
         help_text="Should content of this room be exported to the website",
         default=True,
     )
-    control_password = models.CharField(
+    control_password_day1 = models.CharField(
+        "Password Video control", blank=True, null=True, max_length=64
+    )
+    control_password_day2 = models.CharField(
         "Password Video control", blank=True, null=True, max_length=64
     )
 

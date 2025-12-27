@@ -1,5 +1,3 @@
-import csv
-
 from django.core.management.base import BaseCommand
 from django.db.models import Q
 from django_scopes import scope
@@ -22,25 +20,36 @@ class Command(BaseCommand):
         event = Event.objects.get(slug=event_slug)
 
         with open(csv_file_path, "r") as file:
-            reader = csv.DictReader(file)
-
-            for row in reader:
-                room_name = row["room_name"]
-                password = row["password"]
+            for line in file:
+                day_room, password = line.split(":")
+                try:
+                    day, room_slug = day_room.split("-")
+                except ValueError:
+                    print(f"skipping {day_room}, not a day-devroom combination")
+                    continue
 
                 with scope(event=event):
                     room = (
                         Room.objects.filter(event=event)
-                        .filter(Q(name=room_name) | Q(name__icontains=room_name))
+                        .filter(Q(name=room_slug) | Q(name__icontains=room_slug))
                         .first()
                     )
 
+                if room is None:
+                    print(f"skipping {room_slug}, not known in pretalx")
+                    continue
                 room_settings, _ = RoomSettings.objects.get_or_create(room=room)
-                room_settings.control_password = password
-                room_settings.save()
+                if day == "1":
+                    room_settings.control_password_day1 = password
+                elif day == "2":
+                    room_settings.control_password_day2 = password
+                else:
+                    raise ValueError("invalid day")
+
+                # room_settings.save()
 
                 self.stdout.write(
                     self.style.SUCCESS(
-                        f"Successfully imported password for room: {room_name}"
+                        f"Successfully imported password for room: {room}"
                     )
                 )
