@@ -35,11 +35,13 @@ class FringeActivity(models.Model):
     UNHANDLED = "unhandled"
     TRUE = "true"
     FALSE = "false"
+    REMOVED = "removed"
 
     ONLINE_CHOICES = [
         (UNHANDLED, "Unhandled"),
         (TRUE, "True"),
         (FALSE, "False"),
+        (REMOVED, "Removed"),
     ]
 
     online = models.CharField(

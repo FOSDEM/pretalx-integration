@@ -60,7 +60,10 @@ class FringeActivityListView(PermissionRequired, ListView):
     context_object_name = "fringe_activities"  # Name for the context in the template
 
     def get_queryset(self):
-        return FringeActivity.objects.filter(event=self.request.event)
+        queryset = FringeActivity.objects.filter(event=self.request.event)
+        if self.request.GET.get("show_removed") != "true":
+            queryset = queryset.exclude(online=FringeActivity.REMOVED)
+        return queryset
 
 
 class FringeCreateView(LoginRequiredMixin, CreateView):

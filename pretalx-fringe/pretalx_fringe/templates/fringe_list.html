@@ -6,6 +6,11 @@
 {% block content %}
 
 <h2>Fringe Activity Submissions</h2>
+{% if request.GET.show_removed == "true" %}
+    <a href="?show_removed=false">Hide removed submissions</a>
+{% else %}
+    <a href="?show_removed=true">Show removed submissions</a>
+{% endif %}
 <div class="table-responsive">
 <table class="table table-sm table-hover table-flip">
     <thead><tr><th>online</th><th>name</th><th>url</th><th>edit</th></tr></thead>
