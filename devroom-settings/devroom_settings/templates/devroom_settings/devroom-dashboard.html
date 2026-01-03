@@ -49,6 +49,19 @@
 	    </div>
 	</div>   
 	    {{ track_settings_form.on_website.as_field_group }}
+	<div class="form-group row">
+	    <div class="col-md-3"></div>
+	    <div class="col-md-9">
+		<h3>During the event</h3>
+		Use these links to access the control dashboard of your (physical) room. You can share the username and password to team members managing the room.
+		<ul>
+			{% for item in video_room %}
+			<li><a href="{{ item }}">{{ item }}</a></li>
+			{% endfor %}
+
+		</ul>
+	    </div>
+	</div>   
     {% include "orga/includes/submit_row.html" %}
 
 </form>

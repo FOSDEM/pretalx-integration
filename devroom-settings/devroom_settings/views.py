@@ -1,7 +1,6 @@
 import collections
 import json
 import logging
-from pathlib import Path
 
 import pytz
 from django.conf import settings
@@ -149,6 +148,40 @@ class DevroomDashboard(EventPermissionRequired, TemplateView):
             slug=track_slug,
         )
 
+    def get_video_room_days(self, track):
+        with scope(event=self.request.event):
+            day_rooms = (
+                TalkSlot.objects.filter(submission__track=track, room__isnull=False)
+                .select_related("room", "room__roomsettings")
+                .annotate(
+                    day=F("start__date__iso_week_day"),
+                    room_name=F("room__name"),
+                )
+                .values(
+                    "day",
+                    "room_name",
+                    "room__roomsettings__control_password_day1",
+                    "room__roomsettings__control_password_day2",
+                )
+                .distinct()
+            )
+
+            video_urls = set()
+            for item in day_rooms:
+                day = item["day"] - 5
+                if day not in (1, 2):
+                    raise ValueError("invalid day for FOSDEM")
+                pw = (
+                    item["room__roomsettings__control_password_day1"]
+                    if day == 1
+                    else item["room__roomsettings__control_password_day2"]
+                )
+                if pw is not None:
+                    video_urls.add(
+                        f"https://{day}-{item['room_name']}:{pw}@control.video.fosdem.org"
+                    )
+        return video_urls
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         tracksettings = self.get_queryset()
@@ -165,6 +198,7 @@ class DevroomDashboard(EventPermissionRequired, TemplateView):
             track=track
         ).values_list("code", flat=True)
 
+        context["video_room"] = self.get_video_room_days(track)
         return context
 
     def post(self, request, *args, **kwargs):
@@ -283,7 +317,6 @@ class MatrixExport(APIView):
             .select_related("tracksettings")
             .prefetch_related("tracksettings__manager_team__members")
         )
-        print(track_room)
         tracks = []
         for t in track_objects:
             persons = []
@@ -418,52 +451,6 @@ class VideoSubmissionView(EventPermissionRequired, View):
         except Resource.DoesNotExist:
             data = []
         return JsonResponse(data, safe=False, status=200)
-
-
-def get_track_room_days(tracks):
-    with scopes_disabled():
-        day_rooms = (
-            TalkSlot.objects.filter(submission__track__in=tracks, room__isnull=False)
-            .values_list("start__date__iso_week_day", "room__name")
-            .distinct()
-        )
-        day_rooms = list(day_rooms)
-        day_rooms = {(day - 5, room.localize("en")) for (day, room) in day_rooms}
-
-    return day_rooms
-
-
-class VideoInstructionsView(EventPermissionRequired, View):
-    permission_required = "submission.orga_update_submission"
-
-    def get(self, request, room, day, **kwargs):
-        teams = self.request.user.teams.all()
-        tracks = Track.objects.filter(
-            tracksettings__manager_team__in=teams, event=self.request.event
-        )
-        day_rooms = get_track_room_days(tracks)
-
-        if not (int(day), room) in day_rooms:
-            msg = f"{day}, {room} supplied, not part of {day_rooms}"
-            print(msg)
-            raise PermissionDenied(msg)
-
-        file_path = (
-            Path(settings.MEDIA_ROOT)
-            / f"{self.request.event.slug}/video_instructions/{day}-{room}.pdf"
-        )
-        if not file_path.exists():
-            return HttpResponse("File not found", status=404)
-        file = open(file_path, "rb")
-        response = FileResponse(file)
-
-        # Set the content type for the response
-        response["Content-Type"] = "application/pdf"
-
-        # Set the Content-Disposition header to force download
-        response["Content-Disposition"] = f'attachment; filename="{file_path.name}"'
-
-        return response
 
 
 class FeedbackCreateView(CreateView):
