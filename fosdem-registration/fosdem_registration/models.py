@@ -32,7 +32,7 @@ class FosdemRegistration(models.Model):
     nickname = models.CharField(help_text="child name or nickname")
     age = models.IntegerField(
         validators=[MinValueValidator(0), MaxValueValidator(120)],
-        help_text="age in years of kid on the day of the session",
+        help_text="age in years of child on the day of the session",
     )
     special_needs = models.CharField(blank=True)
 
@@ -45,13 +45,15 @@ class FosdemRegistration(models.Model):
 
         reg_track = FosdemRegistrationTrack.objects.get(track=track)
 
-        current_count = FosdemRegistration.objects.filter(session__track=track).count()
+        current_count = FosdemRegistration.objects.filter(session=self.session).count()
         max_number = int(
             self.session.answers.get(question=reg_track.max_number_question).answer
         )
+        print(f"current_count: {current_count}; max_number: {max_number}")
         if current_count >= max_number:
+            print("max reached")
             raise ValidationError(
-                f"Registration limit ({reg_track.max_number}) reached for {track}."
+                f"Registration limit ({reg_track.max_number_question}) reached for {track}."
             )
 
     def save(self, *args, **kwargs):
