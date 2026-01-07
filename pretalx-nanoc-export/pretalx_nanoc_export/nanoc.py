@@ -1,6 +1,6 @@
 import datetime
+import logging
 import os
-import re
 import shutil
 from collections import defaultdict
 from functools import lru_cache
@@ -22,9 +22,12 @@ from pretalx.person.models import SpeakerProfile
 from pretalx.schedule.exporters import ScheduleData
 from pretalx.schedule.models import Room, TalkSlot
 from pretalx.submission.models import Submission, Track
-from unidecode import unidecode
+
+from devroom_settings.models import sanitize
 
 tz = pytz.timezone("Europe/Brussels")
+
+logger = logging.getLogger(__name__)
 
 
 def represent_time(dumper, data):
@@ -52,20 +55,6 @@ yaml.add_representer(datetime.datetime, represent_datetime)
 from yaml.representer import Representer
 
 yaml.add_representer(defaultdict, Representer.represent_dict)
-
-
-def sanitize(b):
-    b = unidecode(b.lower())
-
-    b = re.sub(r"\/+", "", b)
-    b = re.sub(r"\s+", "_", b)
-    b = re.sub(r'["\']+', "", b)
-    b = re.sub(r"[^0-9A-Za-z\-]", "_", b)
-    b = re.sub(r"_+", "_", b)
-    b = re.sub(r"^_", "", b)
-    b = re.sub(r"_$", "", b)
-
-    return b
 
 
 def sanitize_filename(filename):
@@ -228,6 +217,7 @@ class NanocExporter(ScheduleData):
             - bb
 
         """
+        logger.debug("Generating rooms for nanoc export")
         schedule = self.schedule
         rooms = (
             Room.objects.annotate(
@@ -309,6 +299,7 @@ class NanocExporter(ScheduleData):
 
     @cached_property
     def tracks(self):
+        logger.debug("Generating tracks for nanoc export")
         tracks = (
             Track.objects.filter(event=self.event)
             .exclude(tracksettings__track_type="LLT")
@@ -386,6 +377,7 @@ class NanocExporter(ScheduleData):
 
     @cached_property
     def talks(self, matrix_links=True, feedback_links=True):
+        logger.debug("Generating talks for nanoc export")
         talks = {}
         for day in self.data:
             for room in day["rooms"]:
@@ -563,6 +555,7 @@ class NanocExporter(ScheduleData):
 
     @cached_property
     def days(self):
+        logger.debug("Generating days for nanoc export")
         tz = pytz.timezone(self.event.timezone)
         days = {}
         for day in self.data:
@@ -601,6 +594,7 @@ class NanocExporter(ScheduleData):
 
     @cached_property
     def speakers(self):
+        logger.debug("Generating speakers for nanoc export")
         # speakers = talk_slot.submission.speakers.all()
         speakers_dict = {}
         for day in self.data:
@@ -699,6 +693,7 @@ class NanocExporter(ScheduleData):
 
     @cached_property
     def fringe(self):
+        logger.debug("Generating fringe activities for nanoc export")
         try:
             from pretalx_fringe.models import FringeActivity
         except ImportError:
