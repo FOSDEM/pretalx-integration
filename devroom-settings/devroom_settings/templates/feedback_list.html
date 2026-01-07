@@ -7,7 +7,6 @@
             <tr>
 		<td>#</th>
                 <th>Submission</th>
-                <th>Personal Knowledge</th>
                 <th>Content Importance</th>
                 <th>Content Quality</th>
                 <th>Presentation Quality</th>
@@ -20,7 +19,6 @@
                 <tr>
 		    <td>{{ forloop.counter }}</td>
                     <td>{{ feedback.submission.title }}</td>
-                    <td>{{ feedback.get_personal_knowledge_display }}</td>
                     <td>{{ feedback.get_content_importance_display }}</td>
                     <td>{{ feedback.get_content_quality_display }}</td>
                     <td>{{ feedback.get_presentation_quality_display }}</td>
