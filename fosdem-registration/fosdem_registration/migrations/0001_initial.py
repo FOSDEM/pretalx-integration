@@ -22,9 +22,26 @@ class Migration(migrations.Migration):
                         auto_created=True, primary_key=True, serialize=False
                     ),
                 ),
-                ("name", models.CharField(max_length=200)),
-                ("email", models.EmailField(max_length=254)),
-                ("contact_number", models.CharField(max_length=20)),
+                (
+                    "name",
+                    models.CharField(
+                        max_length=200, help_text="Name of parent or guardian"
+                    ),
+                ),
+                (
+                    "email",
+                    models.EmailField(
+                        max_length=254,
+                        help_text="Email address of parent or guardian. Registration confirmation will be sent here",
+                    ),
+                ),
+                (
+                    "contact_number",
+                    models.CharField(
+                        max_length=20,
+                        help_text="Emergency phone number of parent or guardian",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
@@ -36,9 +53,25 @@ class Migration(migrations.Migration):
                         auto_created=True, primary_key=True, serialize=False
                     ),
                 ),
-                ("nickname", models.CharField()),
-                ("age", models.IntegerField()),
-                ("special_needs", models.TextField()),
+                (
+                    "nickname",
+                    models.CharField(
+                        max_length=100, help_text="child name or nickname"
+                    ),
+                ),
+                (
+                    "age",
+                    models.IntegerField(
+                        help_text="age in years of child on the day of the session"
+                    ),
+                ),
+                ("special_needs", models.CharField(max_length=400, blank=True)),
+                (
+                    "removed",
+                    models.BooleanField(
+                        default=False, help_text="registration removed"
+                    ),
+                ),
                 (
                     "session",
                     models.ForeignKey(
