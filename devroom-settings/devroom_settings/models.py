@@ -1,43 +1,10 @@
-import re
-
 from django.db import models
 from django.utils.text import slugify
 from django_scopes import ScopedManager
 from pretalx.event.models import Team
 from pretalx.person.models import User
-from pretalx.schedule.models import Room, TalkSlot
+from pretalx.schedule.models import Room
 from pretalx.submission.models import Submission, Track
-from unidecode import unidecode
-
-
-def sanitize(b):
-    b = unidecode(b.lower())
-
-    b = re.sub(r"\/+", "", b)
-    b = re.sub(r"\s+", "_", b)
-    b = re.sub(r'["\']+', "", b)
-    b = re.sub(r"[^0-9A-Za-z\-]", "_", b)
-    b = re.sub(r"_+", "_", b)
-    b = re.sub(r"^_", "", b)
-    b = re.sub(r"_$", "", b)
-
-    return b
-
-
-def fosdem_slug(self):
-    try:
-        q = submission_slug_question(self.event.pk)
-        orig_slug = self.submission.answers.get(question=q).answer
-    except:
-        orig_slug = self.submission.title
-
-    slug = sanitize(orig_slug)
-    slug = slug[:80]
-    # code is attached, so we are sure this is unique
-    return self.submission.code + "-" + slug
-
-
-TalkSlot.fosdem_slug = property(fosdem_slug)
 
 
 class TrackSettings(models.Model):

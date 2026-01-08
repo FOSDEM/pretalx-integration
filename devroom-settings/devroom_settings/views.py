@@ -478,7 +478,7 @@ class FeedbackCreateView(CreateView):
 
     def get_success_url(self):
         # Redirect to a success page or adjust as needed
-        return f"https://fosdem.org/schedule/event/{self.submission.slots.first().fosdem_slug}"
+        return f"https://fosdem.org/schedule/event/{self.submission.slots.first().frab_slug}"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

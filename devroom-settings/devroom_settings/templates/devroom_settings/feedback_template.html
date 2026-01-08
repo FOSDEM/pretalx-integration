@@ -20,6 +20,7 @@
     </p>
     <form method="post" action="">
         {% csrf_token %}
+        {{ form.personal_knowledge.as_field_group }}
         {{ form.content_importance.as_field_group }}
         {{ form.content_quality.as_field_group }}
         {{ form.presentation_quality.as_field_group }}
