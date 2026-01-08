@@ -29,12 +29,13 @@ class FosdemRegistration(models.Model):
     registering_person = models.ForeignKey(
         to=FosdemRegistrationGuardian, on_delete=models.CASCADE
     )
-    nickname = models.CharField(help_text="child name or nickname")
+    nickname = models.CharField(max_length=100, help_text="child name or nickname")
     age = models.IntegerField(
         validators=[MinValueValidator(0), MaxValueValidator(120)],
         help_text="age in years of child on the day of the session",
     )
-    special_needs = models.CharField(blank=True)
+    special_needs = models.CharField(max_length=400, blank=True)
+    removed = models.BooleanField(default=False, help_text="registration removed")
 
     def clean(self):
         """Prevent creating a registration if the track is full."""
