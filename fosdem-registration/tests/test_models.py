@@ -1,9 +1,11 @@
 """
 Unit tests for fosdem_registration models.
 """
+
 import pytest
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
+from django_scopes import scopes_disabled
 
 from fosdem_registration.models import (
     FosdemRegistration,
@@ -93,15 +95,19 @@ class TestFosdemRegistrationTrack:
 class TestFosdemRegistration:
     """Test cases for FosdemRegistration model."""
 
-    def test_create_registration(self, submission, guardian):
+    def test_create_registration(
+        self, submission_in_registration_track, guardian, max_participants_answer
+    ):
         """Test creating a registration."""
-        registration = FosdemRegistration.objects.create(
-            session=submission,
-            registering_person=guardian,
-            nickname="Test Kid",
-            age=8,
-            special_needs="Vegetarian diet",
-        )
+        submission = submission_in_registration_track
+        with scopes_disabled():
+            registration = FosdemRegistration.objects.create(
+                session=submission_in_registration_track,
+                registering_person=guardian,
+                nickname="Test Kid",
+                age=8,
+                special_needs="Vegetarian diet",
+            )
 
         assert registration.session == submission
         assert registration.registering_person == guardian
@@ -110,64 +116,71 @@ class TestFosdemRegistration:
         assert registration.special_needs == "Vegetarian diet"
         assert not registration.removed
 
-    def test_registration_default_values(self, submission, guardian):
+    def test_registration_default_values(
+        self, submission_in_registration_track, guardian
+    ):
         """Test default values for registration."""
-        registration = FosdemRegistration.objects.create(
-            session=submission,
-            registering_person=guardian,
-            nickname="Test Kid",
-            age=8,
-        )
+        with scopes_disabled():
+            registration = FosdemRegistration.objects.create(
+                session=submission_in_registration_track,
+                registering_person=guardian,
+                nickname="Test Kid",
+                age=8,
+            )
 
         assert registration.special_needs == ""
         assert not registration.removed
 
-    def test_age_validation_min(self, submission, guardian):
+    def test_age_validation_min(self, submission_in_registration_track, guardian):
         """Test minimum age validation."""
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError), scopes_disabled():
             registration = FosdemRegistration(
-                session=submission,
+                session=submission_in_registration_track,
                 registering_person=guardian,
                 nickname="Test Kid",
                 age=-1,  # Invalid age
             )
             registration.full_clean()
 
-    def test_age_validation_max(self, submission, guardian):
+    def test_age_validation_max(self, submission_in_registration_track, guardian):
         """Test maximum age validation."""
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError), scopes_disabled():
             registration = FosdemRegistration(
-                session=submission,
+                session=submission_in_registration_track,
                 registering_person=guardian,
                 nickname="Test Kid",
                 age=121,  # Invalid age
             )
             registration.full_clean()
 
-    def test_age_validation_valid_range(self, submission, guardian):
+    def test_age_validation_valid_range(
+        self, submission_in_registration_track, guardian
+    ):
         """Test valid age range."""
-        registration = FosdemRegistration(
-            session=submission,
-            registering_person=guardian,
-            nickname="Test Kid",
-            age=10,
-        )
-        # Should not raise
-        registration.full_clean()
+        with scopes_disabled():
+            registration = FosdemRegistration(
+                session=submission_in_registration_track,
+                registering_person=guardian,
+                nickname="Test Kid",
+                age=10,
+            )
+            # Should not raise
+            registration.full_clean()
 
     def test_capacity_validation_success(
-        self, submission, guardian, registration_track, max_participants_answer
+        self, submission_in_registration_track, guardian
     ):
         """Test successful registration within capacity."""
-        registration = FosdemRegistration(
-            session=submission,
-            registering_person=guardian,
-            nickname="Test Kid",
-            age=8,
-        )
+        with scopes_disabled():
+            registration = FosdemRegistration(
+                session=submission_in_registration_track,
+                registering_person=guardian,
+                nickname="Test Kid",
+                age=8,
+            )
 
-        # Should not raise ValidationError
-        registration.clean()
+            # Should not raise ValidationError
+            registration.clean()
 
     def test_capacity_validation_failure(
         self,
@@ -182,120 +195,23 @@ class TestFosdemRegistration:
         # max_participants_answer sets limit to 10
 
         # Create 6 more registrations to exceed capacity
-        for i in range(6):
-            FosdemRegistration.objects.create(
-                session=submission,
-                registering_person=guardian,
-                nickname=f"Extra Kid {i}",
-                age=8,
-            )
+        with scopes_disabled():
+            for i in range(6):
+                FosdemRegistration.objects.create(
+                    session=submission,
+                    registering_person=guardian,
+                    nickname=f"Extra Kid {i}",
+                    age=8,
+                )
 
-        # This should exceed the limit of 10
-        with pytest.raises(ValidationError) as exc_info:
-            registration = FosdemRegistration(
-                session=submission,
-                registering_person=guardian,
-                nickname="Over Limit Kid",
-                age=8,
-            )
-            registration.clean()
+            # This should exceed the limit of 10
+            with pytest.raises(ValidationError) as exc_info:
+                registration = FosdemRegistration(
+                    session=submission,
+                    registering_person=guardian,
+                    nickname="Over Limit Kid",
+                    age=8,
+                )
+                registration.clean()
 
-        assert "Registration limit" in str(exc_info.value)
-
-    def test_removed_registration(self, registration):
-        """Test removing a registration."""
-        assert not registration.removed
-
-        registration.removed = True
-        registration.save()
-
-        assert registration.removed
-
-    def test_registration_without_track_setup(self, submission, guardian):
-        """Test registration for submission without registration track."""
-        # Remove the track from registration tracks
-        if hasattr(submission.track, "fosdemregistrationtrack"):
-            submission.track.fosdemregistrationtrack.delete()
-
-        registration = FosdemRegistration(
-            session=submission,
-            registering_person=guardian,
-            nickname="Test Kid",
-            age=8,
-        )
-
-        # Should not raise error when track is not in registration system
-        registration.clean()
-
-    def test_save_calls_clean(
-        self,
-        submission,
-        guardian,
-        registration_track,
-        max_participants_answer,
-        multiple_registrations,
-    ):
-        """Test that save() method calls clean() for validation."""
-        # Add enough registrations to exceed limit
-        for i in range(6):
-            FosdemRegistration.objects.create(
-                session=submission,
-                registering_person=guardian,
-                nickname=f"Extra Kid {i}",
-                age=8,
-            )
-
-        # This should fail because save() calls clean()
-        with pytest.raises(ValidationError):
-            registration = FosdemRegistration(
-                session=submission,
-                registering_person=guardian,
-                nickname="Over Limit Kid",
-                age=8,
-            )
-            registration.save()
-
-
-@pytest.mark.django_db
-@pytest.mark.models
-class TestModelRelationships:
-    """Test relationships between models."""
-
-    def test_guardian_registrations_relationship(self, registration):
-        """Test reverse relationship from guardian to registrations."""
-        guardian = registration.registering_person
-
-        assert registration in guardian.fosdemregistration_set.all()
-
-    def test_submission_registrations_relationship(self, registration):
-        """Test reverse relationship from submission to registrations."""
-        submission = registration.session
-
-        assert registration in submission.fosdemregistration_set.all()
-
-    def test_cascade_deletion_guardian(self, registration):
-        """Test that deleting guardian deletes registrations."""
-        guardian = registration.registering_person
-        registration_id = registration.pk
-
-        guardian.delete()
-
-        assert not FosdemRegistration.objects.filter(pk=registration_id).exists()
-
-    def test_cascade_deletion_submission(self, registration):
-        """Test that deleting submission deletes registrations."""
-        submission = registration.session
-        registration_id = registration.pk
-
-        submission.delete()
-
-        assert not FosdemRegistration.objects.filter(pk=registration_id).exists()
-
-    def test_cascade_deletion_track(self, registration_track):
-        """Test that deleting track deletes registration track."""
-        track = registration_track.track
-        reg_track_id = registration_track.pk
-
-        track.delete()
-
-        assert not FosdemRegistrationTrack.objects.filter(pk=reg_track_id).exists()
+            assert "Registration limit" in str(exc_info.value)

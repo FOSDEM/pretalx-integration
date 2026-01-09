@@ -1,6 +1,7 @@
 """
 Very simple test to check if pytest-django is working.
 """
+
 import pytest
 
 

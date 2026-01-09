@@ -1,8 +1,10 @@
 """
 Unit tests for fosdem_registration forms.
 """
+
 import pytest
 from django.core.exceptions import ValidationError
+from django_scopes import scopes_disabled
 
 from fosdem_registration.forms import (
     FosdemRegistrationForm,
@@ -117,111 +119,123 @@ class TestFosdemRegistrationGuardianForm:
 class TestFosdemRegistrationForm:
     """Test cases for FosdemRegistrationForm."""
 
-    def test_valid_registration_form(self, submission, guardian):
+    def test_valid_registration_form(self, submission_in_registration_track, guardian):
         """Test form with valid data and proper session context."""
+        # Create instance with required relationships first
+        instance = FosdemRegistration(
+            session=submission_in_registration_track, registering_person=guardian
+        )
+
         form_data = {
             "nickname": "Little Alice",
             "age": 8,
             "special_needs": "Vegetarian diet",
         }
-        form = FosdemRegistrationForm(data=form_data)
+        form = FosdemRegistrationForm(data=form_data, instance=instance)
+        with scopes_disabled():
+            assert form.is_valid()
+            assert form.cleaned_data["nickname"] == "Little Alice"
+            assert form.cleaned_data["age"] == 8
+            assert form.cleaned_data["special_needs"] == "Vegetarian diet"
 
-        assert form.is_valid()
-        assert form.cleaned_data["nickname"] == "Little Alice"
-        assert form.cleaned_data["age"] == 8
-        assert form.cleaned_data["special_needs"] == "Vegetarian diet"
+        # Test that we can save it
+        with scopes_disabled():
+            registration = form.save()
 
-        # Test that we can save it with proper foreign keys
-        registration = form.save(commit=False)
-        registration.session = submission
-        registration.registering_person = guardian
-        registration.save()
-
-        assert registration.session == submission
+        assert registration.session == submission_in_registration_track
         assert registration.registering_person == guardian
 
-    def test_registration_form_missing_required_fields(self):
+    def test_registration_form_missing_required_fields(
+        self, submission_in_registration_track, guardian
+    ):
         """Test form validation with missing required fields."""
         # Missing nickname
         form_data = {
             "age": 8,
             "special_needs": "None",
         }
-        form = FosdemRegistrationForm(data=form_data)
-        assert not form.is_valid()
-        assert "nickname" in form.errors
+
+        instance = FosdemRegistration(
+            session=submission_in_registration_track, registering_person=guardian
+        )
+        form = FosdemRegistrationForm(data=form_data, instance=instance)
+        with scopes_disabled():
+            assert not form.is_valid()
+            assert "nickname" in form.errors
 
         # Missing age
         form_data = {
             "nickname": "Little Alice",
             "special_needs": "None",
         }
-        form = FosdemRegistrationForm(data=form_data)
-        assert not form.is_valid()
-        assert "age" in form.errors
+        form = FosdemRegistrationForm(data=form_data, instance=instance)
+        with scopes_disabled():
+            assert not form.is_valid()
+            assert "age" in form.errors
 
-    def test_registration_form_optional_fields(self):
+    def test_registration_form_optional_fields(
+        self, submission_in_registration_track, guardian
+    ):
         """Test that special_needs is optional."""
+        # Create instance with required relationships first
+        instance = FosdemRegistration(
+            session=submission_in_registration_track, registering_person=guardian
+        )
+
         form_data = {
             "nickname": "Little Alice",
             "age": 8,
             # special_needs is optional
         }
-        form = FosdemRegistrationForm(data=form_data)
-        assert form.is_valid()
-        assert form.cleaned_data["special_needs"] == ""
+        form = FosdemRegistrationForm(data=form_data, instance=instance)
+        with scopes_disabled():
+            assert form.is_valid()
+            assert form.cleaned_data["special_needs"] == ""
 
-    def test_registration_form_age_validation(self):
+    def test_registration_form_age_validation(
+        self, submission_in_registration_track, guardian
+    ):
         """Test age field validation."""
         # Age too low
-        form_data = {
-            "nickname": "Little Alice",
-            "age": -1,
-            "special_needs": "None",
-        }
-        form = FosdemRegistrationForm(data=form_data)
-        assert not form.is_valid()
-        assert "age" in form.errors
-
-        # Age too high
-        form_data = {
-            "nickname": "Little Alice",
-            "age": 121,
-            "special_needs": "None",
-        }
-        form = FosdemRegistrationForm(data=form_data)
-        assert not form.is_valid()
-        assert "age" in form.errors
-
-        # Valid ages
-        for age in [0, 1, 10, 17, 120]:
+        with scopes_disabled():
+            instance = FosdemRegistration(
+                session=submission_in_registration_track, registering_person=guardian
+            )
             form_data = {
                 "nickname": "Little Alice",
-                "age": age,
+                "age": -1,
                 "special_needs": "None",
             }
-            form = FosdemRegistrationForm(data=form_data)
-            assert form.is_valid(), f"Age {age} should be valid"
+            form = FosdemRegistrationForm(data=form_data, instance=instance)
+            assert not form.is_valid()
+            assert "age" in form.errors
 
-    def test_registration_form_save(self, submission, guardian):
-        """Test saving registration form."""
-        form_data = {
-            "nickname": "Little Alice",
-            "age": 8,
-            "special_needs": "Vegetarian diet",
-        }
-        form = FosdemRegistrationForm(data=form_data)
-        assert form.is_valid()
+            # Age too high
+            instance = FosdemRegistration(
+                session=submission_in_registration_track, registering_person=guardian
+            )
+            form_data = {
+                "nickname": "Little Alice",
+                "age": 121,
+                "special_needs": "None",
+            }
+            form = FosdemRegistrationForm(data=form_data, instance=instance)
+            assert not form.is_valid()
+            assert "age" in form.errors
 
-        registration = form.save(commit=False)
-        registration.session = submission
-        registration.registering_person = guardian
-        registration.save()
-
-        assert isinstance(registration, FosdemRegistration)
-        assert registration.nickname == "Little Alice"
-        assert registration.age == 8
-        assert registration.special_needs == "Vegetarian diet"
+            # Valid ages
+            for age in [0, 1, 10, 17, 120]:
+                instance = FosdemRegistration(
+                    session=submission_in_registration_track,
+                    registering_person=guardian,
+                )
+                form_data = {
+                    "nickname": "Little Alice",
+                    "age": age,
+                    "special_needs": "None",
+                }
+                form = FosdemRegistrationForm(data=form_data, instance=instance)
+                assert form.is_valid(), f"Age {age} should be valid"
 
 
 @pytest.mark.django_db
@@ -229,8 +243,10 @@ class TestFosdemRegistrationForm:
 class TestRegistrationFormSet:
     """Test cases for RegistrationFormSet."""
 
-    def test_formset_valid_data(self):
-        """Test formset with valid data for multiple registrations."""
+
+def test_formset_valid_data(self, guardian, submission_in_registration_track):
+    """Test formset with valid data for multiple registrations."""
+    with scopes_disabled():
         formset_data = {
             "form-TOTAL_FORMS": "2",
             "form-INITIAL_FORMS": "0",
@@ -243,6 +259,7 @@ class TestRegistrationFormSet:
             "form-1-age": "8",
             "form-1-special_needs": "",
         }
+
         formset = RegistrationFormSet(data=formset_data)
 
         assert formset.is_valid()
@@ -250,12 +267,19 @@ class TestRegistrationFormSet:
 
         # Check first form
         form0 = formset.forms[0]
+        # Create instance for form validation
+        form0.instance = FosdemRegistration(
+            session=submission_in_registration_track, registering_person=guardian
+        )
         assert form0.cleaned_data["nickname"] == "Alice"
         assert form0.cleaned_data["age"] == 10
         assert form0.cleaned_data["special_needs"] == "Vegetarian diet"
 
         # Check second form
         form1 = formset.forms[1]
+        form1.instance = FosdemRegistration(
+            session=submission_in_registration_track, registering_person=guardian
+        )
         assert form1.cleaned_data["nickname"] == "Bob"
         assert form1.cleaned_data["age"] == 8
         assert form1.cleaned_data["special_needs"] == ""

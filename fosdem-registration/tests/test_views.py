@@ -1,6 +1,7 @@
 """
 Unit tests for fosdem_registration views.
 """
+
 import pytest
 from django.contrib.auth.models import AnonymousUser
 from django.http import Http404

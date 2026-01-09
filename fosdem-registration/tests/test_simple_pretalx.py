@@ -2,6 +2,7 @@
 Simple functional test script that uses pretalx's test infrastructure.
 Run with: python -m pretalx test fosdem_registration.tests.test_simple_pretalx
 """
+
 from django.test import TestCase
 
 from fosdem_registration.models import FosdemRegistrationGuardian

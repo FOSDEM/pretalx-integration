@@ -4,6 +4,7 @@ Test configuration and fixtures for fosdem_registration tests.
 Make sure to run these tests from your pretalx environment with:
     python -m pytest
 """
+
 import os
 from datetime import date
 
@@ -23,9 +24,10 @@ if not settings.configured:
 from django.contrib.auth.models import Permission
 from django.test import Client
 from django.urls import reverse
+from django_scopes import scope
 
 # Import pretalx models
-from pretalx.event.models import Event, Team
+from pretalx.event.models import Event, Organiser, Team
 from pretalx.person.models import User
 from pretalx.submission.models import Question, Submission, SubmissionType, Track
 from pretalx.submission.models.question import Answer
@@ -47,7 +49,7 @@ def client():
 @pytest.fixture
 def event():
     """Create a test event."""
-    return Event.objects.create(
+    event = Event(
         name="Test FOSDEM",
         slug="test-fosdem",
         email="test@example.org",
@@ -55,6 +57,10 @@ def event():
         date_to=date(2026, 2, 2),
         timezone="Europe/Brussels",
     )
+
+    with scope(event=event):
+        event.save()
+    return event
 
 
 @pytest.fixture
@@ -69,13 +75,19 @@ def user(event):
 
 
 @pytest.fixture
-def team(event, user):
+def organiser():
+    o = Organiser.objects.create(name="Test Organiser", slug="testorganiser")
+    return o
+
+
+@pytest.fixture
+def team(user, organiser):
     """Create a test team with user."""
     team = Team.objects.create(
-        event=event,
         name="Test Team",
         can_change_submissions=True,
-        can_change_organizer_settings=True,
+        can_change_organiser_settings=True,
+        organiser=organiser,
     )
     team.members.add(user)
     return team
@@ -94,11 +106,13 @@ def submission_type(event):
 @pytest.fixture
 def track(event):
     """Create a test track."""
-    return Track.objects.create(
-        name="Kids Track",
-        event=event,
-        color="#ff0000",
-    )
+    with scope(event=event):
+        track = Track.objects.create(
+            name="Kids Track",
+            event=event,
+            color="#ff0000",
+        )
+    return track
 
 
 @pytest.fixture
@@ -126,7 +140,7 @@ def registration_track(track, max_participants_question, team):
 @pytest.fixture
 def submission(event, track, submission_type, user):
     """Create a test submission."""
-    return Submission.objects.create(
+    submission = Submission.objects.create(
         title="Test Workshop for Kids",
         abstract="A fun workshop for children",
         description="Learn programming in a fun way",
@@ -136,6 +150,30 @@ def submission(event, track, submission_type, user):
         submission_type=submission_type,
         state="confirmed",
     )
+    return submission
+
+
+@pytest.fixture
+def submission_in_registration_track(
+    event, submission_type, registration_track, max_participants_question
+):
+    """Create a test submission linked to a registration track."""
+    submission = Submission.objects.create(
+        title="Test Workshop with Registration",
+        abstract="A fun workshop requiring registration",
+        description="Learn programming in a fun way with limited seats",
+        code="TESTKIDS2",
+        event=event,
+        track=registration_track.track,
+        submission_type=submission_type,
+        state="confirmed",
+    )
+    Answer.objects.create(
+        submission=submission,
+        question=max_participants_question,
+        answer="5",
+    )
+    return submission
 
 
 @pytest.fixture
@@ -242,7 +280,7 @@ def registration_url(event, submission):
 def overview_url(event):
     """URL for registration overview."""
     return reverse(
-        "plugins:fosdem_registration:overview",
+        "plugins:fosdem_registration:registration_overview",
         kwargs={"event": event.slug},
     )
 
