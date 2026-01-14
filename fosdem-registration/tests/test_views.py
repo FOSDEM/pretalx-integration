@@ -7,6 +7,7 @@ from django.contrib.auth.models import AnonymousUser
 from django.http import Http404
 from django.test import RequestFactory
 from django.urls import reverse
+from django_scopes import scopes_disabled
 
 from fosdem_registration.models import FosdemRegistration, FosdemRegistrationGuardian
 from fosdem_registration.views import (
@@ -36,10 +37,12 @@ class TestRegistrationOverview:
         max_participants_answer,
     ):
         """Test overview with authenticated user having permissions."""
-        response = authenticated_client.get(overview_url)
-        assert response.status_code == 200
-        assert "submissions" in response.context
+        with scopes_disabled():
+            response = authenticated_client.get(overview_url)
+            assert response.status_code == 200
+            assert "submissions" in response.context
 
+    @scopes_disabled()
     def test_overview_queryset_filtering(
         self,
         event,
@@ -66,6 +69,7 @@ class TestRegistrationOverview:
         assert hasattr(submission_data, "nr_registrations")
         assert hasattr(submission_data, "max_number")
 
+    @scopes_disabled()
     def test_overview_registration_counts(
         self,
         authenticated_client,
@@ -129,7 +133,7 @@ class TestRegistrationDetail:
     def test_detail_invalid_submission(self, authenticated_client, event):
         """Test detail view with invalid submission code."""
         invalid_url = reverse(
-            "plugins:fosdem_registration:detail",
+            "plugins:fosdem_registration:registration_detail",
             kwargs={
                 "event": event.slug,
                 "submission_code": "INVALID",

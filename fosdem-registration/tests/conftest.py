@@ -47,7 +47,7 @@ def client():
 
 
 @pytest.fixture
-def event():
+def event(organiser):
     """Create a test event."""
     event = Event(
         name="Test FOSDEM",
@@ -56,6 +56,7 @@ def event():
         date_from=date(2026, 2, 1),
         date_to=date(2026, 2, 2),
         timezone="Europe/Brussels",
+        organiser=organiser,
     )
 
     with scope(event=event):

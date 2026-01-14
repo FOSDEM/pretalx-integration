@@ -4,6 +4,7 @@ Test settings for fosdem_registration tests.
 
 import os
 import sys
+from pathlib import Path
 
 # Add pretalx to Python path
 pretalx_src_path = "/home/johan/git/fosdem/pretalx/src"
@@ -14,7 +15,7 @@ if pretalx_src_path not in sys.path:
 os.environ.setdefault("PRETALX_CONFIG_FILE", "")
 
 # Import base pretalx settings
-from pretalx.settings import INSTALLED_APPS
+from pretalx.settings import *  # Import all settings from pretalx
 
 # Override settings for testing
 DATABASES = {
@@ -26,6 +27,30 @@ DATABASES = {
 
 # Email backend for testing
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
+
+# Static files settings for tests
+STATIC_URL = "/static/"
+STATIC_ROOT = Path("/tmp/static")
+
+# Disable static files collection and manifest for tests
+STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+
+# Disable DEBUG to avoid template rendering issues in tests
+DEBUG = False
+
+# Skip staticfiles finders that might cause issues
+STATICFILES_FINDERS = [
+    "django.contrib.staticfiles.finders.FileSystemFinder",
+    "compressor.finders.CompressorFinder",
+]
 
 # Make sure fosdem_registration is in INSTALLED_APPS
 # Also ensure all required pretalx apps are included for proper migrations
