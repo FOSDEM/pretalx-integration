@@ -24,7 +24,7 @@ if not settings.configured:
 from django.contrib.auth.models import Permission
 from django.test import Client
 from django.urls import reverse
-from django_scopes import scope
+from django_scopes import scope, scopes_disabled
 
 # Import pretalx models
 from pretalx.event.models import Event, Organiser, Team
@@ -210,12 +210,13 @@ def registration(submission, guardian):
 
 
 @pytest.fixture
-def multiple_registrations(submission, guardian):
+@scopes_disabled()
+def multiple_registrations(submission_in_registration_track, guardian):
     """Create multiple test registrations for capacity testing."""
     registrations = []
     for i in range(5):
         reg = FosdemRegistration.objects.create(
-            session=submission,
+            session=submission_in_registration_track,
             registering_person=guardian,
             nickname=f"Test Kid {i+1}",
             age=7 + i,
@@ -226,15 +227,13 @@ def multiple_registrations(submission, guardian):
 
 
 @pytest.fixture
-def user_with_permissions(user, event):
+def user_with_permissions(user, registration_track, team, event):
     """Create a user with necessary permissions."""
     # Add permission to view registrations
-    permission = Permission.objects.get_or_create(
-        codename="view_fosdem_registrations",
-        name="Can view fosdem registrations",
-        content_type_id=1,  # This might need adjustment based on your setup
-    )[0]
-    user.user_permissions.add(permission)
+    registration_track.teams.add(team)
+    team.organiser = event.organiser
+    team.members.add(user)
+    team.save()
     return user
 
 
@@ -266,13 +265,33 @@ def sample_form_data():
 
 
 @pytest.fixture
-def registration_url(event, submission):
+@scopes_disabled()
+def registration_talkslot(submission_in_registration_track):
+    """Create a talk slot for the submission in registration track."""
+    from pretalx.schedule.models import TalkSlot
+
+    event = submission_in_registration_track.event
+    talkslot = TalkSlot.objects.create(
+        submission=submission_in_registration_track,
+        is_visible=True,
+        start=event.date_from,
+        end=event.date_from,
+        schedule=event.wip_schedule,
+    )
+    event.release_schedule(name="first schedule")
+
+    return talkslot
+
+
+@pytest.fixture
+def registration_url(event, registration_talkslot):
     """URL for registration form."""
+
     return reverse(
-        "plugins:fosdem_registration:register",
+        "plugins:fosdem_registration:register_person",
         kwargs={
-            "event": event.slug,
-            "submission_code": submission.code,
+            "event": registration_talkslot.submission.event.slug,
+            "submission_code": registration_talkslot.submission.code,
         },
     )
 
@@ -287,12 +306,12 @@ def overview_url(event):
 
 
 @pytest.fixture
-def detail_url(event, submission):
+def detail_url(event, submission_in_registration_track):
     """URL for registration detail view."""
     return reverse(
-        "plugins:fosdem_registration:detail",
+        "plugins:fosdem_registration:registration_detail",
         kwargs={
             "event": event.slug,
-            "submission_code": submission.code,
+            "submission_code": submission_in_registration_track.code,
         },
     )

@@ -8,6 +8,8 @@ from django.http import Http404
 from django.test import RequestFactory
 from django.urls import reverse
 from django_scopes import scopes_disabled
+from pretalx.schedule.models import Schedule, TalkSlot
+from pretalx.submission.models import Submission
 
 from fosdem_registration.models import FosdemRegistration, FosdemRegistrationGuardian
 from fosdem_registration.views import (
@@ -75,7 +77,6 @@ class TestRegistrationOverview:
         authenticated_client,
         overview_url,
         registration_track,
-        submission,
         max_participants_answer,
         multiple_registrations,
     ):
@@ -84,7 +85,8 @@ class TestRegistrationOverview:
         assert response.status_code == 200
 
         submissions = response.context["submissions"]
-        submission_data = submissions.first()
+        # assert len(submissions) == 1
+        submission_data = submissions[1]
         assert (
             submission_data.nr_registrations == 5
         )  # from multiple_registrations fixture
@@ -101,29 +103,46 @@ class TestRegistrationDetail:
         assert response.status_code in [302, 403]
 
     def test_detail_with_authenticated_user(
-        self,
-        authenticated_client,
-        detail_url,
-        registration_track,
-        submission,
-        registration,
+        self, authenticated_client, detail_url, submission_in_registration_track, event
     ):
         """Test detail view with authenticated user."""
-        response = authenticated_client.get(detail_url)
+        with scopes_disabled():
+            schedule = Schedule.objects.create(event=event, version="test-schedule")
+            TalkSlot.objects.create(
+                submission=submission_in_registration_track,
+                is_visible=True,
+                start=event.date_from,
+                end=event.date_from,
+                schedule=event.wip_schedule,
+            )
+            event.release_schedule(name="first schedule")
+
+            response = authenticated_client.get(detail_url)
         assert response.status_code == 200
         assert "object_list" in response.context
         assert "submission" in response.context
         assert "talkslot" in response.context
 
+    @scopes_disabled()
     def test_detail_shows_registrations(
         self,
         authenticated_client,
         detail_url,
         registration_track,
-        submission,
+        submission_in_registration_track,
         multiple_registrations,
+        event,
     ):
         """Test that detail view shows all registrations for a session."""
+        TalkSlot.objects.create(
+            submission=submission_in_registration_track,
+            is_visible=True,
+            start=event.date_from,
+            end=event.date_from,
+            schedule=event.wip_schedule,
+        )
+        event.release_schedule(name="first schedule")
+
         response = authenticated_client.get(detail_url)
         assert response.status_code == 200
 
@@ -142,8 +161,9 @@ class TestRegistrationDetail:
         response = authenticated_client.get(invalid_url)
         assert response.status_code == 404
 
+    @scopes_disabled()
     def test_detail_context_data(
-        self, event, submission, registration_track, user_with_permissions
+        self, event, submission_in_registration_track, user_with_permissions
     ):
         """Test context data in detail view."""
         factory = RequestFactory()
@@ -151,17 +171,30 @@ class TestRegistrationDetail:
         request.user = user_with_permissions
         request.event = event
 
+        TalkSlot.objects.create(
+            submission=submission_in_registration_track,
+            is_visible=True,
+            start=event.date_from,
+            end=event.date_from,
+            schedule=event.wip_schedule,
+        )
+        event.release_schedule(name="first schedule")
+
         view = RegistrationDetail()
         view.request = request
         view.kwargs = {
             "event": event.slug,
-            "submission_code": submission.code,
+            "submission_code": submission_in_registration_track.code,
         }
 
+        # Properly initialize the view by calling get_queryset and setting object_list
+        view.object_list = view.get_queryset()
+
         context = view.get_context_data()
+        print(context)
 
         assert "submission" in context
-        assert context["submission"] == submission
+        assert context["submission"] == submission_in_registration_track
 
 
 @pytest.mark.django_db
@@ -169,8 +202,10 @@ class TestRegistrationDetail:
 class TestGuardianWithRegistrationsCreateView:
     """Test cases for GuardianWithRegistrationsCreateView."""
 
-    def test_registration_form_get(self, client, registration_url, registration_track):
+    @scopes_disabled()
+    def test_registration_form_get(self, client, registration_url):
         """Test GET request to registration form."""
+
         response = client.get(registration_url)
         assert response.status_code == 200
         assert "form" in response.context

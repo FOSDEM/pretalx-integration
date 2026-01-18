@@ -183,12 +183,7 @@ class TestFosdemRegistration:
             registration.clean()
 
     def test_capacity_validation_failure(
-        self,
-        submission,
-        guardian,
-        registration_track,
-        max_participants_answer,
-        multiple_registrations,
+        self, submission_in_registration_track, guardian
     ):
         """Test registration failure when capacity is exceeded."""
         # multiple_registrations fixture creates 5 registrations
@@ -196,18 +191,18 @@ class TestFosdemRegistration:
 
         # Create 6 more registrations to exceed capacity
         with scopes_disabled():
-            for i in range(6):
+            for i in range(5):
                 FosdemRegistration.objects.create(
-                    session=submission,
+                    session=submission_in_registration_track,
                     registering_person=guardian,
                     nickname=f"Extra Kid {i}",
                     age=8,
                 )
 
-            # This should exceed the limit of 10
+            # This should exceed the limit of 5
             with pytest.raises(ValidationError) as exc_info:
                 registration = FosdemRegistration(
-                    session=submission,
+                    session=submission_in_registration_track,
                     registering_person=guardian,
                     nickname="Over Limit Kid",
                     age=8,

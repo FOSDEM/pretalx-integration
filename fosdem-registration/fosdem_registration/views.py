@@ -1,7 +1,7 @@
 from django.core.mail import EmailMessage
 from django.db.models import Count, F, IntegerField, OuterRef, Subquery
 from django.http import Http404
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, ListView
@@ -58,7 +58,8 @@ class RegistrationDetail(EventPermissionRequired, ListView):
     template_name = "fosdem_registration/session.html"
 
     def get_queryset(self):
-        submission = Submission.objects.get(
+        submission = get_object_or_404(
+            Submission,
             code=self.kwargs["submission_code"],
             track__fosdemregistrationtrack__isnull=False,
             state="confirmed",
@@ -75,10 +76,10 @@ class RegistrationDetail(EventPermissionRequired, ListView):
             event=event,
         )
 
-        talkslot = submission.slots.get(schedule=event.current_schedule)
+        talkslot = submission.slots.get(schedule=event.wip_schedule)
         context["talkslot"] = talkslot
         context["submission"] = submission
-        context["schedule"] = submission.slots.get(schedule=event.current_schedule)
+        context["schedule"] = submission.slots.get(schedule=event.wip_schedule)
         return context
 
 
