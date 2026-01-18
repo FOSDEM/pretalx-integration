@@ -80,7 +80,10 @@ def sanitize_filename(filename):
 
 
 def speaker_slug(user):
-    return sanitize(user.name)
+    if user.name == "":
+        return user.code
+    else:
+        return sanitize(user.name)
 
 
 def time_to_index(timevalue):
@@ -465,9 +468,9 @@ class NanocExporter(ScheduleData):
                             "filename": Path(resource.resource.name).name,
                             "identifier": "/" + str(destination.with_suffix("")) + "/",
                             "type": "slides",  # TODO - or not -influences link+icon
-                            "size": resource.resource.size
-                            if not self.fake_image
-                            else 0,
+                            "size": (
+                                resource.resource.size if not self.fake_image else 0
+                            ),
                             "id": resource.pk,
                             "event_id": talk.pk,
                             "event_slug": talk.fosdem_slug,
@@ -503,9 +506,11 @@ class NanocExporter(ScheduleData):
                         "title": talk.submission.title,
                         "subtitle": "",  # this does not exist in pretalx
                         "slug": talk.fosdem_slug,
-                        "abstract": markdown.markdown(talk.submission.abstract)
-                        if talk.submission.abstract
-                        else "",
+                        "abstract": (
+                            markdown.markdown(talk.submission.abstract)
+                            if talk.submission.abstract
+                            else ""
+                        ),
                         "description": "",  # no longer used
                         "featured": talk.submission.is_featured,
                         "start_time": talk.start.astimezone(tz).time(),
@@ -533,9 +538,9 @@ class NanocExporter(ScheduleData):
                         "type": track.tracksettings.get_track_type_display(),
                         "room": str(talk.room.name).lower(),
                         "room_name": str(talk.room.description),
-                        "room_rank": talk.room.position
-                        if talk.room.position
-                        else talk.room.id,
+                        "room_rank": (
+                            talk.room.position if talk.room.position else talk.room.id
+                        ),
                         "conference_room_id": talk.room.pk,
                         "language": "en",
                         "attachments": attachments,
@@ -663,13 +668,13 @@ class NanocExporter(ScheduleData):
                                 "slug": speaker_slug(speaker),
                                 "gender": "",  # check whether we need/want this
                                 "sortname": speaker.name.upper(),
-                                "abstract": markdown.markdown(biography)
-                                if biography
-                                else "",
+                                "abstract": (
+                                    markdown.markdown(biography) if biography else ""
+                                ),
                                 "description": "",  # Lets not make things more confusing
                                 "conference_person_id": speaker.pk,  # not equal to person_id in penta
                                 "links": [],
-                                "events": [talk.fosdem_slug]
+                                "events": [talk.fosdem_slug],
                                 # "events_by_day:": events_by_day
                             }
                             if self.dest_dir and valid_avatar:
@@ -733,9 +738,9 @@ class NanocExporter(ScheduleData):
             "description_length": "",
             "export_base_url": f"https://fosdem.org/{self.year}/schedule",
             "schedule_html_include": "",
-            "schedule_version": self.schedule.version
-            if self.schedule.version
-            else "latest",
+            "schedule_version": (
+                self.schedule.version if self.schedule.version else "latest"
+            ),
             "feedback_base_url": "https://fosdem.org/TODO",
             "css": "",
             "email": "info@fosdem.org",
