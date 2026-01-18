@@ -1,1 +1,0 @@
-[{"model": "fosdem_registration.fosdemregistrationguardian", "pk": 6, "fields": {"name": "Test Guardian 6", "email": "guardian6@test.example.com", "contact_number": "+32470000006"}}, {"model": "fosdem_registration.fosdemregistrationguardian", "pk": 20, "fields": {"name": "Test Guardian 20", "email": "guardian20@test.example.com", "contact_number": "+32470000020"}}]
