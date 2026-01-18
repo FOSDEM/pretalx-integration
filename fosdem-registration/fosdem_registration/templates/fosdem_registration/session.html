@@ -47,9 +47,6 @@
                 <td>
                     {% if reg.removed %}
                         <span class="label label-danger">Removed</span>
-                        {% if reg.removal_reason %}
-                        <br><small>Reason: {{ reg.removal_reason }}</small>
-                        {% endif %}
                     {% else %}
                         <span class="label label-success">Active</span>
                     {% endif %}

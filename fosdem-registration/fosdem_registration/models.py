@@ -36,9 +36,6 @@ class FosdemRegistration(models.Model):
     )
     special_needs = models.CharField(max_length=400, blank=True)
     removed = models.BooleanField(default=False, help_text="registration removed")
-    removal_reason = models.TextField(
-        blank=True, help_text="optional reason for removal"
-    )
 
     def clean(self):
         """Prevent creating a registration if the track is full."""

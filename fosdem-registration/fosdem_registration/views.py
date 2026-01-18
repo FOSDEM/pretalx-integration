@@ -18,7 +18,6 @@ from .forms import (
     FosdemRegistrationForm,
     FosdemRegistrationGuardianForm,
     RegistrationFormSet,
-    RemoveRegistrationForm,
 )
 from .models import FosdemRegistration, FosdemRegistrationGuardian
 
@@ -235,37 +234,24 @@ class GuardianWithRegistrationsCreateView(CreateView):
         return render(self.request, self.template_name, context)
 
 
-class RemoveRegistration(EventPermissionRequired, FormView):
+class RemoveRegistration(EventPermissionRequired, ListView):
     permission_required = "orga.view_fosdem_registrations"
-    form_class = RemoveRegistrationForm
-    template_name = "fosdem_registration/remove_registration.html"
+    model = FosdemRegistration
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        registration = get_object_or_404(
-            FosdemRegistration, pk=self.kwargs["registration_id"]
-        )
-        context["registration"] = registration
-        context["submission"] = registration.session
-        return context
-
-    def form_valid(self, form):
+    def get(self, request, *args, **kwargs):
         registration = get_object_or_404(
             FosdemRegistration, pk=self.kwargs["registration_id"]
         )
         registration.removed = True
-        registration.removal_reason = form.cleaned_data.get("removal_reason", "")
         registration.save()
 
         logger.info(
             f"Registration {registration.pk} removed for session {registration.session.code}"
         )
 
-        # Redirect back to the registration detail page
+        # Redirect back to the registration detail page with removed=true
         return redirect(
-            "plugins:fosdem_registration:registration_detail",
-            event=self.kwargs["event"],
-            submission_code=registration.session.code,
+            f"{reverse_lazy('plugins:fosdem_registration:registration_detail', kwargs={'event': self.kwargs['event'], 'submission_code': registration.session.code})}?removed=true"
         )
 
 
@@ -278,7 +264,6 @@ class ReenableRegistration(EventPermissionRequired, ListView):
             FosdemRegistration, pk=self.kwargs["registration_id"]
         )
         registration.removed = False
-        registration.removal_reason = ""
         registration.save()
 
         logger.info(

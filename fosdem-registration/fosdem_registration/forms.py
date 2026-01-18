@@ -16,15 +16,6 @@ class FosdemRegistrationGuardianForm(forms.ModelForm):
         fields = ["name", "email", "contact_number"]
 
 
-class RemoveRegistrationForm(forms.Form):
-    removal_reason = forms.CharField(
-        widget=forms.Textarea(attrs={"rows": 3, "cols": 40}),
-        required=False,
-        label="Reason for removal (optional)",
-        help_text="Optionally provide a reason for removing this registration",
-    )
-
-
 RegistrationFormSet = modelformset_factory(
     FosdemRegistration,
     form=FosdemRegistrationForm,
