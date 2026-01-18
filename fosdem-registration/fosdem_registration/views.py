@@ -1,6 +1,7 @@
 import logging
 
 from django.core.mail import EmailMessage
+from django.db import models
 from django.db.models import Count, F, IntegerField, OuterRef, Subquery
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
@@ -17,6 +18,7 @@ from .forms import (
     FosdemRegistrationForm,
     FosdemRegistrationGuardianForm,
     RegistrationFormSet,
+    RemoveRegistrationForm,
 )
 from .models import FosdemRegistration, FosdemRegistrationGuardian
 
@@ -47,7 +49,10 @@ class RegistrationOverview(EventPermissionRequired, ListView):
                 event=event,
             )
             .annotate(
-                nr_registrations=Count("fosdemregistration"),
+                nr_registrations=Count(
+                    "fosdemregistration",
+                    filter=models.Q(fosdemregistration__removed=False),
+                ),
                 max_number=Subquery(max_participants_subquery),
             )
             .select_related("track")
@@ -68,7 +73,14 @@ class RegistrationDetail(EventPermissionRequired, ListView):
             track__fosdemregistrationtrack__isnull=False,
             state="confirmed",
         )
-        return submission.fosdemregistration_set.all()
+        queryset = submission.fosdemregistration_set.all()
+
+        # Only show removed registrations if ?removed=true is in query params
+        show_removed = self.request.GET.get("removed", "false").lower() == "true"
+        if not show_removed:
+            queryset = queryset.filter(removed=False)
+
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -84,6 +96,9 @@ class RegistrationDetail(EventPermissionRequired, ListView):
         context["talkslot"] = talkslot
         context["submission"] = submission
         context["schedule"] = submission.slots.get(schedule=event.wip_schedule)
+        context["show_removed"] = (
+            self.request.GET.get("removed", "false").lower() == "true"
+        )
         return context
 
 
@@ -218,3 +233,59 @@ class GuardianWithRegistrationsCreateView(CreateView):
         # If formset invalid, re-render page with errors
         logger.debug("  Rendering template with context")
         return render(self.request, self.template_name, context)
+
+
+class RemoveRegistration(EventPermissionRequired, FormView):
+    permission_required = "orga.view_fosdem_registrations"
+    form_class = RemoveRegistrationForm
+    template_name = "fosdem_registration/remove_registration.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        registration = get_object_or_404(
+            FosdemRegistration, pk=self.kwargs["registration_id"]
+        )
+        context["registration"] = registration
+        context["submission"] = registration.session
+        return context
+
+    def form_valid(self, form):
+        registration = get_object_or_404(
+            FosdemRegistration, pk=self.kwargs["registration_id"]
+        )
+        registration.removed = True
+        registration.removal_reason = form.cleaned_data.get("removal_reason", "")
+        registration.save()
+
+        logger.info(
+            f"Registration {registration.pk} removed for session {registration.session.code}"
+        )
+
+        # Redirect back to the registration detail page
+        return redirect(
+            "plugins:fosdem_registration:registration_detail",
+            event=self.kwargs["event"],
+            submission_code=registration.session.code,
+        )
+
+
+class ReenableRegistration(EventPermissionRequired, ListView):
+    permission_required = "orga.view_fosdem_registrations"
+    model = FosdemRegistration
+
+    def get(self, request, *args, **kwargs):
+        registration = get_object_or_404(
+            FosdemRegistration, pk=self.kwargs["registration_id"]
+        )
+        registration.removed = False
+        registration.removal_reason = ""
+        registration.save()
+
+        logger.info(
+            f"Registration {registration.pk} re-enabled for session {registration.session.code}"
+        )
+
+        # Redirect back to the registration detail page with removed view
+        return redirect(
+            f"{reverse_lazy('plugins:fosdem_registration:registration_detail', kwargs={'event': self.kwargs['event'], 'submission_code': registration.session.code})}?removed=true"
+        )

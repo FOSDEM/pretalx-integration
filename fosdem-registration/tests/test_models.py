@@ -210,3 +210,39 @@ class TestFosdemRegistration:
                 registration.clean()
 
             assert "Registration limit" in str(exc_info.value)
+
+    def test_capacity_validation_excludes_removed(
+        self, submission_in_registration_track, guardian
+    ):
+        """Test that removed registrations don't count toward capacity."""
+        # max_participants_answer sets limit to 10
+
+        # Create 4 active registrations
+        with scopes_disabled():
+            for i in range(4):
+                FosdemRegistration.objects.create(
+                    session=submission_in_registration_track,
+                    registering_person=guardian,
+                    nickname=f"Active Kid {i}",
+                    age=8,
+                )
+
+            # Create 3 removed registrations
+            for i in range(3):
+                FosdemRegistration.objects.create(
+                    session=submission_in_registration_track,
+                    registering_person=guardian,
+                    nickname=f"Removed Kid {i}",
+                    age=8,
+                    removed=True,
+                )
+
+            # Should be able to add one more since removed don't count
+            registration = FosdemRegistration(
+                session=submission_in_registration_track,
+                registering_person=guardian,
+                nickname="New Kid",
+                age=8,
+            )
+            # Should not raise ValidationError
+            registration.clean()

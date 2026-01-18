@@ -273,6 +273,105 @@ class TestCompleteRegistrationWorkflow:
         assert submission_data.nr_registrations == 3
         assert submission_data.max_number == "3"
 
+    def test_capacity_limits_with_removed_registrations(
+        self,
+        client,
+        authenticated_client,
+        event,
+        track,
+        submission_type,
+        max_participants_question,
+        team,
+        user_with_permissions,
+    ):
+        """Test that removed registrations don't count toward capacity."""
+        from pretalx.submission.models import Submission
+        from pretalx.submission.models.question import Answer
+
+        submission = Submission.objects.create(
+            title="Workshop with Removals",
+            abstract="Testing removed registrations",
+            code="REMOV1",
+            event=event,
+            track=track,
+            submission_type=submission_type,
+            state="confirmed",
+        )
+
+        reg_track = FosdemRegistrationTrack.objects.create(
+            track=track,
+            max_number_question=max_participants_question,
+        )
+        reg_track.teams.add(team)
+
+        # Set capacity to 3
+        Answer.objects.create(
+            submission=submission,
+            question=max_participants_question,
+            answer="3",
+        )
+
+        # Create guardian
+        guardian = FosdemRegistrationGuardian.objects.create(
+            name="Test Parent",
+            email="parent@example.com",
+            contact_number="+32470111111",
+        )
+
+        # Create 2 active and 2 removed registrations
+        for i in range(2):
+            FosdemRegistration.objects.create(
+                session=submission,
+                registering_person=guardian,
+                nickname=f"Active Kid {i}",
+                age=8,
+            )
+
+        for i in range(2):
+            FosdemRegistration.objects.create(
+                session=submission,
+                registering_person=guardian,
+                nickname=f"Removed Kid {i}",
+                age=8,
+                removed=True,
+            )
+
+        # Overview should show 2 registrations (not 4)
+        overview_url = reverse(
+            "plugins:fosdem_registration:overview",
+            kwargs={"event": event.slug},
+        )
+        response = authenticated_client.get(overview_url)
+        submissions = response.context["submissions"]
+        submission_data = submissions.first()
+        assert submission_data.nr_registrations == 2
+
+        # Should be able to add 1 more (3 total active)
+        registration_url = reverse(
+            "plugins:fosdem_registration:register",
+            kwargs={
+                "event": event.slug,
+                "submission_code": submission.code,
+            },
+        )
+
+        form_data = {
+            "name": "New Parent",
+            "email": "newparent@example.com",
+            "contact_number": "+32470222222",
+            "form-TOTAL_FORMS": "1",
+            "form-INITIAL_FORMS": "0",
+            "form-MIN_NUM_FORMS": "1",
+            "form-MAX_NUM_FORMS": "1000",
+            "form-0-nickname": "New Kid",
+            "form-0-age": "8",
+            "form-0-special_needs": "",
+        }
+
+        response = client.post(registration_url, data=form_data)
+        assert response.status_code == 302  # Should succeed
+        assert FosdemRegistration.objects.filter(removed=False).count() == 3
+
     def test_email_notification_workflow(
         self, client, event, track, submission_type, max_participants_question, team
     ):

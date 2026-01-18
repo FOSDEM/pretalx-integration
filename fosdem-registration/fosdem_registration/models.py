@@ -36,6 +36,9 @@ class FosdemRegistration(models.Model):
     )
     special_needs = models.CharField(max_length=400, blank=True)
     removed = models.BooleanField(default=False, help_text="registration removed")
+    removal_reason = models.TextField(
+        blank=True, help_text="optional reason for removal"
+    )
 
     def clean(self):
         """Prevent creating a registration if the track is full."""
@@ -46,7 +49,9 @@ class FosdemRegistration(models.Model):
 
         reg_track = FosdemRegistrationTrack.objects.get(track=track)
 
-        current_count = FosdemRegistration.objects.filter(session=self.session).count()
+        current_count = FosdemRegistration.objects.filter(
+            session=self.session, removed=False
+        ).count()
         max_number = int(
             self.session.answers.get(question=reg_track.max_number_question).answer
         )

@@ -12,7 +12,15 @@
     <li>Not yet scheduled.</li>
 {% endif %}
 <li>public link: <a href="{% url 'plugins:fosdem_registration:register_person' submission_code=submission.code event=request.event.slug  %}">{% url 'plugins:fosdem_registration:register_person' submission_code=submission.code  event=request.event.slug %}</a> </li>
+<li>
+    {% if show_removed %}
+        <a href="{% url 'plugins:fosdem_registration:registration_detail' event=request.event.slug submission_code=submission.code %}">Hide removed registrations</a>
+    {% else %}
+        <a href="{% url 'plugins:fosdem_registration:registration_detail' event=request.event.slug submission_code=submission.code %}?removed=true">Show removed registrations</a>
+    {% endif %}
+</li>
 </ul>
+
 <table>
     <thead>
         <tr>
@@ -22,21 +30,42 @@
             <th>Mail</th>
 	    <th>phone</th>
             <th>Special Needs</th>
+            {% if show_removed %}<th>Status</th>{% endif %}
+            <th>Actions</th>
         </tr>
     </thead>
     <tbody>
         {% for reg in object_list %}
-            <tr>
+            <tr {% if reg.removed %}style="background-color: #ffcccc; text-decoration: line-through;"{% endif %}>
                 <td>{{ reg.nickname }}</td>
                 <td>{{ reg.age }}</td>
                 <td>{{ reg.registering_person.name }}</td>
                 <td>{{ reg.registering_person.email }}</td>
                 <td>{{ reg.registering_person.contact_number }}</td>
                 <td>{{ reg.special_needs|default:"-" }}</td>
+                {% if show_removed %}
+                <td>
+                    {% if reg.removed %}
+                        <span class="label label-danger">Removed</span>
+                        {% if reg.removal_reason %}
+                        <br><small>Reason: {{ reg.removal_reason }}</small>
+                        {% endif %}
+                    {% else %}
+                        <span class="label label-success">Active</span>
+                    {% endif %}
+                </td>
+                {% endif %}
+                <td>
+                    {% if not reg.removed %}
+                        <a href="{% url 'plugins:fosdem_registration:remove_registration' event=request.event.slug submission_code=submission.code registration_id=reg.pk %}" class="btn btn-sm btn-danger">Remove</a>
+                    {% elif show_removed %}
+                        <a href="{% url 'plugins:fosdem_registration:reenable_registration' event=request.event.slug submission_code=submission.code registration_id=reg.pk %}" class="btn btn-sm btn-success">Re-enable</a>
+                    {% endif %}
+                </td>
             </tr>
         {% empty %}
             <tr>
-                <td colspan="4">No registrations yet.</td>
+                <td colspan="{% if show_removed %}8{% else %}7{% endif %}">No registrations yet.</td>
             </tr>
         {% endfor %}	
     </tbody>

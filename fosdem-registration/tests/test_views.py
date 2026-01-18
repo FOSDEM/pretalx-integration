@@ -91,6 +91,41 @@ class TestRegistrationOverview:
             submission_data.nr_registrations == 5
         )  # from multiple_registrations fixture
 
+    @scopes_disabled()
+    def test_overview_excludes_removed_registrations(
+        self,
+        authenticated_client,
+        overview_url,
+        submission_in_registration_track,
+        guardian,
+    ):
+        """Test that overview count excludes removed registrations."""
+        # Create 3 active and 2 removed registrations
+        for i in range(3):
+            FosdemRegistration.objects.create(
+                session=submission_in_registration_track,
+                registering_person=guardian,
+                nickname=f"Active Kid {i}",
+                age=8,
+            )
+
+        for i in range(2):
+            FosdemRegistration.objects.create(
+                session=submission_in_registration_track,
+                registering_person=guardian,
+                nickname=f"Removed Kid {i}",
+                age=8,
+                removed=True,
+            )
+
+        response = authenticated_client.get(overview_url)
+        assert response.status_code == 200
+
+        submissions = response.context["submissions"]
+        submission_data = submissions[0]
+        # Should only count the 3 active registrations
+        assert submission_data.nr_registrations == 3
+
 
 @pytest.mark.django_db
 @pytest.mark.views
