@@ -197,18 +197,55 @@ class TestRegistrationDetail:
         assert context["submission"] == submission_in_registration_track
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 @pytest.mark.views
 class TestGuardianWithRegistrationsCreateView:
     """Test cases for GuardianWithRegistrationsCreateView."""
 
-    @scopes_disabled()
-    def test_registration_form_get(self, client, registration_url):
+    def test_registration_form_get(self, client, registration_url, transactional_db):
         """Test GET request to registration form."""
+        with scopes_disabled():
+            response = client.get(registration_url, HTTP_HOST="testserver")
+            assert response.status_code == 200
+            assert "form" in response.context
 
-        response = client.get(registration_url)
-        assert response.status_code == 200
-        assert "form" in response.context
+    @scopes_disabled()
+    def test_registration_form_get_direct(
+        self, event, registration_talkslot, max_participants_answer
+    ):
+        """Test GET request to registration form using RequestFactory to bypass URL routing."""
+        from django.test import RequestFactory
+
+        # Ensure event is activated properly
+        from pretalx.orga.signals import activate_event
+
+        from fosdem_registration.views import GuardianWithRegistrationsCreateView
+
+        responses = activate_event.send_robust(event, request=None)
+        exceptions = [r[1] for r in responses if isinstance(r[1], Exception)]
+        if not exceptions:
+            event.is_public = True
+            event.save()
+
+        factory = RequestFactory()
+        request = factory.get(
+            f"/{event.slug}/p/register/{registration_talkslot.submission.code}/"
+        )
+
+        view = GuardianWithRegistrationsCreateView()
+        view.setup(
+            request,
+            event=event.slug,
+            submission_code=registration_talkslot.submission.code,
+        )
+        view.kwargs = {
+            "event": event.slug,
+            "submission_code": registration_talkslot.submission.code,
+        }
+
+        context = view.get_context_data()
+        assert "submission" in context
+        assert context["submission"] == registration_talkslot.submission
 
     def test_registration_form_context(
         self,
@@ -219,8 +256,9 @@ class TestGuardianWithRegistrationsCreateView:
         max_participants_answer,
     ):
         """Test context data in registration form."""
-        response = client.get(registration_url)
-        assert response.status_code == 200
+        with scopes_disabled():
+            response = client.get(registration_url)
+            assert response.status_code == 200
 
         context = response.context
         assert "submissions" in context

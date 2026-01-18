@@ -1,3 +1,5 @@
+import logging
+
 from django.core.mail import EmailMessage
 from django.db.models import Count, F, IntegerField, OuterRef, Subquery
 from django.http import Http404
@@ -17,6 +19,8 @@ from .forms import (
     RegistrationFormSet,
 )
 from .models import FosdemRegistration, FosdemRegistrationGuardian
+
+logger = logging.getLogger(__name__)
 
 
 class RegistrationOverview(EventPermissionRequired, ListView):
@@ -90,9 +94,20 @@ class GuardianWithRegistrationsCreateView(CreateView):
     success_url = reverse_lazy("registration_success")
 
     def get_context_data(self, **kwargs):
+        logger.debug("GuardianWithRegistrationsCreateView.get_context_data called")
         context = super().get_context_data(**kwargs)
 
-        event = Event.objects.get(slug=self.kwargs["event"])
+        event_slug = self.kwargs.get("event")
+        submission_code = self.kwargs.get("submission_code")
+        logger.debug(f"  Looking for event: {event_slug}")
+        logger.debug(f"  Looking for submission: {submission_code}")
+
+        try:
+            event = Event.objects.get(slug=event_slug)
+            logger.debug(f"  Found event: {event} (id={event.pk})")
+        except Event.DoesNotExist:
+            logger.error(f"  Event not found with slug: {event_slug}")
+            raise Http404(f"Event not found: {event_slug}")
 
         max_participants_subquery = Answer.objects.filter(
             submission=OuterRef("pk"),  # link to the submission
@@ -103,8 +118,9 @@ class GuardianWithRegistrationsCreateView(CreateView):
             :1
         ]  # only one answer expected
 
+        logger.debug("  Querying for submissions...")
         submissions = Submission.objects.filter(
-            code=self.kwargs["submission_code"],
+            code=submission_code,
             track__fosdemregistrationtrack__isnull=False,
             state="confirmed",
             event=event,
@@ -112,43 +128,71 @@ class GuardianWithRegistrationsCreateView(CreateView):
             nr_registrations=Count("fosdemregistration"),
             max_number=Subquery(max_participants_subquery),
         )
+
+        logger.debug(f"  Found {submissions.count()} submissions")
+
         if len(submissions) != 1:
+            logger.error(f"  Expected 1 submission, found {len(submissions)}")
             raise Http404("Submission not found")
+
         submission = submissions.first()
+        logger.debug(
+            f"  Submission: {submission} (code={submission.code}, track={submission.track})"
+        )
 
         if self.request.POST:
+            logger.debug("  Creating formset from POST data")
             context["formset"] = RegistrationFormSet(self.request.POST)
         else:
+            logger.debug("  Creating empty formset")
             context["formset"] = RegistrationFormSet(
                 queryset=FosdemRegistration.objects.none()
             )
 
         context["submission"] = submission
-        context["talkslot"] = submission.slots.get(schedule=event.current_schedule)
 
+        try:
+            talkslot = submission.slots.get(schedule=event.current_schedule)
+            context["talkslot"] = talkslot
+            logger.debug(f"  Found talkslot: {talkslot}")
+        except Exception as e:
+            logger.error(f"  Error getting talkslot: {e}")
+            raise
+
+        logger.debug("  get_context_data completed successfully")
         return context
 
     def form_valid(self, form):
+        logger.debug("GuardianWithRegistrationsCreateView.form_valid called")
         context = self.get_context_data()
         formset = context["formset"]
 
+        logger.debug("  Creating new formset from POST data")
         formset = RegistrationFormSet(
             self.request.POST,
             queryset=FosdemRegistration.objects.none(),
         )
-        for subform in formset.forms:
+
+        logger.debug(f"  Formset has {len(formset.forms)} forms")
+        for i, subform in enumerate(formset.forms):
             subform.instance.session = context["submission"]
+            logger.debug(f"  Form {i}: setting session to {context['submission']}")
 
         if formset.is_valid():
+            logger.debug("  Formset is valid, saving...")
             # Save the guardian first
             guardian = form.save()
+            logger.debug(f"  Guardian saved: {guardian}")
 
             # Save children and link to guardian
             registrations = formset.save(commit=False)
-            for reg in registrations:
+            logger.debug(f"  Saving {len(registrations)} registrations")
+
+            for i, reg in enumerate(registrations):
                 reg.session = context["submission"]
                 reg.registering_person = guardian
                 reg.save()
+                logger.debug(f"  Registration {i} saved: {reg}")
 
             submission = registrations[0].session
 
@@ -157,6 +201,7 @@ class GuardianWithRegistrationsCreateView(CreateView):
             context["registrations_submitted"] = registrations
             context["submission"] = submission
 
+            logger.debug("  Preparing email...")
             mail_text = render_to_string("fosdem_registration/mail.txt", context)
             mail = EmailMessage(
                 to=[guardian.email],
@@ -165,6 +210,11 @@ class GuardianWithRegistrationsCreateView(CreateView):
                 body=mail_text,
             )
             mail.send()
+            logger.debug(f"  Email sent to {guardian.email}")
+        else:
+            logger.warning("  Formset is invalid")
+            logger.warning(f"  Formset errors: {formset.errors}")
 
         # If formset invalid, re-render page with errors
+        logger.debug("  Rendering template with context")
         return render(self.request, self.template_name, context)

@@ -11,7 +11,10 @@ from .views import (
 
 logger = logging.getLogger(__name__)
 
-logger.debug("loading fosdem_registration url")
+logger.debug("=" * 80)
+logger.debug("FOSDEM REGISTRATION URLs MODULE LOADING")
+logger.debug(f"Module name: {__name__}")
+logger.debug("=" * 80)
 
 urlpatterns = [
     re_path(
@@ -30,3 +33,7 @@ urlpatterns = [
         name="register_person",
     ),
 ]
+
+logger.debug(f"URL patterns defined: {len(urlpatterns)}")
+for pattern in urlpatterns:
+    logger.debug(f"  - {pattern.pattern} -> {pattern.name}")

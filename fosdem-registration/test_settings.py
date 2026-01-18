@@ -25,6 +25,10 @@ DATABASES = {
     }
 }
 
+# Set site URL to match testserver used by Django test client
+SITE_URL = "http://testserver"
+SITE_NETLOC = "testserver"
+
 # Email backend for testing
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 
@@ -95,5 +99,13 @@ LOGGING = {
             "handlers": ["console"],
             "level": "WARNING",  # Reduce DB query noise
         },
+        "fosdem_registration": {
+            "handlers": ["console"],
+            "level": "INFO",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
     },
 }

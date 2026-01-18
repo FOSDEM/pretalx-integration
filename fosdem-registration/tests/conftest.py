@@ -57,6 +57,8 @@ def event(organiser):
         date_to=date(2026, 2, 2),
         timezone="Europe/Brussels",
         organiser=organiser,
+        is_public=True,
+        custom_domain=None,  # Explicitly set to None for testing
     )
 
     with scope(event=event):
@@ -284,13 +286,17 @@ def registration_talkslot(submission_in_registration_track):
 
 
 @pytest.fixture
-def registration_url(event, registration_talkslot):
+def registration_url(registration_talkslot):
     """URL for registration form."""
+    event = registration_talkslot.submission.event
+    # Ensure event is public
+    event.is_public = True
+    event.save()
 
     return reverse(
         "plugins:fosdem_registration:register_person",
         kwargs={
-            "event": registration_talkslot.submission.event.slug,
+            "event": event.slug,
             "submission_code": registration_talkslot.submission.code,
         },
     )
