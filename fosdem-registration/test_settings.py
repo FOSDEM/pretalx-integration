@@ -6,14 +6,6 @@ import os
 import sys
 from pathlib import Path
 
-# Add pretalx to Python path
-pretalx_src_path = "/home/johan/git/fosdem/pretalx/src"
-if pretalx_src_path not in sys.path:
-    sys.path.insert(0, pretalx_src_path)
-
-# Set environment variables to prevent CONFIG_FILES error
-os.environ.setdefault("PRETALX_CONFIG_FILE", "")
-
 # Import base pretalx settings
 from pretalx.settings import *  # Import all settings from pretalx
 
