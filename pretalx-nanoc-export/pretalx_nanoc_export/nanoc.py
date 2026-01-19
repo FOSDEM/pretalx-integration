@@ -664,10 +664,14 @@ class NanocExporter(ScheduleData):
                                 "first_name": "",
                                 "last_name": "",
                                 "nickname": "",
-                                "name": speaker.name,
+                                "name": speaker.name if speaker.name else speaker.code,
                                 "slug": speaker_slug(speaker),
                                 "gender": "",  # check whether we need/want this
-                                "sortname": speaker.name.upper(),
+                                "sortname": (
+                                    speaker.name.upper()
+                                    if speaker.name
+                                    else speaker.code
+                                ),
                                 "abstract": (
                                     markdown.markdown(biography) if biography else ""
                                 ),
