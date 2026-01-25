@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 @receiver(nav_event, dispatch_uid="fosdem_registration_toolbar")
 def fosdem_registration_overview(sender, request, **kwargs):
-    print("checking permissions for fosdem registration")
+    logger.debug("checking permissions for fosdem registration")
     try:
         if not request.user.has_perm("orga.view_fosdem_registrations", request.event):
             return []
