@@ -19,6 +19,7 @@ def navbar_info_event(sender, request, **kwargs):
             )
             + "?model=SubmissionProxyEvent",
             "active": False,
+            "children": [],
         }
     ]
 
@@ -36,5 +37,6 @@ def navbar_info(sender, request, **kwargs):
             )
             + "?model=SubmissionProxyEvent",
             "active": False,
+            "children": [],
         }
     ]

@@ -17,5 +17,6 @@ def pretalx_fringe_list(sender, request, **kwargs):
                 kwargs={"event": request.event.slug},
             ),
             "active": request.resolver_match.url_name == "fringe_list",
+            "children": [],
         }
     ]

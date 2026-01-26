@@ -29,5 +29,6 @@ def fosdem_registration_overview(sender, request, **kwargs):
                 kwargs={"event": request.event.slug},
             ),
             "active": request.resolver_match.url_name == "registration_overview",
+            "children": [],
         }
     ]
