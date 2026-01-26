@@ -30,10 +30,15 @@ class Command(BaseCommand):
         notify = not kwargs["no_mail"]
         with scope(event=event):
             warnings = event.wip_schedule.warnings
+            for item in warnings["talk_warnings"]:
+                w = item["warnings"][0]
+                t = item["talk"]
+                wtype = w.get("type", "")
+                message = w.get("message", "")
+                url = w.get("url", "")
+                print(f"{wtype},{t.submission.code},{message},{url}")
 
             if bool(warnings["talk_warnings"]):
-                print("there are talk warnings")
-                print(warnings["talk_warnings"])
                 if not kwargs["ignore_warnings"]:
                     sys.exit(1)
                 else:
