@@ -46,7 +46,7 @@ class Command(BaseCommand):
                 else:
                     raise ValueError("invalid day")
 
-                # room_settings.save()
+                room_settings.save()
 
                 self.stdout.write(
                     self.style.SUCCESS(
