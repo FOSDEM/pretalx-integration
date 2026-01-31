@@ -1,5 +1,4 @@
 import collections
-import json
 import logging
 
 import pytz
@@ -30,6 +29,8 @@ from devroom_settings.forms import (
     TrackSettingsForm,
 )
 from devroom_settings.models import FosdemFeedback, RoomSettings, TrackSettings
+
+logger = logging.getLogger("__name__")
 
 
 class TrackSettingsView(EventPermissionRequired, TemplateView):
@@ -370,9 +371,13 @@ class VideoSubmissionListView(View):
         return JsonResponse(result, safe=False, status=200)
 
 
-@method_decorator(csrf_exempt, name="dispatch")
-class VideoSubmissionView(EventPermissionRequired, View):
+# @method_decorator(csrf_exempt, name="dispatch")
+class VideoSubmissionView(APIView):
     permission_required = "submission.orga_update_submission"
+    authentication_classes = [UserTokenAuthentication]
+    permission_classes = [
+        IsAuthenticated,
+    ]
 
     def post(self, request, submission_id, **kwargs):
         """Add or overwrite video links
@@ -383,13 +388,14 @@ class VideoSubmissionView(EventPermissionRequired, View):
         try:
             submission = request.event.talks.get(pk=int(submission_id))
         except Submission.DoesNotExist:
+            logger.debug("invalid submission_id")
             return JsonResponse(
                 {"error": "Invalid submission ID. Please provide a valid integer."},
                 status=404,
             )
 
         try:
-            data = json.loads(request.body)
+            data = request.data
             for record in data:
                 if not record["description"].startswith(VIDEO_RECORDING_STRING):
                     return JsonResponse(
@@ -403,7 +409,7 @@ class VideoSubmissionView(EventPermissionRequired, View):
                         {
                             "error": f"Invalid link, must be https://video.fosdem.org/..."
                         },
-                        status=404,
+                        status=422,
                     )
 
         except:
