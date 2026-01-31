@@ -32,7 +32,7 @@ def fosdem_slug(self):
         orig_slug = self.submission.title
 
     slug = sanitize(orig_slug)
-    slug = slug[:80]
+    slug = slug[:72]
     # code is attached, so we are sure this is unique
     return self.submission.code + "-" + slug
 
