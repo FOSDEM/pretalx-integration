@@ -1,12 +1,13 @@
 import re
+from functools import lru_cache
 
 from django.db import models
 from django.utils.text import slugify
-from django_scopes import ScopedManager
-from pretalx.event.models import Team
+from django_scopes import ScopedManager, scope
+from pretalx.event.models import Event, Team
 from pretalx.person.models import User
 from pretalx.schedule.models import Room, TalkSlot
-from pretalx.submission.models import Submission, Track
+from pretalx.submission.models import Answer, Submission, Track
 from unidecode import unidecode
 
 
@@ -24,11 +25,19 @@ def sanitize(b):
     return b
 
 
+@lru_cache(maxsize=None)
+def submission_slug_question(event_id):
+    event = Event.objects.get(pk=event_id)
+    with scope(event=event):
+        q = event.questions.get(question__icontains="talk slug")
+    return q
+
+
 def fosdem_slug(self):
     try:
         q = submission_slug_question(self.event.pk)
         orig_slug = self.submission.answers.get(question=q).answer
-    except:
+    except Answer.DoesNotExist:
         orig_slug = self.submission.title
 
     slug = sanitize(orig_slug)
