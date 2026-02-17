@@ -10,6 +10,7 @@ import magic
 import markdown
 import pytz
 import yaml
+from devroom_settings.models import sanitize
 from django.conf import settings
 from django.db.models import Count, DurationField, ExpressionWrapper, F, Prefetch, Q
 from django.forms.models import model_to_dict
@@ -22,8 +23,6 @@ from pretalx.person.models import SpeakerProfile
 from pretalx.schedule.exporters import ScheduleData
 from pretalx.schedule.models import Room, TalkSlot
 from pretalx.submission.models import Submission, Track
-
-from devroom_settings.models import sanitize
 
 tz = pytz.timezone("Europe/Brussels")
 
@@ -284,7 +283,7 @@ class NanocExporter(ScheduleData):
                 "size": room.capacity,
                 "rank": room.position if room.position is not None else room.pk,
                 "slug": str(room.name).lower(),
-                "live_video_link": f"https://live.fosdem.org/watch/{str(room.name)}",
+                # "live_video_link": f"https://live.fosdem.org/watch/{str(room.name)}",
                 "title": str(room.description),
                 "events": [talk.fosdem_slug for talk in room.talks_current],
                 "events_by_day": events_by_day[room.pk],
@@ -542,8 +541,8 @@ class NanocExporter(ScheduleData):
                     }
                     if track.tracksettings.track_type not in ["J", "B"]:
                         talks[talk.fosdem_slug] |= {
-                            "live_video_link": "https://live.fosdem.org/watch/"
-                            + str(talk.room.name),
+                            # "live_video_link": "https://live.fosdem.org/watch/"
+                            # + str(talk.room.name),
                             "chat_link": self.chat_link(track.tracksettings.slug),
                         }
                     if self.dest_dir and valid_talk_image:
