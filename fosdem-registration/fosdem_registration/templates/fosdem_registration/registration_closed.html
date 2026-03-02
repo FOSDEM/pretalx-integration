@@ -1,0 +1,26 @@
+{% extends "cfp/event/base.html" %}
+{% load i18n %}
+{% block title %}Registration Closed{% endblock title %}
+{% block content %}
+
+<div style="text-align: center; padding: 2em;">
+  <h2>Registration Closed</h2>
+  <p>Registration for this session is now closed.</p>
+  
+  {% if submission %}
+  <h3>{{ submission.title }}</h3>
+  <p>
+    <strong>Speaker(s):</strong> {{ submission.speakers.all|join:", " }}<br>
+    {% if talkslot %}
+    <strong>Location:</strong> {{ talkslot.room }}<br>
+    <strong>Time:</strong> {{ talkslot.start|date:"Y-m-d H:i" }} - {{ talkslot.end|date:"H:i" }}
+    {% endif %}
+  </p>
+  {% endif %}
+  
+  <p>
+    <a href="https://fosdem.org/2026/schedule/track/junior/">View the FOSDEM Junior schedule</a>
+  </p>
+</div>
+
+{% endblock content %}

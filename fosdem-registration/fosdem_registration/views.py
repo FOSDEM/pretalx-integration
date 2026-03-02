@@ -1,5 +1,7 @@
 import logging
+from datetime import datetime
 
+import pytz
 from django.core.mail import EmailMessage
 from django.db import models
 from django.db.models import Count, F, IntegerField, OuterRef, Subquery
@@ -7,6 +9,7 @@ from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse_lazy
+from django.utils import timezone
 from django.views.generic import CreateView, ListView
 from django.views.generic.edit import FormView
 from pretalx.common.views.mixins import EventPermissionRequired
@@ -107,6 +110,51 @@ class GuardianWithRegistrationsCreateView(CreateView):
     template_name = "fosdem_registration/register.html"
     success_url = reverse_lazy("registration_success")
 
+    def get(self, request, *args, **kwargs):
+        """Override get to check if registration is closed before rendering."""
+        event_slug = self.kwargs.get("event")
+
+        try:
+            event = Event.objects.get(slug=event_slug)
+        except Event.DoesNotExist:
+            raise Http404(f"Event not found: {event_slug}")
+
+        # Check if registration should be closed
+        event_tz = pytz.timezone(event.timezone)
+        event_start = datetime.combine(event.date_from, datetime.min.time())
+        event_start_aware = event_tz.localize(event_start)
+        now = timezone.now()
+
+        if now >= event_start_aware:
+            logger.info(
+                f"Registration closed: event has started (now={now}, event_start={event_start_aware})"
+            )
+            # Get submission details if possible for the closed page
+            submission_code = self.kwargs.get("submission_code")
+            context = {}
+            try:
+                submission = Submission.objects.get(
+                    code=submission_code,
+                    track__fosdemregistrationtrack__isnull=False,
+                    state="confirmed",
+                    event=event,
+                )
+                context["submission"] = submission
+                try:
+                    context["talkslot"] = submission.slots.get(
+                        schedule=event.current_schedule
+                    )
+                except:
+                    pass
+            except:
+                pass
+
+            return render(
+                request, "fosdem_registration/registration_closed.html", context
+            )
+
+        return super().get(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         logger.debug("GuardianWithRegistrationsCreateView.get_context_data called")
         context = super().get_context_data(**kwargs)
@@ -122,6 +170,21 @@ class GuardianWithRegistrationsCreateView(CreateView):
         except Event.DoesNotExist:
             logger.error(f"  Event not found with slug: {event_slug}")
             raise Http404(f"Event not found: {event_slug}")
+
+        # Close registration at the start of the event
+        event_tz = pytz.timezone(event.timezone)
+        event_start = datetime.combine(event.date_from, datetime.min.time())
+        event_start_aware = event_tz.localize(event_start)
+        now = timezone.now()
+
+        if now >= event_start_aware:
+            logger.info(
+                f"Registration closed: event has started (now={now}, event_start={event_start_aware})"
+            )
+            # This shouldn't be reached due to get() check, but keep for safety
+            return render(
+                self.request, "fosdem_registration/registration_closed.html", context
+            )
 
         max_participants_subquery = Answer.objects.filter(
             submission=OuterRef("pk"),  # link to the submission
