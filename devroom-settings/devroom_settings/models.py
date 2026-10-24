@@ -7,7 +7,7 @@ from django_scopes import ScopedManager, scope
 from pretalx.event.models import Event, Team
 from pretalx.person.models import User
 from pretalx.schedule.models import Room, TalkSlot
-from pretalx.submission.models import Answer, Submission, Track
+from pretalx.submission.models import Answer, Question, Submission, Track
 from unidecode import unidecode
 
 
@@ -37,7 +37,7 @@ def fosdem_slug(self):
     try:
         q = submission_slug_question(self.event.pk)
         orig_slug = self.submission.answers.get(question=q).answer
-    except Answer.DoesNotExist:
+    except (Answer.DoesNotExist, Question.DoesNotExist):
         orig_slug = self.submission.title
 
     slug = sanitize(orig_slug)
