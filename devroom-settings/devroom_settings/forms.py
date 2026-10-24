@@ -10,7 +10,9 @@ from .models import TrackSettings
 
 class TrackForm(ModelForm):
     name = forms.CharField(label="Name")
-    description = forms.CharField(label="Description", widget=forms.Textarea)
+    description = forms.CharField(
+        label="Description", widget=forms.Textarea, required=False
+    )
     color = ColorField(label="Color")
 
     class Meta:
