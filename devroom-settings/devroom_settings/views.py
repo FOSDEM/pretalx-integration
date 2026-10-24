@@ -86,6 +86,13 @@ class DevroomReport(EventPermissionRequired, ListView):
         )
         return tracks
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["can_edit_tracks"] = self.request.user.has_perm(
+            TrackSettingsView.permission_required, self.request.event
+        )
+        return context
+
 
 class DevroomTeam(EventPermissionRequired, TemplateView):
     permission_required = "submission.orga_update_submission"

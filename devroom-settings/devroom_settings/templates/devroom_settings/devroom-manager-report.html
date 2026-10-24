@@ -20,7 +20,7 @@
             <tbody>
                 {% for track in tracks %}
                     <tr>
-                        <td>{{ track.name }}</td>
+                        <td>{% if can_edit_tracks %}<a href="{% url "plugins:devroom_settings:track-settings" event=request.event.slug track_id=track.pk %}">{{ track.name }}</a>{% else %}{{ track.name }}{% endif %}</td>
                         <td>{{ track.tracksettings.mail }}
                         </td>
 			<td>{% for member in track.tracksettings.manager_team.members.all %}
