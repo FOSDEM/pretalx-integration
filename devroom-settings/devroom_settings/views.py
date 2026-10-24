@@ -37,9 +37,17 @@ class TrackSettingsView(EventPermissionRequired, TemplateView):
     permission_required = "event.update_event"
     template_name = "devroom_settings/tracksettings.html"
 
+    def get_track_and_settings(self, track_id):
+        track = get_object_or_404(self.request.event.tracks, pk=track_id)
+        try:
+            tracksettings = track.tracksettings
+        except TrackSettings.DoesNotExist:
+            # unsaved instance, created when the form is saved
+            tracksettings = TrackSettings(track=track)
+        return track, tracksettings
+
     def get(self, request, *args, **kwargs):
-        track = Track.objects.get(pk=kwargs["track_id"])
-        tracksettings = track.tracksettings
+        track, tracksettings = self.get_track_and_settings(kwargs["track_id"])
 
         context = {
             "track": track,
@@ -50,8 +58,7 @@ class TrackSettingsView(EventPermissionRequired, TemplateView):
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):
-        track = Track.objects.get(pk=kwargs["track_id"])
-        tracksettings = track.tracksettings
+        track, tracksettings = self.get_track_and_settings(kwargs["track_id"])
 
         track_form = TrackForm(request.POST, instance=track)
         tracksettings_form = TrackSettingsForm(request.POST, instance=tracksettings)
